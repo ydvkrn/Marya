@@ -1,66 +1,35 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Marya Media Uploader</title>
-<link rel="icon" href="https://i.postimg.cc/bwWDyRHb/download-1-1.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Marya Uploader</title>
+<link rel="icon" href="https://marya-database.btfcompanystorage.workers.dev/view/ETTi4l5oIIIhmen181zo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <style>
 :root{--p:#6366f1;--p2:#818cf8;--ok:#10b981;--err:#ef4444;--bg:#0f0f23;--glass:rgba(255,255,255,.04);--txt:#fff;--sub:#94a3b8}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;justify-content:center}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 80%,#6366f1 0,transparent 60%),radial-gradient(circle at 80% 20%,#f59e0b 0,transparent 60%);opacity:.1;pointer-events:none}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt);display:flex;justify-content:center;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 80%,#6366f1 0,transparent 60%),radial-gradient(circle at 80% 20%,#f59e0b 0,transparent 60%);opacity:.1}
 .container{max-width:680px;width:100%;padding:24px}
-header{text-align:center;margin-bottom:48px}
-header img{width:72px;border-radius:16px;box-shadow:0 8px 24px rgba(99,102,241,.4)}
-h1{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;color:transparent;margin:16px 0}
+header{text-align:center;margin-bottom:48px}header img{width:70px;border-radius:16px}
+h1{font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;color:transparent;margin:12px 0}
 p.sub{color:var(--sub)}
-.card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:32px;box-shadow:0 8px 32px rgba(31,38,135,.37)}
-.upload-zone{border:2px dashed rgba(255,255,255,.1);border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:.3s}
-.upload-zone:hover{border-color:var(--p2);background:rgba(99,102,241,.08);transform:translateY(-4px)}
-.upload-zone .material-icons{font-size:64px;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;color:transparent;margin-bottom:12px}
-.url-sec{margin-top:40px}
-.input-wrap{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
-input.url{padding:14px 16px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:var(--glass);color:var(--txt)}
-.btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;padding:14px 24px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer}
-.loading{display:none;margin-top:24px;text-align:center}
-.loading.show{display:block}
-.spinner{border:4px solid rgba(255,255,255,.1);border-top:4px solid var(--p);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto 12px}
+.card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:32px}
+.zone{border:2px dashed rgba(255,255,255,.1);border-radius:16px;padding:46px 24px;text-align:center;cursor:pointer;transition:.3s}
+.zone:hover{border-color:var(--p2);background:rgba(99,102,241,.08);transform:translateY(-4px)}
+.zone .material-icons{font-size:60px;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;color:transparent;margin-bottom:10px}
+.url-box{margin-top:36px}.row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}
+.url{padding:14px 16px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:var(--glass);color:var(--txt)}
+.btn{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;padding:14px 22px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer}
+.load{display:none;margin-top:20px;text-align:center}.load.show{display:block}.spin{border:4px solid rgba(255,255,255,.1);border-top:4px solid var(--p);border-radius:50%;width:38px;height:38px;animation:spin 1s linear infinite;margin:0 auto 10px}
 @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-.result{margin-top:24px;padding:24px;background:var(--glass);border-left:4px solid var(--ok);border-radius:12px}
-.result.error{border-left-color:var(--err)}
-.result h3{display:flex;align-items:center;gap:6px;margin-bottom:12px}
-.result a{color:var(--p2);word-break:break-all}
-small{color:var(--sub)}
-@media(max-width:540px){.card{padding:24px}.upload-zone{padding:32px 16px}}
+.res{margin-top:24px;padding:22px;background:var(--glass);border-left:4px solid var(--ok);border-radius:12px}.res.err{border-left-color:var(--err)}
+.res a{color:var(--p2);word-break:break-all}small{color:var(--sub)}
 </style></head><body>
 <div class="container">
-<header>
-  <img src="https://i.postimg.cc/bwWDyRHb/download-1-1.png" alt="">
-  <h1>Marya Uploader</h1>
-  <p class="sub">Permanent links • Free • 25 MB per file</p>
-</header>
-
+<header><img src="https://marya-database.btfcompanystorage.workers.dev/view/ETTi4l5oIIIhmen181zo.png"><h1>Marya Uploader</h1><p class="sub">Permanent links • Free • ≤25 MB</p></header>
 <div class="card">
-  <div id="zone" class="upload-zone">
-     <span class="material-icons">backup</span>
-     <div>Tap or drop files</div>
-     <small>Any type up to 25 MB</small>
-     <input id="picker" type="file" multiple hidden>
-  </div>
-
-  <div class="url-sec">
-    <label>Upload via URL</label>
-    <div class="input-wrap">
-      <input id="url" class="url" placeholder="https://example.com/file.jpg">
-      <button id="urlBtn" class="btn"><span class="material-icons">download</span>Upload</button>
-    </div>
-  </div>
-
-  <div id="load" class="loading">
-    <div class="spinner"></div>
-    <small id="prog">0 %</small>
-  </div>
+  <div id="zone" class="zone"><span class="material-icons">backup</span><div>Tap or drop files</div><small>Any type up to 25 MB</small><input id="pick" type="file" multiple hidden></div>
+  <div class="url-box"><label>Upload via URL</label><div class="row"><input id="u" class="url" placeholder="https://…"><button id="uBtn" class="btn"><span class="material-icons">download</span>Upload</button></div></div>
+  <div id="L" class="load"><div class="spin"></div><small id="p">0 %</small></div>
 </div>
-
-<div id="out"></div>
-</div>
-<script type="module" src="/js/app.js"></script></body></html>
+<div id="O"></div><div id="alert" style="display:none;color:var(--err);text-align:center;margin-top:14px"></div>
+</div><script type="module" src="/js/app.js"></script></body></html>
