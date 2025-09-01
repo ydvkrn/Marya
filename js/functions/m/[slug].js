@@ -1,27 +1,28 @@
+import { CACHE_YRS } from '../../_config.js';
+
+const SECS = CACHE_YRS*31536000;
+
 export async function onRequest({params,env,request}) {
-  const key = params.slug;                       // slug.ext
-  const hit = await env.FILES_KV.getWithMetadata(key,'arrayBuffer');
-  if(!hit.value) return new Response('404',{status:404});
+  const kv  = env.FILES_KV, slug = params.slug;
+  let link  = await kv.get(slug);          // value holds Telegram CDN URL
 
-  const meta=hit.metadata||{}, buf=new Uint8Array(hit.value);
-  const baseHdr = {
-    'Content-Type' : meta.ctype||'application/octet-stream',
-    'Cache-Control': 'public, max-age=157680000, immutable',  // 5 yr
-    'Expires'      : new Date(Date.now()+157680000000).toUTCString(),
-    'X-Content-Type-Options':'nosniff',
-    'Access-Control-Allow-Origin':'*',
-    'Accept-Ranges':'bytes'
-  };
-  if (request.url.includes('dl=1'))
-      baseHdr['Content-Disposition']=`attachment; filename="${meta.filename||key}"`;
-
-  /* Range support */
-  const range=request.headers.get('Range');
-  if(range){
-    const [ ,s,e]=/bytes=(\d*)-(\d*)/.exec(range); const st=Number(s||0); const en=e?Number(e):buf.length-1;
-    baseHdr['Content-Range']=`bytes ${st}-${en}/${buf.length}`; baseHdr['Content-Length']=en-st+1;
-    return new Response(buf.slice(st,en+1),{status:206,headers:baseHdr});
+  if(!link){                               // never stored?
+    const meta = await kv.getWithMetadata(slug,'text');
+    if(!meta.value) return new Response('404',{status:404});
+    link = meta.value;                     // Telegram URL already saved
   }
-  baseHdr['Content-Length']=buf.length;
-  return new Response(buf,{headers:baseHdr});
+
+  // proxy with range support
+  const range = request.headers.get('Range');
+  const r = await fetch(link,{headers: range? {Range:range}:{}});
+  if(!r.ok) return new Response('TG fetch fail',{status:502});
+
+  const h = new Headers(r.headers);
+  h.set('Cache-Control',`public, max-age=${SECS}, immutable`);
+  h.set('Expires',new Date(Date.now()+SECS*1000).toUTCString());
+  h.set('Access-Control-Allow-Origin','*');
+  if(request.url.includes('dl=1'))
+      h.set('Content-Disposition','attachment');
+
+  return new Response(r.body,{status:r.status,headers:h});
 }
