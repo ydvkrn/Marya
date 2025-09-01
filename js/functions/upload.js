@@ -1,45 +1,67 @@
-const MAX = 25 * 1024 * 1024;                          // 25 MB
-const FIVE_YEARS = 157680000;                          // seconds
-const json = (o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'Content-Type':'application/json'}});
+import { MAX_MB, BOT_TOKEN, CHAT_ID } from '../../_config.js';
+
+const BYTES = MAX_MB * 1024 * 1024;
+const J = (o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'Content-Type':'application/json'}});
 
 export async function onRequest({request,env}) {
   const kv = env.FILES_KV, url = new URL(request.url);
 
-  // -------- via external URL --------
+  // ---------- upload via URL ----------
   if (url.searchParams.has('src')) {
-    try {
-      const src=url.searchParams.get('src'); const r=await fetch(src);
-      if(!r.ok) return json(err('fetch failed'),502);
-      const buf=await r.arrayBuffer(); if(buf.byteLength>MAX) return json(err('Max 25 MB'),413);
-      const {slug,ext}=slugExt(getName(src),r.headers.get('content-type'));
-      const key=`${slug}.${ext}`;
-      await kv.put(key,buf,{metadata:{filename:getName(src),ctype:r.headers.get('content-type'),size:buf.byteLength}});
-      return json(resp(url.origin,key,getName(src),buf.byteLength,r.headers.get('content-type')));
-    } catch(e){ return json(err(e.message),500);}
+    const src=url.searchParams.get('src');
+    const r = await fetch(src); if(!r.ok) return J(err('fetch failed'),502);
+    const buf = await r.arrayBuffer(); if(buf.byteLength>BYTES) return J(err('>25 MB'),413);
+    const ctype = r.headers.get('content-type')||'application/octet-stream';
+    return await handleBuffer(buf,getName(src),ctype,kv,url.origin);
   }
 
-  // -------- via form POST --------
-  if(request.method==='POST'){
-    try{
-      const fd=await request.formData(); const file=fd.get('file');
-      if(!file) return json(err('no file'),400);
-      if(file.size>MAX) return json(err('Max 25 MB'),413);
-      const {slug,ext}=slugExt(file.name,file.type);
-      const key=`${slug}.${ext}`;
-      await kv.put(key,await file.arrayBuffer(),{metadata:{filename:file.name,ctype:file.type,size:file.size}});
-      return json(resp(url.origin,key,file.name,file.size,file.type));
-    }catch(e){ return json(err(e.message),500);}
+  // ---------- upload via form ----------
+  if (request.method==='POST') {
+    const fd=await request.formData(); const file=fd.get('file');
+    if(!file) return J(err('no file'),400);
+    if(file.size>BYTES) return J(err('>25 MB'),413);
+    return await handleBuffer(await file.arrayBuffer(),file.name,file.type,kv,new URL(request.url).origin);
   }
-  return json(err('method'),405);
+
+  return J(err('method'),405);
 }
 
-/* helpers */
-const slugExt = (name,ctype)=>{
-  const base=name.replace(/\.[a-z0-9]+$/i,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase().slice(0,40)||'file';
-  const ext = (ctype||'').split('/').pop().split(';')[0]||'bin';
-  return {slug:crypto.randomUUID().slice(0,8)+'-'+base,ext};
+/*  CORE  ------------------------------------------------------------------ */
+async function handleBuffer(buf,origName,ctype,kv,origin){
+  // 1. send to Telegram
+  const tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`,{
+    method:'POST',
+    body:buildForm(buf,origName,ctype,CHAT_ID)
+  }).then(r=>r.json());
+  if(!tgRes.ok) return J(err('TG error'),502);
+
+  // 2. get CDN link
+  const fileId = tgRes.result.document.file_id;
+  const info   = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`)
+                  .then(r=>r.json());
+  const tgURL  = `https://api.telegram.org/file/bot${BOT_TOKEN}/${info.result.file_path}`;
+
+  // 3. create slug
+  const slug = crypto.randomUUID().slice(0,8)+'-'+clean(origName)+'.'+ext(origName,ctype);
+
+  // 4. store redirect in KV
+  await kv.put(slug,tgURL,{metadata:{filename:origName,size:buf.byteLength,ctype}});
+
+  return J({
+    success:true,filename:origName,size:buf.byteLength,media_type:ctype,
+    preview_url:`${origin}/m/${slug}`,stream_url:`${origin}/m/${slug}`,
+    download_url:`${origin}/m/${slug}?dl=1`
+  });
+}
+
+const buildForm = (buf,name,type,chat) =>{
+  const f = new FormData();
+  f.append('chat_id',chat);
+  f.append('caption',name);
+  f.append('document',new File([buf],name,{type}));
+  return f;
 };
+const clean = n=>n.replace(/\.[^.]+$/,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+const ext   = (n,t)=> n.split('.').pop() || (t||'bin').split('/').pop();
+const err   = m=>({success:false,error:m});
 const getName = u=>decodeURIComponent(u.split('/').pop().split('?')[0]||'file');
-const err = m=>({success:false,error:m});
-const resp=(o,k,n,s,t)=>({success:true,filename:n,size:s,media_type:t,
-view_url:`${o}/m/${k}`,download_url:`${o}/m/${k}?dl=1`});
