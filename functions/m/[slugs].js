@@ -1,4 +1,4 @@
-import { CACHE_SECS } from '../../_config.js';
+import { CACHE_SECS } from '../_config.js';
 
 export async function onRequest({params,request,env}) {
   const slug=params.slug; const kv=env.FILES_KV;
