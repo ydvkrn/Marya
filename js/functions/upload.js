@@ -1,41 +1,45 @@
-export async function onRequest(context) {
-  const kv = context.env.FILES_KV;
-  const { request } = context;
-  const url = new URL(request.url);
+const MAX = 25 * 1024 * 1024;                          // 25 MB
+const FIVE_YEARS = 157680000;                          // seconds
+const json = (o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'Content-Type':'application/json'}});
 
-  // ---------- GET ?src=externalURL ----------
-  if (request.method === 'GET' && url.searchParams.has('src')) {
-    const src = url.searchParams.get('src');
-    const r = await fetch(src);
-    if (!r.ok) return j({success:false,error:'fetch failed'},502);
-    const buf = await r.arrayBuffer();
-    if (buf.byteLength > 25*1024*1024) return j({success:false,error:'Max 25 MB'},413);
-    const id = crypto.randomUUID();
-    await kv.put(id, buf, {
-      metadata: { filename: getName(src), ctype: r.headers.get('content-type'), size: buf.byteLength }
-    });
-    return j(res(url.origin,id,getName(src),buf.byteLength,r.headers.get('content-type')));
+export async function onRequest({request,env}) {
+  const kv = env.FILES_KV, url = new URL(request.url);
+
+  // -------- via external URL --------
+  if (url.searchParams.has('src')) {
+    try {
+      const src=url.searchParams.get('src'); const r=await fetch(src);
+      if(!r.ok) return json(err('fetch failed'),502);
+      const buf=await r.arrayBuffer(); if(buf.byteLength>MAX) return json(err('Max 25 MB'),413);
+      const {slug,ext}=slugExt(getName(src),r.headers.get('content-type'));
+      const key=`${slug}.${ext}`;
+      await kv.put(key,buf,{metadata:{filename:getName(src),ctype:r.headers.get('content-type'),size:buf.byteLength}});
+      return json(resp(url.origin,key,getName(src),buf.byteLength,r.headers.get('content-type')));
+    } catch(e){ return json(err(e.message),500);}
   }
 
-  // ---------- POST form-data ----------
-  if (request.method === 'POST') {
-    const fd = await request.formData();
-    const file = fd.get('file');
-    if (!file) return j({success:false,error:'no file'},400);
-    if (file.size > 25*1024*1024) return j({success:false,error:'Max 25 MB'},413);
-    const id = crypto.randomUUID();
-    await kv.put(id, await file.arrayBuffer(), {
-      metadata: { filename: file.name, ctype: file.type, size: file.size }
-    });
-    return j(res(url.origin,id,file.name,file.size,file.type));
+  // -------- via form POST --------
+  if(request.method==='POST'){
+    try{
+      const fd=await request.formData(); const file=fd.get('file');
+      if(!file) return json(err('no file'),400);
+      if(file.size>MAX) return json(err('Max 25 MB'),413);
+      const {slug,ext}=slugExt(file.name,file.type);
+      const key=`${slug}.${ext}`;
+      await kv.put(key,await file.arrayBuffer(),{metadata:{filename:file.name,ctype:file.type,size:file.size}});
+      return json(resp(url.origin,key,file.name,file.size,file.type));
+    }catch(e){ return json(err(e.message),500);}
   }
-
-  return new Response('Method Not Allowed',{status:405});
+  return json(err('method'),405);
 }
 
-const j = (o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'Content-Type':'application/json'}});
-const res = (orig,id,name,size,type)=>({
-  success:true,file_id:id,filename:name,size,media_type:type,
-  view_url:`${orig}/file/${id}`,download_url:`${orig}/file/${id}?dl=1`
-});
-const getName = u => u.split('/').pop().split('?')[0] || 'file';
+/* helpers */
+const slugExt = (name,ctype)=>{
+  const base=name.replace(/\.[a-z0-9]+$/i,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase().slice(0,40)||'file';
+  const ext = (ctype||'').split('/').pop().split(';')[0]||'bin';
+  return {slug:crypto.randomUUID().slice(0,8)+'-'+base,ext};
+};
+const getName = u=>decodeURIComponent(u.split('/').pop().split('?')[0]||'file');
+const err = m=>({success:false,error:m});
+const resp=(o,k,n,s,t)=>({success:true,filename:n,size:s,media_type:t,
+view_url:`${o}/m/${k}`,download_url:`${o}/m/${k}?dl=1`});
