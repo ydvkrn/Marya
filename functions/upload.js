@@ -1,4 +1,4 @@
-import { BOT_TOKEN, CHANNEL_ID, MAX_SIZE, CHUNK } from '../_config.js';
+import { BOT_TOKEN, CHANNEL_ID, MAX_SIZE, CHUNK } from './_config.js';
 
 const cors = { 'Access-Control-Allow-Origin':'*',
                'Access-Control-Allow-Methods':'GET,POST,OPTIONS',
