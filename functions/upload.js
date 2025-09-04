@@ -15,13 +15,15 @@ export async function onRequest({ request, env }) {
     const formData = await request.formData();
     const file = formData.get('file');
 
-    if (!file) {
-      throw new Error('No file uploaded');
+    if (!file || file.size === 0) {
+      throw new Error('No file uploaded or file is empty');
     }
 
     if (file.size > MAX_SIZE) {
       throw new Error('File too large (max 2GB)');
     }
+
+    console.log('Uploading file:', file.name, 'Size:', file.size);
 
     // Upload to Telegram
     const telegramData = new FormData();
@@ -34,6 +36,7 @@ export async function onRequest({ request, env }) {
     });
 
     const telegramResult = await telegramResponse.json();
+    console.log('Telegram result:', telegramResult);
 
     if (!telegramResult.ok) {
       throw new Error(telegramResult.description || 'Telegram upload failed');
@@ -45,39 +48,39 @@ export async function onRequest({ request, env }) {
     const getFileResult = await getFileResponse.json();
 
     if (!getFileResult.ok) {
-      throw new Error('Failed to get file URL');
+      throw new Error('Failed to get file URL from Telegram');
     }
 
     const filePath = getFileResult.result.file_path;
     const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // Generate slug with extension
+    console.log('Direct Telegram URL:', directUrl);
+
+    // Generate simple slug
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substr(2, 8);
-    const lastDot = file.name.lastIndexOf('.');
-    const extension = lastDot !== -1 ? file.name.substring(lastDot) : '';
-    const nameWithoutExt = lastDot !== -1 ? file.name.substring(0, lastDot) : file.name;
-    const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
-    const slug = `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
+    const extension = file.name.includes('.') ? '.' + file.name.split('.').pop() : '';
+    const slug = `${timestamp}${random}${extension}`.toLowerCase();
 
-    // Generate file ID in MSMfile format
-    const fileNumber = Math.floor(Math.random() * 100);
-    const randomPart1 = Math.random().toString(36).substr(2, 3);
-    const randomPart2 = Math.random().toString(36).substr(2, 3);
-    const fileIdCode = `MSMfile${fileNumber}/${randomPart1}-${randomPart2}`;
-
-    // Store in KV
+    // Store in KV (just the URL as string)
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
         filename: file.name,
         size: file.size,
         contentType: file.type,
-        uploadedAt: Date.now(),
-        fileIdCode: fileIdCode
+        uploadedAt: Date.now()
       }
     });
 
+    console.log('Stored in KV with slug:', slug);
+
+    // Generate file ID for display
+    const fileNumber = Math.floor(Math.random() * 100);
+    const fileIdCode = `MSMfile${fileNumber}/${Math.random().toString(36).substr(2, 3)}-${Math.random().toString(36).substr(2, 3)}`;
+
     const baseUrl = new URL(request.url).origin;
+    
+    // Simplified URLs
     const streamUrl = `${baseUrl}/btf/${slug}/${fileIdCode}`;
     const downloadUrl = `${baseUrl}/btf/${slug}/${fileIdCode}?dl=1`;
 
@@ -95,6 +98,7 @@ export async function onRequest({ request, env }) {
     });
 
   } catch (error) {
+    console.error('Upload error:', error);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 
