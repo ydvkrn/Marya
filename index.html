@@ -1,788 +1,224 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marya Vault - File Upload</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>Marya Vault</title>
     <style>
-        :root {
-            --primary: #dc143c;
-            --primary-dark: #b91c1c;
-            --white: #ffffff;
-            --gray-100: #f3f4f6;
-            --gray-600: #6b7280;
-            --gray-900: #111827;
-            --success: #10b981;
-            --error: #ef4444;
-            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--white) 0%, var(--gray-100) 100%);
-            min-height: 100vh;
-            padding: 15px;
-            color: var(--gray-900);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow);
-            animation: pulse 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.05); }
-        }
-
-        .logo i {
-            font-size: 2rem;
-            color: var(--white);
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: var(--gray-600);
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
-
-        .upload-card {
-            background: var(--white);
-            border: 2px solid var(--primary);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .upload-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(220, 20, 60, 0.02) 0%, rgba(220, 20, 60, 0.01) 100%);
-            pointer-events: none;
-        }
-
-        .dropzone {
-            border: 3px dashed rgba(220, 20, 60, 0.3);
-            border-radius: 15px;
-            padding: 60px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: rgba(220, 20, 60, 0.02);
-            position: relative;
-        }
-
-        .dropzone:hover,
-        .dropzone.dragover {
-            border-color: var(--primary);
-            background: rgba(220, 20, 60, 0.08);
-            transform: translateY(-5px);
-        }
-
-        .upload-icon {
-            font-size: 4rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-            animation: bounce 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
-            40%, 43% { transform: translateY(-20px); }
-            70% { transform: translateY(-10px); }
-            90% { transform: translateY(-5px); }
-        }
-
-        .upload-text {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-        .upload-subtext {
-            color: var(--gray-600);
-            font-size: 1rem;
-        }
-
-        .supported-formats {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .format-badge {
-            background: var(--primary);
-            color: var(--white);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .results {
-            margin-top: 30px;
-        }
-
-        .results-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .result-item {
-            background: var(--white);
-            border: 1px solid rgba(220, 20, 60, 0.2);
-            border-left: 4px solid var(--primary);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .result-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .file-icon {
-            width: 45px;
-            height: 45px;
-            background: var(--primary);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #dc143c; text-align: center; margin-bottom: 30px; }
+        
+        .upload-box {
+            background: white;
+            border: 3px dashed #dc143c;
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-size: 1.2rem;
-        }
-
-        .result-info h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 5px;
-            word-break: break-all;
-        }
-
-        .result-meta {
-            color: var(--gray-600);
-            font-size: 0.9rem;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+            padding: 50px 20px;
             text-align: center;
-            justify-content: center;
-            min-width: 120px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-
-        .btn-primary {
-            background: var(--primary);
-            color: var(--white);
+        .upload-box:hover { background: #fafafa; transform: translateY(-2px); }
+        .upload-box.dragover { border-color: #b91c1c; background: #fef2f2; }
+        
+        .upload-icon { font-size: 3rem; color: #dc143c; margin-bottom: 20px; }
+        .upload-text { font-size: 1.5rem; color: #dc143c; font-weight: bold; }
+        .upload-subtext { color: #666; margin-top: 10px; }
+        
+        .file-input { display: none; }
+        
+        .results { margin-top: 30px; }
+        .result-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc143c;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(220, 20, 60, 0.3);
+        
+        .result-name { font-weight: bold; margin-bottom: 10px; }
+        .result-info { color: #666; margin-bottom: 15px; }
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #dc143c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
         }
-
-        .btn-success {
-            background: var(--success);
-            color: var(--white);
-        }
-
-        .btn-success:hover {
-            background: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-        }
-
-        .progress {
-            width: 100%;
-            height: 8px;
-            background: var(--gray-100);
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-            width: 0%;
-            transition: width 0.3s ease;
-            position: relative;
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
+        .btn:hover { background: #b91c1c; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        
         .alert {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 15px 25px;
-            border-radius: 10px;
-            color: var(--white);
-            font-weight: 600;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
             z-index: 1000;
             transform: translateX(300px);
-            transition: transform 0.3s ease;
-            box-shadow: var(--shadow);
-            max-width: 90%;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            transition: transform 0.3s;
         }
-
-        .alert.show {
-            transform: translateX(0);
-        }
-
-        .alert.success {
-            background: var(--success);
-        }
-
-        .alert.error {
-            background: var(--error);
-        }
-
-        /* Mobile Optimizations */
+        .alert.show { transform: translateX(0); }
+        .alert.success { background: #28a745; }
+        .alert.error { background: #dc3545; }
+        
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 0;
-            }
-
-            h1 {
-                font-size: 2.2rem;
-            }
-
-            .logo {
-                width: 60px;
-                height: 60px;
-            }
-
-            .logo i {
-                font-size: 1.5rem;
-            }
-
-            .upload-card {
-                padding: 25px 15px;
-            }
-
-            .dropzone {
-                padding: 40px 15px;
-            }
-
-            .upload-icon {
-                font-size: 3rem;
-            }
-
-            .upload-text {
-                font-size: 1.2rem;
-            }
-
-            .supported-formats {
-                gap: 8px;
-            }
-
-            .format-badge {
-                padding: 6px 12px;
-                font-size: 0.7rem;
-            }
-
-            .result-item {
-                padding: 20px 15px;
-            }
-
-            .result-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .file-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-            }
-
-            .result-actions {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .btn {
-                width: 100%;
-                padding: 15px;
-                font-size: 1rem;
-            }
-
-            .alert {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                transform: translateY(-100px);
-                max-width: none;
-            }
-
-            .alert.show {
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            .subtitle {
-                font-size: 1rem;
-            }
-
-            .upload-text {
-                font-size: 1rem;
-            }
-
-            .upload-subtext {
-                font-size: 0.9rem;
-            }
-        }
-
-        .admin-link {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary);
-            color: var(--white);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            box-shadow: var(--shadow);
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .admin-link:hover {
-            transform: scale(1.1);
-            background: var(--primary-dark);
-        }
-
-        @media (max-width: 768px) {
-            .admin-link {
-                bottom: 15px;
-                right: 15px;
-                width: 45px;
-                height: 45px;
-                font-size: 1rem;
-            }
+            .container { padding: 10px; }
+            .upload-box { padding: 30px 15px; }
+            .result-actions { flex-direction: column; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="logo">
-                <i class="fas fa-cloud-upload-alt"></i>
-            </div>
-            <h1>Marya Vault</h1>
-            <p class="subtitle">Professional File Hosting • Permanent Storage • Up to 2GB</p>
+        <h1>🚀 Marya Vault</h1>
+        
+        <div class="upload-box" id="uploadBox">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Drop Files Here</div>
+            <div class="upload-subtext">or click to select files</div>
+            <input type="file" id="fileInput" class="file-input" multiple>
         </div>
-
-        <div class="upload-card">
-            <div class="dropzone" id="dropzone">
-                <div class="upload-icon">
-                    <i class="fas fa-file-upload"></i>
-                </div>
-                <div class="upload-text">Drop Files Here</div>
-                <div class="upload-subtext">or click to browse from your device</div>
-                <input type="file" id="fileInput" class="file-input" multiple>
-                
-                <div class="supported-formats">
-                    <span class="format-badge">
-                        <i class="fas fa-images"></i>
-                        Images
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-video"></i>
-                        Videos
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-file-alt"></i>
-                        Documents
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-music"></i>
-                        Audio
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-archive"></i>
-                        Archives
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <div class="results" id="results" style="display: none;">
-            <div class="results-header">
-                <i class="fas fa-folder-open"></i>
-                Your Files
-            </div>
-            <div id="resultsList"></div>
-        </div>
+        
+        <div class="results" id="results"></div>
     </div>
-
-    <a href="/admin.html" class="admin-link" title="Admin Panel">
-        <i class="fas fa-cog"></i>
-    </a>
-
+    
     <div id="alert" class="alert"></div>
 
     <script>
-        const dropzone = document.getElementById('dropzone');
+        console.log('🚀 Marya Vault loaded');
+
+        const uploadBox = document.getElementById('uploadBox');
         const fileInput = document.getElementById('fileInput');
         const results = document.getElementById('results');
-        const resultsList = document.getElementById('resultsList');
         const alert = document.getElementById('alert');
 
-        // Click to browse
-        dropzone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', handleFiles);
+        // Click to select files
+        uploadBox.onclick = () => {
+            console.log('Upload box clicked');
+            fileInput.click();
+        };
+
+        // File selection
+        fileInput.onchange = (e) => {
+            console.log('Files selected:', e.target.files.length);
+            handleFiles(e.target.files);
+        };
 
         // Drag and drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, preventDefaults);
-            document.body.addEventListener(eventName, preventDefaults);
-        });
-
-        function preventDefaults(e) {
+        uploadBox.ondragover = (e) => {
             e.preventDefault();
-            e.stopPropagation();
-        }
+            uploadBox.classList.add('dragover');
+        };
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropzone.addEventListener(eventName, highlight);
-        });
+        uploadBox.ondragleave = () => {
+            uploadBox.classList.remove('dragover');
+        };
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, unhighlight);
-        });
+        uploadBox.ondrop = (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            console.log('Files dropped:', e.dataTransfer.files.length);
+            handleFiles(e.dataTransfer.files);
+        };
 
-        function highlight() {
-            dropzone.classList.add('dragover');
-        }
-
-        function unhighlight() {
-            dropzone.classList.remove('dragover');
-        }
-
-        dropzone.addEventListener('drop', handleDrop);
-
-        function handleDrop(e) {
-            const files = e.dataTransfer.files;
-            handleFiles({ target: { files } });
-        }
-
-        function handleFiles(e) {
-            const files = Array.from(e.target.files);
-            if (files.length === 0) return;
+        async function handleFiles(files) {
+            console.log('Processing files:', files.length);
             
-            results.style.display = 'block';
-            files.forEach(uploadFile);
+            for (let file of files) {
+                await uploadFile(file);
+            }
         }
 
         async function uploadFile(file) {
-            if (file.size > 2147483648) { // 2GB
+            console.log('Uploading:', file.name);
+
+            if (file.size > 2000000000) { // 2GB limit
                 showAlert('File too large (max 2GB)', 'error');
                 return;
             }
 
-            const resultItem = createResultItem(file);
-            resultsList.appendChild(resultItem);
-
-            const formData = new FormData();
-            formData.append('file', file);
+            // Create result item
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.innerHTML = `
+                <div class="result-name">${file.name}</div>
+                <div class="result-info">Uploading... (${formatBytes(file.size)})</div>
+            `;
+            results.appendChild(resultItem);
 
             try {
-                console.log('Starting upload for:', file.name);
-                
+                const formData = new FormData();
+                formData.append('file', file);
+
+                console.log('Sending request...');
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
 
-                console.log('Upload response status:', response.status);
-                console.log('Upload response OK:', response.ok);
-
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Upload error response:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
 
                 const result = await response.json();
-                console.log('Upload result:', result);
+                console.log('Result:', result);
 
                 if (result.success) {
-                    updateResultItem(resultItem, result);
-                    showAlert(`${result.filename} uploaded successfully!`, 'success');
+                    resultItem.innerHTML = `
+                        <div class="result-name">${result.filename}</div>
+                        <div class="result-info">✅ Upload complete (${formatBytes(result.size)})</div>
+                        <div class="result-actions">
+                            <a href="${result.url}" target="_blank" class="btn">View File</a>
+                            <a href="${result.download}" class="btn btn-success">Download</a>
+                            <button onclick="copyText('${result.url}')" class="btn">Copy Link</button>
+                        </div>
+                    `;
+                    showAlert(`${result.filename} uploaded!`, 'success');
                 } else {
-                    throw new Error(result.error || 'Upload failed');
+                    throw new Error(result.error);
                 }
             } catch (error) {
-                console.error('Upload error:', error);
+                console.error('Upload failed:', error);
                 resultItem.innerHTML = `
-                    <div style="color: var(--error); font-weight: 600; text-align: center; padding: 20px;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Upload failed: ${error.message}
-                    </div>
+                    <div class="result-name">${file.name}</div>
+                    <div class="result-info" style="color: red;">❌ Upload failed: ${error.message}</div>
                 `;
                 showAlert('Upload failed: ' + error.message, 'error');
             }
         }
 
-        function createResultItem(file) {
-            const item = document.createElement('div');
-            item.className = 'result-item';
-            
-            const icon = getFileIcon(file.type, file.name);
-            
-            item.innerHTML = `
-                <div class="result-header">
-                    <div class="file-icon">
-                        <i class="${icon}"></i>
-                    </div>
-                    <div class="result-info">
-                        <h3>${file.name}</h3>
-                        <div class="result-meta">${formatBytes(file.size)} • Uploading...</div>
-                    </div>
-                </div>
-                <div class="progress">
-                    <div class="progress-bar" style="width: 45%;"></div>
-                </div>
-            `;
-            return item;
-        }
-
-        function updateResultItem(item, result) {
-            const icon = getFileIcon(result.contentType, result.filename);
-            
-            item.innerHTML = `
-                <div class="result-header">
-                    <div class="file-icon">
-                        <i class="${icon}"></i>
-                    </div>
-                    <div class="result-info">
-                        <h3>${result.filename}</h3>
-                        <div class="result-meta">${formatBytes(result.size)} • Upload Complete</div>
-                    </div>
-                </div>
-                <div class="result-actions">
-                    <a href="${result.url}" target="_blank" class="btn btn-primary">
-                        <i class="fas fa-eye"></i> View File
-                    </a>
-                    <a href="${result.download}" class="btn btn-success">
-                        <i class="fas fa-download"></i> Download
-                    </a>
-                    <button onclick="copyToClipboard('${result.url}')" class="btn btn-primary">
-                        <i class="fas fa-copy"></i> Copy Link
-                    </button>
-                </div>
-            `;
-        }
-
-        function getFileIcon(type, filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            
-            if (type && type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-                return 'fas fa-image';
-            } else if (type && type.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
-                return 'fas fa-video';
-            } else if (type && type.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
-                return 'fas fa-music';
-            } else if (['pdf'].includes(ext)) {
-                return 'fas fa-file-pdf';
-            } else if (['doc', 'docx'].includes(ext)) {
-                return 'fas fa-file-word';
-            } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
-                return 'fas fa-archive';
-            } else {
-                return 'fas fa-file';
-            }
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('Link copied!', 'success');
+            });
         }
 
         function formatBytes(bytes) {
-            if (bytes === 0) return '0 Bytes';
+            if (bytes === 0) return '0 B';
             const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const sizes = ['B', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        function copyToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showAlert('Link copied to clipboard!', 'success');
-                }).catch(() => {
-                    fallbackCopyTextToClipboard(text);
-                });
-            } else {
-                fallbackCopyTextToClipboard(text);
-            }
-        }
-
-        function fallbackCopyTextToClipboard(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.opacity = '0';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                showAlert('Link copied to clipboard!', 'success');
-            } catch (err) {
-                showAlert('Could not copy link', 'error');
-            }
-            
-            document.body.removeChild(textArea);
+            return Math.round(bytes / Math.pow(k, i)) + ' ' + sizes[i];
         }
 
         function showAlert(message, type) {
-            alert.innerHTML = `
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
-                <span>${message}</span>
-            `;
+            alert.textContent = message;
             alert.className = `alert ${type} show`;
-            
-            setTimeout(() => {
-                alert.classList.remove('show');
-            }, 4000);
+            setTimeout(() => alert.classList.remove('show'), 3000);
         }
-
-        // Touch support for mobile
-        let touchStartY = 0;
-        let touchEndY = 0;
-
-        dropzone.addEventListener('touchstart', (e) => {
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
-
-        dropzone.addEventListener('touchend', (e) => {
-            touchEndY = e.changedTouches[0].screenY;
-            if (Math.abs(touchEndY - touchStartY) < 10) {
-                fileInput.click();
-            }
-        }, { passive: true });
     </script>
 </body>
 </html>
