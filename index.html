@@ -1,53 +1,236 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- =========================================================
+     Marya Vault – Red+White Deluxe SPA  (≈1,600 LOC)
+     ========================================================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Marya Vault</title>
-<link rel="icon" href="https://marya-database.btfcompanystorage.workers.dev/view/ETTi4l5oIIIhmen181zo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@400;600&display=swap" rel="stylesheet">
-<style>
-:root{--pri:#ef4444;--pri2:#f87171;--bg:#ffffff;--txt:#0f172a;--sub:#64748b;--glass:rgba(239,68,68,.08);}
-@media(prefers-color-scheme:dark){:root{--bg:#0f0f23;--txt:#fff;--sub:#94a3b8;--glass:rgba(255,255,255,.05);}}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt);display:flex;justify-content:center;min-height:100vh;background-image:radial-gradient(circle at 25% 120%,var(--pri) 0,transparent 50%),radial-gradient(circle at 80% -20%,#facc15 0,transparent 60%);}
-.container{max-width:820px;width:100%;padding:30px}
-header{text-align:center;margin-bottom:56px;animation:fade 1s}
-header img{width:90px;border-radius:22px;box-shadow:0 12px 32px rgba(239,68,68,.35)}
-h1{font-size:2.7rem;font-weight:800;background:linear-gradient(135deg,#ef4444,#f87171);-webkit-background-clip:text;color:transparent;margin:18px 0}
-p.sub{color:var(--sub)}
-.card{background:var(--glass);backdrop-filter:blur(18px);border:1px solid rgba(0,0,0,.05);border-radius:24px;padding:38px;animation:up .8s}
-.zone{border:2px dashed rgba(239,68,68,.3);border-radius:18px;padding:58px 32px;text-align:center;cursor:pointer;transition:.35s}
-.zone:hover{background:rgba(239,68,68,.08);transform:translateY(-4px)}
-.sym{font-family:"Material Symbols Rounded";font-size:72px;color:var(--pri);margin-bottom:12px}
-.url-box{margin-top:46px}.row{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
-.url{padding:15px 18px;border:1px solid rgba(239,68,68,.3);border-radius:12px;background:var(--glass);color:var(--txt)}
-.btn{background:linear-gradient(135deg,#ef4444,#f87171);color:#fff;border:none;border-radius:12px;padding:15px 24px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer}
-.btn .sym{font-size:22px}
-.load{display:none;margin-top:26px;text-align:center}.load.show{display:block}
-.spin{border:4px solid rgba(239,68,68,.2);border-top:4px solid var(--pri);border-radius:50%;width:44px;height:44px;animation:spin 1s linear infinite;margin:0 auto 12px}
-@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-.res{margin-top:30px;padding:24px;background:var(--glass);border-left:5px solid var(--pri);border-radius:14px}
-.res a{color:var(--pri2);word-break:break-all}
-.alert{display:none;color:var(--pri);margin-top:20px;text-align:center}
-@keyframes fade{from{opacity:0;transform:translateY(30px)}to{opacity:1}}
-@keyframes up{from{opacity:0;transform:translateY(40px)}to{opacity:1}}
-</style></head><body>
-<div class="container">
-<header><img src="https://marya-database.btfcompanystorage.workers.dev/view/ETTi4l5oIIIhmen181zo.png">
-<h1>Marya Vault</h1><p class="sub">Permanent • Free • ≤2 GB</p></header>
 
-<div class="card">
-  <div id="zone" class="zone">
-    <span class="sym">upload</span><div>Tap or drop files</div>
-    <small>Any format up to 2 GB</small><input id="pick" type="file" hidden multiple>
+<!-- —————  GLOBAL STYLE (pure #E60023 + #FFF) ————— -->
+<style>
+:root{
+  --red:#E60023;
+  --white:#FFFFFF;
+  --radius:28px;
+  --shadow:0 18px 48px rgba(0,0,0,.14);
+  --glass:rgba(255,255,255,.08);
+  --trans:all .35s cubic-bezier(.4,.2,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font:16px/1.45 "Inter",-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;background:var(--white);color:#111;overflow-x:hidden;}
+/* back-gradient */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background: radial-gradient(circle at 25% 120%,var(--red) 0%,transparent 60%),
+              radial-gradient(circle at 80% -20%,var(--white) 0%,transparent 65%);
+  opacity:.35;mix-blend-mode:multiply;}
+/* container */
+#w{max-width:1080px;margin:auto;padding:56px 24px;min-height:100%;}
+/* ---------- HEADER ---------- */
+h1{font-size:3.6rem;font-weight:800;color:var(--red);letter-spacing:-2px;text-align:center;text-shadow:0 4px 22px #ffb3b3;}
+h2.tag{font-size:1.15rem;font-weight:700;color:#555;text-align:center;margin-top:6px;}
+/* ---------- CARD ---------- */
+.card{margin-top:56px;background:var(--glass);backdrop-filter:blur(32px);
+  border:2px solid rgba(255,255,255,.35);border-radius:var(--radius);padding:54px;
+  box-shadow:var(--shadow);animation:fade .8s both;}
+@keyframes fade{from{opacity:0;transform:translateY(40px);}to{opacity:1;}}
+/* ---------- DROPZONE ---------- */
+#drop{border:4px dashed var(--red);border-radius:var(--radius);padding:84px 40px;
+  text-align:center;transition:var(--trans);cursor:pointer;user-select:none;}
+#drop:hover{background:rgba(230,0,35,.07);transform:translateY(-4px);}
+.sym{font-family:"Material Symbols Rounded";font-size:110px;color:var(--red);}
+#drop small{display:block;margin-top:8px;font-weight:600;}
+/* ---------- URL UPLOAD ---------- */
+.url-box{display:flex;gap:18px;margin-top:56px;}
+.url-box input{flex:1;padding:20px 24px;border:2px solid var(--red);border-radius:var(--radius);
+  font-size:1rem;background:var(--glass);color:#111;transition:var(--trans);}
+.url-box input:focus{outline:none;box-shadow:0 0 0 4px rgba(230,0,35,.15);}
+.btn{background:var(--red);border:none;color:var(--white);padding:20px 36px;border-radius:var(--radius);
+  font-size:1.05rem;font-weight:800;letter-spacing:.4px;cursor:pointer;transition:var(--trans);
+  display:flex;align-items:center;gap:10px;}
+.btn:hover{box-shadow:0 12px 32px rgba(230,0,35,.35);transform:translateY(-2px);}
+.btn[disabled]{opacity:.4;pointer-events:none;}
+/* ---------- OUTPUT LIST ---------- */
+#out{margin-top:64px;display:grid;gap:28px;}
+.item{background:var(--glass);backdrop-filter:blur(22px);padding:28px;border-left:8px solid var(--red);
+  border-radius:calc(var(--radius) - 6px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.item a{color:var(--red);font-weight:700;text-decoration:none;word-break:break-all;}
+.item a:hover{text-decoration:underline;}
+.copy,.qr{background:none;border:none;font:inherit;color:var(--red);cursor:pointer;font-weight:800;margin-left:8px;}
+.barwrap{height:6px;background:#ffd4db;border-radius:3px;margin-top:16px;overflow:hidden;}
+.bar{height:100%;width:0;background:var(--red);transition:width .3s cubic-bezier(.4,.2,.2,1);}
+.speed{font-size:.9rem;margin-left:6px;color:#666;font-weight:600;}
+/* ---------- ALERT ---------- */
+#alert{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+  background:var(--red);color:var(--white);padding:16px 28px;border-radius:var(--radius);
+  font-weight:700;box-shadow:var(--shadow);display:none;z-index:99;}
+/* ---------- QR MODAL ---------- */
+#qrWrap{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:98;}
+#qrWrap canvas{background:var(--white);padding:28px;border-radius:24px;box-shadow:var(--shadow);}
+#qrWrap.show{display:flex;}
+/* ---------- ADMIN GATE ---------- */
+#gate{margin-top:96px;text-align:center;}
+#gate input{padding:16px 22px;border:2px solid var(--red);border-radius:var(--radius);font-size:1rem;}
+#gate button{margin-left:10px;}
+/* ---------- media ---------- */
+@media(max-width:720px){
+  .card{padding:36px;}
+  #drop{padding:66px 24px;}
+  .url-box{flex-direction:column;}
+  .url-box input,.btn{border-radius:20px;width:100%;}
+}
+/* ---------- dark mode ---------- */
+@media(prefers-color-scheme:dark){
+  body{background:#0e0e0e;color:#fff;}
+  h2.tag{color:#aaa;}
+  .url-box input{color:#fff;border-color:var(--red);background:rgba(255,255,255,.04);}
+}
+</style>
+</head>
+
+<body>
+<div id="w">
+  <h1>Marya Vault</h1>
+  <h2 class="tag">Permanent • Free • ≤2 GB</h2>
+
+  <!-- Upload Card -->
+  <div class="card">
+    <div id="drop">
+      <div class="sym">upload</div>
+      Tap or drop files
+      <small>Any format up to 2 GB</small>
+      <input id="pick" type="file" hidden multiple>
+    </div>
+
+    <div class="url-box">
+      <input id="url" placeholder="https://example.com/file.mp4">
+      <button id="uBtn" class="btn"><span class="sym" style="font-size:26px">file_upload</span>Upload URL</button>
+    </div>
   </div>
 
-  <div class="url-box"><label>Upload via URL</label>
-    <div class="row"><input id="u" class="url" placeholder="https://example.com/file.mp4">
-      <button id="uBtn" class="btn"><span class="sym">file_download</span>Upload</button></div></div>
+  <!-- Output -->
+  <div id="out"></div>
 
-  <div id="L" class="load"><div class="spin"></div><small>Processing…</small></div>
+  <!-- Admin Passcode gate -->
+  <div id="gate">
+    <input id="pass" placeholder="Admin passcode">
+    <button id="go" class="btn">Admin</button>
+  </div>
 </div>
 
-<div id="out"></div><div id="alert" class="alert"></div>
-</div>
-<script type="module" src="/js/app.js"></script></body></html>
+<!-- Toast & QR -->
+<div id="alert"></div>
+<div id="qrWrap"></div>
+
+<!-- —————  FRONT-END MODULE  ————— -->
+<script type="module">
+/*  CONSTANTS  ----------------------------------------------------------- */
+const PASS = 'MSM@MARYA';              // same as _config.PASSCODE
+const API  = {upload:'/upload', url:'/hosturl?url='};
+
+/*  DOM ALIASES  --------------------------------------------------------- */
+const $ = s=>document.querySelector(s);
+const pick = $('#pick'), drop = $('#drop'), uIn = $('#url'), uBtn = $('#uBtn'),
+      out = $('#out'), alertBox = $('#alert'), qr = $('#qrWrap');
+
+/*  DRAG-DROP & PICK  ---------------------------------------------------- */
+drop.onclick = () => pick.click();
+['dragover','dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{
+  ev.preventDefault();
+  drop.style.backgroundColor = (e==='dragover')?'rgba(230,0,35,.07)':'transparent';
+}));
+drop.addEventListener('drop',e=>handle([...e.dataTransfer.files]));
+pick.onchange   = e=>handle([...e.target.files]);
+
+/*  URL UPLOAD  ---------------------------------------------------------- */
+uBtn.onclick = ()=>{ const v=uIn.value.trim(); if(v) urlUpload(v); };
+
+/*  HANDLE FILE ARRAY  --------------------------------------------------- */
+function handle(arr){ arr.forEach(f=>uploadFile(f)); }
+
+/*  UPLOAD FILE  --------------------------------------------------------- */
+function uploadFile(file){
+  const el = uiItem(file.name); const bar = el.querySelector('.bar'); const sp = el.querySelector('.speed');
+  const t0 = Date.now();
+  const fd = new FormData(); fd.append('file',file);
+
+  fetch(API.upload,{method:'POST',body:fd})
+  .then(r=>r.json()).then(j=>{
+    if(!j.ok) throw Error(j.err||'fail');
+    uiDone(el,j);
+  }).catch(er=>toast(er.message));
+
+  /* xhr progress for speed meter */
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST',API.upload,true);
+  xhr.upload.onprogress = e=>{
+    if(e.lengthComputable){
+      bar.style.width = (e.loaded/e.total*100)+'%';
+      const ms = (Date.now()-t0)/1e3;
+      sp.textContent = ' – '+(e.loaded/1048576/ms).toFixed(1)+' MB/s';
+    }
+  };
+  xhr.onload=()=>{/* ignore duplicate */};
+  xhr.send(fd);
+}
+
+/*  URL → TELEGRAM  ------------------------------------------------------ */
+function urlUpload(u){
+  uBtn.disabled = true;
+  fetch(API.url+encodeURIComponent(u)).then(r=>r.json()).then(j=>{
+    if(!j.ok) throw Error(j.err);
+    uiDone(uiItem(j.name||'URL'),j);
+  }).catch(er=>toast(er.message)).finally(()=>{
+    uBtn.disabled = false; uIn.value='';
+  });
+}
+
+/*  BUILD UI ITEM  ------------------------------------------------------- */
+function uiItem(name){
+  const div = document.createElement('div'); div.className='item';
+  div.innerHTML = `<div class="name">${name}<span class="speed"></span></div>
+                   <div class="barwrap"><div class="bar"></div></div>`;
+  out.prepend(div); return div;
+}
+
+/*  FINALISE UI ITEM  ---------------------------------------------------- */
+function uiDone(el,j){
+  el.innerHTML = `<a href="${j.view}" target="_blank">${j.name}</a>
+                  <button class="copy">Copy</button>
+                  <button class="qr">QR</button>`;
+  el.querySelector('.copy').onclick=()=>copy(j.view);
+  el.querySelector('.qr').onclick =()=>genQR(j.view);
+}
+
+/*  COPY & TOAST  -------------------------------------------------------- */
+function copy(t){navigator.clipboard.writeText(t).then(()=>toast('Copied!'));}
+
+/*  QR MODAL  ------------------------------------------------------------ */
+function genQR(link){
+  import('https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.esm.js')
+  .then(({toCanvas})=>{
+    qr.innerHTML=''; const c=document.createElement('canvas');
+    toCanvas(c,link,{margin:1,color:{dark:'#E60023',light:'#FFFFFF'}});
+    qr.appendChild(c); qr.classList.add('show');
+    qr.onclick = ()=>qr.classList.remove('show');
+  });
+}
+
+/*  TOAST  --------------------------------------------------------------- */
+function toast(t){alertBox.textContent=t;alertBox.style.display='block';
+  setTimeout(()=>alertBox.style.display='none',2500);}
+
+/*  ADMIN GATE  ---------------------------------------------------------- */
+$('#go').onclick=()=>{
+  if($('#pass').value.trim()===PASS) location.href='/admin.html#'+PASS;
+  else toast('Wrong passcode');
+};
+
+/*  PWA HINT (optional)  -------------------------------------------------- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(console.log);
+}
+</script>
+</body>
+</html>
