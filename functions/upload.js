@@ -1,18 +1,26 @@
 import { BOT_TOKEN, CHANNEL_ID, MAX_SIZE } from './_config.js';
 
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type'
+};
+
 export async function onRequest({ request, env }) {
   if (request.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST' }
-    });
+    return new Response(null, { headers: cors });
   }
 
   try {
     const formData = await request.formData();
     const file = formData.get('file');
 
-    if (!file || file.size > MAX_SIZE) {
-      throw new Error('Invalid file or too large');
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
+
+    if (file.size > MAX_SIZE) {
+      throw new Error('File too large (max 2GB)');
     }
 
     // Upload to Telegram
@@ -26,45 +34,64 @@ export async function onRequest({ request, env }) {
     });
 
     const telegramResult = await telegramResponse.json();
-    if (!telegramResult.ok) throw new Error('Telegram upload failed');
+
+    if (!telegramResult.ok) {
+      throw new Error(telegramResult.description || 'Telegram upload failed');
+    }
 
     // Get file URL
     const fileId = telegramResult.result.document.file_id;
     const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
     const getFileResult = await getFileResponse.json();
-    if (!getFileResult.ok) throw new Error('Failed to get file URL');
 
-    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileResult.result.file_path}`;
+    if (!getFileResult.ok) {
+      throw new Error('Failed to get file URL');
+    }
 
-    // Generate simple slug
+    const filePath = getFileResult.result.file_path;
+    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+
+    // Generate slug with extension
     const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substr(2, 6);
-    const extension = file.name.includes('.') ? file.name.split('.').pop() : '';
-    const slug = `${timestamp}${random}${extension ? '.' + extension : ''}`;
+    const random = Math.random().toString(36).substr(2, 8);
+    const lastDot = file.name.lastIndexOf('.');
+    const extension = lastDot !== -1 ? file.name.substring(lastDot) : '';
+    const nameWithoutExt = lastDot !== -1 ? file.name.substring(0, lastDot) : file.name;
+    const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
+    const slug = `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
+
+    // Generate file ID in MSMfile format
+    const fileNumber = Math.floor(Math.random() * 100);
+    const randomPart1 = Math.random().toString(36).substr(2, 3);
+    const randomPart2 = Math.random().toString(36).substr(2, 3);
+    const fileIdCode = `MSMfile${fileNumber}/${randomPart1}-${randomPart2}`;
 
     // Store in KV
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
         filename: file.name,
         size: file.size,
-        type: file.type,
-        uploadedAt: Date.now()
+        contentType: file.type,
+        uploadedAt: Date.now(),
+        fileIdCode: fileIdCode
       }
     });
 
     const baseUrl = new URL(request.url).origin;
-    const fileUrl = `${baseUrl}/m/${slug}`;
+    const streamUrl = `${baseUrl}/btf/${slug}/${fileIdCode}`;
+    const downloadUrl = `${baseUrl}/btf/${slug}/${fileIdCode}?dl=1`;
 
     return new Response(JSON.stringify({
       success: true,
       filename: file.name,
       size: file.size,
-      url: fileUrl
+      contentType: file.type,
+      view_url: streamUrl,
+      stream_url: streamUrl,
+      download_url: downloadUrl,
+      file_id: fileIdCode
     }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+      headers: { 'Content-Type': 'application/json', ...cors }
     });
 
   } catch (error) {
@@ -73,10 +100,7 @@ export async function onRequest({ request, env }) {
       error: error.message 
     }), {
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+      headers: { 'Content-Type': 'application/json', ...cors }
     });
   }
 }
