@@ -2,41 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marya Vault - Professional File Hosting</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Marya Vault</title>
     <style>
-        :root {
-            --primary: #dc143c;
-            --primary-dark: #b91c1c;
-            --white: #ffffff;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-600: #6b7280;
-            --gray-900: #111827;
-            --success: #10b981;
-            --error: #ef4444;
-            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            /* ✅ CRITICAL: Mobile Safari fix */
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: rgba(220, 20, 60, 0.3);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--white) 0%, var(--gray-100) 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
             min-height: 100vh;
-            padding: 15px;
-            color: var(--gray-900);
+            padding: 20px;
+            color: #111827;
             line-height: 1.6;
-            /* ✅ Mobile optimization */
             -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
+            touch-action: manipulation;
         }
 
         .container {
@@ -52,13 +36,13 @@
         .logo {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, #dc143c, #b91c1c);
             border-radius: 50%;
             margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--shadow);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             animation: pulse 3s ease-in-out infinite alternate;
         }
 
@@ -67,34 +51,33 @@
             100% { transform: scale(1.05); }
         }
 
-        .logo i {
+        .logo::before {
+            content: "☁";
             font-size: 2rem;
-            color: var(--white);
+            color: white;
         }
 
         h1 {
             font-size: 3rem;
             font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #dc143c;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
         .subtitle {
-            color: var(--gray-600);
+            color: #6b7280;
             font-size: 1.2rem;
             font-weight: 500;
         }
 
         .upload-card {
-            background: var(--white);
-            border: 2px solid var(--primary);
+            background: white;
+            border: 3px solid #dc143c;
             border-radius: 20px;
-            padding: 40px;
+            padding: 40px 20px;
             margin-bottom: 30px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
         }
@@ -106,55 +89,47 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(220, 20, 60, 0.02) 0%, rgba(220, 20, 60, 0.01) 100%);
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.02) 0%, transparent 100%);
             pointer-events: none;
         }
 
-        /* ✅ CRITICAL FIX: Mobile click area */
         .dropzone {
-            border: 3px dashed rgba(220, 20, 60, 0.3);
+            border: 3px dashed rgba(220, 20, 60, 0.4);
             border-radius: 15px;
             padding: 60px 20px;
             text-align: center;
-            cursor: pointer; /* ✅ CRITICAL for mobile Safari */
+            cursor: pointer;
             transition: all 0.3s ease;
             background: rgba(220, 20, 60, 0.02);
             position: relative;
-            /* ✅ CRITICAL: Touch optimizations */
-            touch-action: manipulation;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            /* ✅ Ensure clickable area */
             min-height: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .dropzone:hover,
-        .dropzone.dragover,
         .dropzone:active,
-        .dropzone:focus {
-            border-color: var(--primary);
+        .dropzone.active {
+            border-color: #dc143c;
             background: rgba(220, 20, 60, 0.08);
-            transform: translateY(-5px);
-        }
-
-        /* ✅ CRITICAL: Touch states for mobile */
-        .dropzone:active {
-            transform: translateY(0) scale(0.98);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(220, 20, 60, 0.2);
         }
 
         .upload-icon {
             font-size: 4rem;
-            color: var(--primary);
             margin-bottom: 20px;
             animation: bounce 2s ease-in-out infinite;
-            /* ✅ Prevent touch interference */
             pointer-events: none;
+        }
+
+        .upload-icon::before {
+            content: "📁";
         }
 
         @keyframes bounce {
@@ -167,16 +142,14 @@
         .upload-text {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--primary);
+            color: #dc143c;
             margin-bottom: 10px;
-            /* ✅ Prevent touch interference */
             pointer-events: none;
         }
 
         .upload-subtext {
-            color: var(--gray-600);
+            color: #6b7280;
             font-size: 1rem;
-            /* ✅ Prevent touch interference */
             pointer-events: none;
         }
 
@@ -186,22 +159,18 @@
             gap: 10px;
             margin-top: 20px;
             flex-wrap: wrap;
-            /* ✅ Prevent touch interference */
             pointer-events: none;
         }
 
         .format-badge {
-            background: var(--primary);
-            color: var(--white);
+            background: #dc143c;
+            color: white;
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .file-input {
@@ -210,6 +179,11 @@
 
         .results {
             margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
         }
 
         .results-header {
@@ -219,13 +193,17 @@
             margin-bottom: 20px;
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--primary);
+            color: #dc143c;
+        }
+
+        .results-header::before {
+            content: "📂";
         }
 
         .result-item {
-            background: var(--white);
+            background: white;
             border: 1px solid rgba(220, 20, 60, 0.2);
-            border-left: 4px solid var(--primary);
+            border-left: 4px solid #dc143c;
             border-radius: 12px;
             padding: 25px;
             margin-bottom: 20px;
@@ -248,25 +226,25 @@
         .file-icon {
             width: 45px;
             height: 45px;
-            background: var(--primary);
+            background: #dc143c;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--white);
+            color: white;
             font-size: 1.2rem;
         }
 
         .result-info h3 {
             font-size: 1.2rem;
             font-weight: 600;
-            color: var(--gray-900);
+            color: #111827;
             margin-bottom: 5px;
             word-break: break-all;
         }
 
         .result-meta {
-            color: var(--gray-600);
+            color: #6b7280;
             font-size: 0.9rem;
         }
 
@@ -274,6 +252,7 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
+            margin-top: 15px;
         }
 
         .btn {
@@ -291,26 +270,24 @@
             text-align: center;
             justify-content: center;
             min-width: 120px;
-            /* ✅ Mobile touch optimization */
             touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
         }
 
         .btn-primary {
-            background: var(--primary);
-            color: var(--white);
+            background: #dc143c;
+            color: white;
         }
 
         .btn-primary:hover,
         .btn-primary:active {
-            background: var(--primary-dark);
+            background: #b91c1c;
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(220, 20, 60, 0.3);
         }
 
         .btn-success {
-            background: var(--success);
-            color: var(--white);
+            background: #10b981;
+            color: white;
         }
 
         .btn-success:hover,
@@ -322,7 +299,7 @@
 
         .progress-container {
             margin: 15px 0;
-            background: var(--gray-100);
+            background: #f3f4f6;
             border-radius: 10px;
             padding: 4px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -330,7 +307,7 @@
 
         .progress-bar {
             height: 20px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(90deg, #dc143c, #b91c1c);
             border-radius: 8px;
             width: 0%;
             transition: width 0.3s ease;
@@ -357,7 +334,7 @@
         .progress-text {
             text-align: center;
             font-weight: 600;
-            color: var(--primary);
+            color: #dc143c;
             margin-top: 8px;
             font-size: 0.9rem;
         }
@@ -368,12 +345,12 @@
             right: 20px;
             padding: 15px 25px;
             border-radius: 10px;
-            color: var(--white);
+            color: white;
             font-weight: 600;
             z-index: 1000;
             transform: translateX(300px);
             transition: transform 0.3s ease;
-            box-shadow: var(--shadow);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             max-width: 90%;
             display: flex;
             align-items: center;
@@ -385,21 +362,17 @@
         }
 
         .alert.success {
-            background: var(--success);
+            background: #10b981;
         }
 
         .alert.error {
-            background: var(--error);
+            background: #ef4444;
         }
 
         /* Mobile Optimizations */
         @media (max-width: 768px) {
             body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 0;
+                padding: 15px;
             }
 
             h1 {
@@ -411,19 +384,13 @@
                 height: 60px;
             }
 
-            .logo i {
-                font-size: 1.5rem;
-            }
-
             .upload-card {
-                padding: 25px 15px;
+                padding: 30px 15px;
             }
 
             .dropzone {
                 padding: 40px 15px;
-                /* ✅ CRITICAL: Larger touch area on mobile */
                 min-height: 180px;
-                border-width: 2px;
             }
 
             .upload-icon {
@@ -432,15 +399,6 @@
 
             .upload-text {
                 font-size: 1.2rem;
-            }
-
-            .supported-formats {
-                gap: 8px;
-            }
-
-            .format-badge {
-                padding: 6px 12px;
-                font-size: 0.7rem;
             }
 
             .result-item {
@@ -453,12 +411,6 @@
                 gap: 10px;
             }
 
-            .file-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-            }
-
             .result-actions {
                 flex-direction: column;
                 width: 100%;
@@ -468,8 +420,7 @@
                 width: 100%;
                 padding: 15px;
                 font-size: 1rem;
-                /* ✅ CRITICAL: Minimum touch target size */
-                min-height: 48px;
+                min-height: 50px;
             }
 
             .alert {
@@ -493,72 +444,36 @@
             .subtitle {
                 font-size: 1rem;
             }
-
-            .upload-text {
-                font-size: 1rem;
-            }
-
-            .upload-subtext {
-                font-size: 0.9rem;
-            }
-
-            .dropzone {
-                padding: 30px 10px;
-                min-height: 160px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">
-                <i class="fas fa-cloud-upload-alt"></i>
-            </div>
+            <div class="logo"></div>
             <h1>Marya Vault</h1>
             <p class="subtitle">Professional File Hosting • Permanent Storage • Up to 2GB</p>
         </div>
 
         <div class="upload-card">
-            <!-- ✅ CRITICAL: Added explicit role and tabindex for accessibility -->
-            <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Click or drop files to upload">
-                <div class="upload-icon">
-                    <i class="fas fa-file-upload"></i>
-                </div>
+            <div class="dropzone" id="dropzone">
+                <div class="upload-icon"></div>
                 <div class="upload-text">Drop Files Here</div>
                 <div class="upload-subtext">or click to browse from your device</div>
                 <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
                 
                 <div class="supported-formats">
-                    <span class="format-badge">
-                        <i class="fas fa-images"></i>
-                        Images
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-video"></i>
-                        Videos
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-file-alt"></i>
-                        Documents
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-music"></i>
-                        Audio
-                    </span>
-                    <span class="format-badge">
-                        <i class="fas fa-archive"></i>
-                        Archives
-                    </span>
+                    <span class="format-badge">📷 Images</span>
+                    <span class="format-badge">🎥 Videos</span>
+                    <span class="format-badge">📄 Documents</span>
+                    <span class="format-badge">🎵 Audio</span>
+                    <span class="format-badge">📦 Archives</span>
                 </div>
             </div>
         </div>
 
-        <div class="results" id="results" style="display: none;">
-            <div class="results-header">
-                <i class="fas fa-folder-open"></i>
-                Your Files
-            </div>
+        <div class="results" id="results">
+            <div class="results-header">Your Files</div>
             <div id="resultsList"></div>
         </div>
     </div>
@@ -566,13 +481,12 @@
     <div id="alert" class="alert"></div>
 
     <script>
-        console.log('🚀 Marya Vault - Mobile Optimized Version Loading...');
+        console.log('🚀 Marya Vault - Simple Version Loading...');
 
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Initializing mobile-friendly handlers...');
+        // Wait for page to fully load
+        window.addEventListener('load', function() {
+            console.log('✅ Page loaded - Initializing...');
 
-            // Get elements
             const dropzone = document.getElementById('dropzone');
             const fileInput = document.getElementById('fileInput');
             const results = document.getElementById('results');
@@ -580,86 +494,62 @@
             const alert = document.getElementById('alert');
 
             if (!dropzone || !fileInput) {
-                console.error('❌ Critical elements missing!');
+                console.error('❌ Elements not found!');
                 return;
             }
 
-            // ✅ CRITICAL FIX: Multiple event handlers for maximum compatibility
-            function openFileDialog(e) {
-                console.log('🎯 File dialog triggered via:', e.type);
+            // CRITICAL: Multiple event handlers for maximum compatibility
+            function triggerFileSelect(e) {
+                console.log('🎯 File select triggered:', e.type);
                 e.preventDefault();
                 e.stopPropagation();
+                
+                dropzone.classList.add('active');
+                setTimeout(() => dropzone.classList.remove('active'), 200);
                 
                 try {
                     fileInput.click();
-                } catch (error) {
-                    console.error('File input click error:', error);
-                    // Fallback method
-                    fileInput.focus();
-                    if (fileInput.click) {
-                        fileInput.click();
-                    }
+                } catch (err) {
+                    console.error('Click failed:', err);
                 }
             }
 
-            // ✅ CRITICAL: Multiple event types for mobile compatibility
-            dropzone.addEventListener('click', openFileDialog, { passive: false });
-            dropzone.addEventListener('touchstart', openFileDialog, { passive: false });
+            // Add ALL possible event listeners
+            dropzone.addEventListener('click', triggerFileSelect);
+            dropzone.addEventListener('touchstart', triggerFileSelect);
             dropzone.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                console.log('🖱️ Touch end detected');
-                openFileDialog(e);
-            }, { passive: false });
-
-            // ✅ Keyboard support for accessibility
-            dropzone.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    openFileDialog(e);
-                }
+                triggerFileSelect(e);
             });
 
-            // File input change handler
+            // File input change
             fileInput.addEventListener('change', function(e) {
                 console.log('📁 Files selected:', e.target.files.length);
                 if (e.target.files && e.target.files.length > 0) {
-                    handleFiles(e.target.files);
+                    handleFiles(Array.from(e.target.files));
                 }
             });
 
-            // ✅ Drag and drop handlers (with mobile considerations)
-            function handleDragOver(e) {
+            // Drag and drop
+            dropzone.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                dropzone.classList.add('dragover');
-                console.log('📋 Drag over detected');
-            }
+                dropzone.classList.add('active');
+            });
 
-            function handleDragLeave(e) {
+            dropzone.addEventListener('dragleave', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                dropzone.classList.remove('dragover');
-            }
+                dropzone.classList.remove('active');
+            });
 
-            function handleDrop(e) {
+            dropzone.addEventListener('drop', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                dropzone.classList.remove('dragover');
-                
-                console.log('📋 Files dropped:', e.dataTransfer?.files?.length || 0);
-                
-                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    handleFiles(e.dataTransfer.files);
+                dropzone.classList.remove('active');
+                console.log('📋 Files dropped');
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    handleFiles(Array.from(e.dataTransfer.files));
                 }
-            }
+            });
 
-            // Add drag and drop listeners
-            dropzone.addEventListener('dragover', handleDragOver);
-            dropzone.addEventListener('dragenter', handleDragOver);
-            dropzone.addEventListener('dragleave', handleDragLeave);
-            dropzone.addEventListener('drop', handleDrop);
-
-            // Main file handling function
             function handleFiles(files) {
                 console.log('📂 Processing files:', files.length);
                 
@@ -668,18 +558,15 @@
                     return;
                 }
                 
-                results.style.display = 'block';
+                results.classList.add('show');
                 
-                Array.from(files).forEach(file => {
-                    uploadFileWithProgress(file);
-                });
+                files.forEach(uploadFile);
             }
 
-            // Upload with progress tracking
-            function uploadFileWithProgress(file) {
-                console.log('🚀 Starting upload:', file.name, file.size);
+            function uploadFile(file) {
+                console.log('🚀 Uploading:', file.name, file.size);
 
-                if (file.size > 2147483648) { // 2GB
+                if (file.size > 2147483648) {
                     showAlert('File too large (max 2GB)', 'error');
                     return;
                 }
@@ -691,61 +578,49 @@
                 const progressText = resultItem.querySelector('.progress-text');
                 const resultMeta = resultItem.querySelector('.result-meta');
 
-                // Use XMLHttpRequest for progress tracking
                 const xhr = new XMLHttpRequest();
 
-                // Track upload progress
-                xhr.upload.addEventListener('progress', (e) => {
+                xhr.upload.addEventListener('progress', function(e) {
                     if (e.lengthComputable) {
-                        const percentComplete = Math.round((e.loaded / e.total) * 100);
-                        
-                        progressBar.style.width = percentComplete + '%';
-                        progressText.textContent = `${percentComplete}% uploaded`;
-                        resultMeta.textContent = `${formatBytes(e.loaded)} of ${formatBytes(e.total)} • ${percentComplete}%`;
-                        
-                        console.log(`📊 Upload progress: ${percentComplete}%`);
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressText.textContent = percent + '% uploaded';
+                        resultMeta.textContent = formatBytes(e.loaded) + ' of ' + formatBytes(e.total) + ' • ' + percent + '%';
+                        console.log('📊 Progress:', percent + '%');
                     }
                 });
 
-                // Handle completion
-                xhr.addEventListener('load', () => {
-                    console.log('✅ Upload completed:', xhr.status);
+                xhr.addEventListener('load', function() {
+                    console.log('✅ Upload complete:', xhr.status);
                     
                     if (xhr.status === 200) {
                         try {
                             const result = JSON.parse(xhr.responseText);
                             if (result.success) {
                                 updateResultItemSuccess(resultItem, result);
-                                showAlert(`${result.filename} uploaded successfully!`, 'success');
+                                showAlert(result.filename + ' uploaded!', 'success');
                             } else {
-                                throw new Error(result.error || 'Upload failed');
+                                throw new Error(result.error);
                             }
-                        } catch (parseError) {
-                            updateResultItemError(resultItem, file, 'Invalid server response');
-                            showAlert('Upload failed: Invalid response', 'error');
+                        } catch (err) {
+                            updateResultItemError(resultItem, file, 'Invalid response');
+                            showAlert('Upload failed', 'error');
                         }
                     } else {
-                        updateResultItemError(resultItem, file, `HTTP ${xhr.status}`);
-                        showAlert(`Upload failed: HTTP ${xhr.status}`, 'error');
+                        updateResultItemError(resultItem, file, 'HTTP ' + xhr.status);
+                        showAlert('Upload failed: HTTP ' + xhr.status, 'error');
                     }
                 });
 
-                xhr.addEventListener('error', () => {
+                xhr.addEventListener('error', function() {
                     updateResultItemError(resultItem, file, 'Network error');
                     showAlert('Upload failed: Network error', 'error');
                 });
 
-                xhr.addEventListener('timeout', () => {
-                    updateResultItemError(resultItem, file, 'Upload timeout');
-                    showAlert('Upload failed: Timeout', 'error');
-                });
-
-                // Start upload
                 const formData = new FormData();
                 formData.append('file', file);
 
                 xhr.open('POST', '/upload', true);
-                xhr.timeout = 300000; // 5 minutes
                 xhr.send(formData);
             }
 
@@ -753,148 +628,107 @@
                 const item = document.createElement('div');
                 item.className = 'result-item';
                 
-                const icon = getFileIcon(file.type, file.name);
+                const icon = getFileIcon(file.name);
                 
-                item.innerHTML = `
-                    <div class="result-header">
-                        <div class="file-icon">
-                            <i class="${icon}"></i>
-                        </div>
-                        <div class="result-info">
-                            <h3>${file.name}</h3>
-                            <div class="result-meta">${formatBytes(file.size)} • Preparing...</div>
-                        </div>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar"></div>
-                    </div>
-                    <div class="progress-text">0% uploaded</div>
-                `;
+                item.innerHTML = 
+                    '<div class="result-header">' +
+                        '<div class="file-icon">' + icon + '</div>' +
+                        '<div class="result-info">' +
+                            '<h3>' + file.name + '</h3>' +
+                            '<div class="result-meta">' + formatBytes(file.size) + ' • Preparing...</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="progress-container">' +
+                        '<div class="progress-bar"></div>' +
+                    '</div>' +
+                    '<div class="progress-text">0% uploaded</div>';
                 
                 return item;
             }
 
             function updateResultItemSuccess(item, result) {
-                const icon = getFileIcon(result.contentType, result.filename);
+                const icon = getFileIcon(result.filename);
                 
-                item.innerHTML = `
-                    <div class="result-header">
-                        <div class="file-icon">
-                            <i class="${icon}"></i>
-                        </div>
-                        <div class="result-info">
-                            <h3>${result.filename}</h3>
-                            <div class="result-meta">${formatBytes(result.size)} • Upload Complete ✅</div>
-                        </div>
-                    </div>
-                    <div class="result-actions">
-                        <a href="${result.url}" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-eye"></i> View File
-                        </a>
-                        <a href="${result.download}" class="btn btn-success">
-                            <i class="fas fa-download"></i> Download
-                        </a>
-                        <button onclick="copyToClipboard('${result.url}')" class="btn btn-primary">
-                            <i class="fas fa-copy"></i> Copy Link
-                        </button>
-                    </div>
-                `;
+                item.innerHTML = 
+                    '<div class="result-header">' +
+                        '<div class="file-icon">' + icon + '</div>' +
+                        '<div class="result-info">' +
+                            '<h3>' + result.filename + '</h3>' +
+                            '<div class="result-meta">' + formatBytes(result.size) + ' • Complete ✅</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="result-actions">' +
+                        '<a href="' + result.url + '" target="_blank" class="btn btn-primary">👁️ View File</a>' +
+                        '<a href="' + result.download + '" class="btn btn-success">⬇️ Download</a>' +
+                        '<button onclick="copyLink(\'' + result.url + '\')" class="btn btn-primary">📋 Copy Link</button>' +
+                    '</div>';
             }
 
             function updateResultItemError(item, file, error) {
-                const icon = getFileIcon(file.type, file.name);
+                const icon = getFileIcon(file.name);
                 
-                item.innerHTML = `
-                    <div class="result-header">
-                        <div class="file-icon" style="background: var(--error);">
-                            <i class="${icon}"></i>
-                        </div>
-                        <div class="result-info">
-                            <h3>${file.name}</h3>
-                            <div class="result-meta" style="color: var(--error);">❌ Upload failed: ${error}</div>
-                        </div>
-                    </div>
-                `;
+                item.innerHTML = 
+                    '<div class="result-header">' +
+                        '<div class="file-icon" style="background: #ef4444;">' + icon + '</div>' +
+                        '<div class="result-info">' +
+                            '<h3>' + file.name + '</h3>' +
+                            '<div class="result-meta" style="color: #ef4444;">❌ Failed: ' + error + '</div>' +
+                        '</div>' +
+                    '</div>';
             }
 
-            function getFileIcon(type, filename) {
-                const ext = filename.split('.').pop()?.toLowerCase() || '';
+            function getFileIcon(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
                 
-                if (type?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-                    return 'fas fa-image';
-                } else if (type?.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
-                    return 'fas fa-video';
-                } else if (type?.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
-                    return 'fas fa-music';
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                    return '🖼️';
+                } else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
+                    return '🎥';
+                } else if (['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
+                    return '🎵';
                 } else if (['pdf'].includes(ext)) {
-                    return 'fas fa-file-pdf';
+                    return '📄';
                 } else if (['doc', 'docx'].includes(ext)) {
-                    return 'fas fa-file-word';
+                    return '📝';
                 } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
-                    return 'fas fa-archive';
+                    return '📦';
                 } else {
-                    return 'fas fa-file';
+                    return '📄';
                 }
             }
 
             function formatBytes(bytes) {
-                if (bytes === 0) return '0 Bytes';
+                if (bytes === 0) return '0 B';
                 const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const sizes = ['B', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
-            // Global functions for buttons
-            window.copyToClipboard = function(text) {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        showAlert('Link copied to clipboard!', 'success');
-                    }).catch(() => {
-                        fallbackCopyTextToClipboard(text);
+            // Global function for copy button
+            window.copyLink = function(text) {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(function() {
+                        showAlert('Link copied!', 'success');
                     });
                 } else {
-                    fallbackCopyTextToClipboard(text);
+                    showAlert('Could not copy link', 'error');
                 }
             };
 
-            function fallbackCopyTextToClipboard(text) {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.top = '0';
-                textArea.style.left = '0';
-                textArea.style.opacity = '0';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                
-                try {
-                    document.execCommand('copy');
-                    showAlert('Link copied to clipboard!', 'success');
-                } catch (err) {
-                    showAlert('Could not copy link', 'error');
-                }
-                
-                document.body.removeChild(textArea);
-            }
-
             function showAlert(message, type) {
-                alert.innerHTML = `
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
-                    <span>${message}</span>
-                `;
-                alert.className = `alert ${type} show`;
+                alert.innerHTML = 
+                    '<span>' + (type === 'success' ? '✅' : '❌') + '</span>' +
+                    '<span>' + message + '</span>';
+                alert.className = 'alert ' + type + ' show';
                 
-                setTimeout(() => {
+                setTimeout(function() {
                     alert.classList.remove('show');
                 }, 4000);
             }
 
-            console.log('✅ Marya Vault Mobile Version Ready - All handlers initialized!');
+            console.log('✅ Marya Vault Ready!');
         });
-
-        console.log('🎯 Script loaded - waiting for DOM...');
     </script>
 </body>
 </html>
