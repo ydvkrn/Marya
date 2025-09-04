@@ -295,23 +295,6 @@
             background: linear-gradient(90deg, var(--primary), var(--primary-dark));
             width: 0%;
             transition: width 0.3s ease;
-            position: relative;
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
         }
 
         .alert {
@@ -342,6 +325,29 @@
 
         .alert.error {
             background: var(--error);
+        }
+
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: var(--white);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .admin-link:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
         }
 
         /* Mobile Optimizations */
@@ -430,6 +436,14 @@
             .alert.show {
                 transform: translateY(0);
             }
+
+            .admin-link {
+                bottom: 15px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -447,39 +461,6 @@
 
             .upload-subtext {
                 font-size: 0.9rem;
-            }
-        }
-
-        .admin-link {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary);
-            color: var(--white);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            box-shadow: var(--shadow);
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .admin-link:hover {
-            transform: scale(1.1);
-            background: var(--primary-dark);
-        }
-
-        @media (max-width: 768px) {
-            .admin-link {
-                bottom: 15px;
-                right: 15px;
-                width: 45px;
-                height: 45px;
-                font-size: 1rem;
             }
         }
     </style>
@@ -544,34 +525,68 @@
     <div id="alert" class="alert"></div>
 
     <script>
+        console.log('🚀 Marya Vault JS loaded');
+
+        // Get DOM elements
         const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('fileInput');
         const results = document.getElementById('results');
         const resultsList = document.getElementById('resultsList');
         const alert = document.getElementById('alert');
 
-        // Click to browse
-        dropzone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', handleFiles);
+        // Global flag to prevent double initialization
+        let initialized = false;
 
-        // Drag and drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, preventDefaults);
-            document.body.addEventListener(eventName, preventDefaults);
-        });
+        function initializeUploadHandlers() {
+            if (initialized) {
+                console.warn('Upload handlers already initialized');
+                return;
+            }
+
+            console.log('Initializing upload handlers...');
+
+            // ✅ FIXED: Single click handler
+            dropzone.addEventListener('click', handleDropzoneClick);
+            fileInput.addEventListener('change', handleFileInputChange);
+
+            // Drag and drop handlers
+            const dragEvents = ['dragenter', 'dragover', 'dragleave', 'drop'];
+            
+            dragEvents.forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults);
+                document.body.addEventListener(eventName, preventDefaults);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, highlight);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, unhighlight);
+            });
+
+            dropzone.addEventListener('drop', handleDrop);
+
+            initialized = true;
+            console.log('✅ Upload handlers initialized successfully');
+        }
+
+        function handleDropzoneClick(e) {
+            console.log('Dropzone clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.click();
+        }
+
+        function handleFileInputChange(e) {
+            console.log('File input changed');
+            handleFiles(e.target.files);
+        }
 
         function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
         }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropzone.addEventListener(eventName, highlight);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, unhighlight);
-        });
 
         function highlight() {
             dropzone.classList.add('dragover');
@@ -581,22 +596,28 @@
             dropzone.classList.remove('dragover');
         }
 
-        dropzone.addEventListener('drop', handleDrop);
-
         function handleDrop(e) {
+            console.log('Files dropped');
             const files = e.dataTransfer.files;
-            handleFiles({ target: { files } });
+            handleFiles(files);
         }
 
-        function handleFiles(e) {
-            const files = Array.from(e.target.files);
-            if (files.length === 0) return;
+        function handleFiles(files) {
+            console.log('Processing files:', files.length);
+            
+            if (!files || files.length === 0) {
+                console.warn('No files provided');
+                return;
+            }
             
             results.style.display = 'block';
-            files.forEach(uploadFile);
+            
+            Array.from(files).forEach(uploadFile);
         }
 
         async function uploadFile(file) {
+            console.log('Starting upload for:', file.name, 'Size:', file.size);
+
             if (file.size > 2147483648) { // 2GB
                 showAlert('File too large (max 2GB)', 'error');
                 return;
@@ -609,23 +630,25 @@
             formData.append('file', file);
 
             try {
-                console.log('Starting upload for:', file.name);
+                console.log('Sending upload request...');
                 
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
 
-                console.log('Upload response status:', response.status);
-                console.log('Upload response OK:', response.ok);
+                console.log('Upload response received - Status:', response.status, 'OK:', response.ok);
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Upload error response:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                let result;
+                try {
+                    result = await response.json();
+                } catch (parseError) {
+                    console.error('Failed to parse response as JSON:', parseError);
+                    const responseText = await response.text();
+                    console.error('Response text:', responseText);
+                    throw new Error(`Server returned invalid JSON. Status: ${response.status}`);
                 }
 
-                const result = await response.json();
                 console.log('Upload result:', result);
 
                 if (result.success) {
@@ -769,20 +792,14 @@
             }, 4000);
         }
 
-        // Touch support for mobile
-        let touchStartY = 0;
-        let touchEndY = 0;
+        // ✅ Initialize on DOM load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeUploadHandlers);
+        } else {
+            initializeUploadHandlers();
+        }
 
-        dropzone.addEventListener('touchstart', (e) => {
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
-
-        dropzone.addEventListener('touchend', (e) => {
-            touchEndY = e.changedTouches[0].screenY;
-            if (Math.abs(touchEndY - touchStartY) < 10) {
-                fileInput.click();
-            }
-        }, { passive: true });
+        console.log('🎯 Marya Vault script loaded successfully');
     </script>
 </body>
 </html>
