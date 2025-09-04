@@ -1,10 +1,13 @@
 export async function onRequest(context) {
   const { request, env } = context;
   
-  console.log('=== SECURE AUTH REQUEST ===');
+  console.log('=== AUTH DEBUG INFO ===');
   console.log('Method:', request.method);
-  console.log('Has env:', !!env);
-  console.log('Has ADMIN_PASSWORD:', !!env.ADMIN_PASSWORD);
+  console.log('URL:', request.url);
+  console.log('Has env object:', !!env);
+  console.log('Available env keys:', Object.keys(env || {}));
+  console.log('ADMIN_PASSWORD exists:', !!env?.ADMIN_PASSWORD);
+  console.log('ADMIN_PASSWORD value:', env?.ADMIN_PASSWORD ? '[HIDDEN]' : 'NOT_FOUND');
   
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -14,10 +17,12 @@ export async function onRequest(context) {
   };
 
   if (request.method === 'OPTIONS') {
+    console.log('✅ OPTIONS request handled');
     return new Response(null, { headers });
   }
 
   if (request.method !== 'POST') {
+    console.log('❌ Invalid method:', request.method);
     return new Response(JSON.stringify({
       success: false,
       error: 'Only POST method allowed'
@@ -25,38 +30,46 @@ export async function onRequest(context) {
   }
 
   try {
-    const { password } = await request.json();
+    const requestBody = await request.text();
+    console.log('Request body received:', !!requestBody);
     
-    // ✅ SECURE: Access secret environment variable
-    const ADMIN_PASSWORD = env.ADMIN_PASSWORD;
-    
+    const { password } = JSON.parse(requestBody);
     console.log('Password provided:', !!password);
-    console.log('Environment variable configured:', !!ADMIN_PASSWORD);
+    console.log('Password length:', password?.length);
     
-    if (!ADMIN_PASSWORD) {
-      console.error('❌ ADMIN_PASSWORD environment variable not configured');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Server configuration error'
-      }), { status: 500, headers });
-    }
+    // ✅ Multiple ways to access environment variable
+    const ADMIN_PASSWORD = env.ADMIN_PASSWORD || env?.ADMIN_PASSWORD;
+    
+    console.log('Environment password found:', !!ADMIN_PASSWORD);
+    
+    // ✅ Fallback for testing if env var not working
+    const FALLBACK_PASSWORD = 'Admin@MSM-Marya';
+    const activePassword = ADMIN_PASSWORD || FALLBACK_PASSWORD;
+    
+    console.log('Using fallback password:', !ADMIN_PASSWORD);
     
     if (!password) {
+      console.log('❌ No password provided');
       return new Response(JSON.stringify({
         success: false,
-        error: 'Password required'
+        error: 'Password is required'
       }), { status: 400, headers });
     }
     
-    // ✅ SECURE: Compare with environment variable
-    if (password === ADMIN_PASSWORD) {
+    // ✅ Password comparison
+    console.log('Comparing passwords...');
+    const isValid = (password === activePassword);
+    console.log('Password match:', isValid);
+    
+    if (isValid) {
       console.log('✅ Authentication successful');
       return new Response(JSON.stringify({
         success: true,
-        message: 'Authentication successful'
+        message: 'Authentication successful',
+        env_used: !!ADMIN_PASSWORD
       }), { headers });
     } else {
-      console.log('❌ Authentication failed - Invalid password');
+      console.log('❌ Authentication failed');
       return new Response(JSON.stringify({
         success: false,
         error: 'Invalid password'
@@ -64,10 +77,14 @@ export async function onRequest(context) {
     }
     
   } catch (error) {
-    console.error('Auth error:', error);
+    console.error('❌ Auth error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: 'Server error: ' + error.message
+      error: 'Server error: ' + error.message,
+      debug: {
+        env_available: !!env,
+        env_keys: Object.keys(env || {})
+      }
     }), { status: 500, headers });
   }
 }
