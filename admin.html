@@ -287,7 +287,6 @@ tr:hover {
   margin-bottom: 10px;
 }
 
-/* Mobile Responsive */
 @media (max-width: 768px) {
   .container {
     padding: 20px 15px;
@@ -329,7 +328,6 @@ tr:hover {
 </head>
 <body>
 <div class="container">
-  <!-- Header -->
   <div class="header">
     <div class="logo">
       <i class="fas fa-shield-alt"></i>
@@ -338,7 +336,6 @@ tr:hover {
     <p class="subtitle">Marya Vault File Management System</p>
   </div>
 
-  <!-- Statistics -->
   <div class="stats">
     <div class="stat-card">
       <div class="stat-number" id="totalFiles">0</div>
@@ -350,7 +347,6 @@ tr:hover {
     </div>
   </div>
 
-  <!-- Content -->
   <div class="content-card">
     <div class="table-header">
       <h2 class="table-title">
@@ -461,9 +457,10 @@ function renderFiles(files) {
     const uploadedAt = metadata.uploadedAt ? new Date(metadata.uploadedAt).toLocaleString() : 'Unknown';
     const contentType = metadata.contentType || '';
     const extension = filename.split('.').pop().toUpperCase() || 'FILE';
+    const fileIdCode = metadata.fileIdCode || 'MSMfile0/old-fmt';
     
     const iconClass = getFileIcon(filename, contentType);
-    const viewUrl = `${window.location.origin}/m/${item.key}`;
+    const viewUrl = `${window.location.origin}/btf/${item.key}/${fileIdCode}`;
 
     html += `
       <tr>
@@ -600,7 +597,6 @@ function showToast(message, type) {
   }, 3000);
 }
 
-// Load files on page load
 loadFiles();
 </script>
 </body>
