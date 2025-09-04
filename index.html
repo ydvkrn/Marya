@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marya Vault Pro</title>
+<!-- FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
   --red: #E60023;
@@ -74,9 +76,9 @@ body::before {
   100% { transform: scale(1.05); box-shadow: 0 35px 60px -12px rgba(230, 0, 35, 0.4); }
 }
 
-.logo::before {
-  content: '📤';
+.logo i {
   font-size: 2rem;
+  color: var(--white);
 }
 
 h1 {
@@ -183,6 +185,9 @@ h1 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* URL Section */
@@ -251,6 +256,9 @@ h1 {
   min-width: 140px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .upload-btn:hover:not(:disabled) {
@@ -318,7 +326,6 @@ h1 {
   justify-content: center;
   font-size: 1.5rem;
   color: var(--white);
-  font-weight: bold;
 }
 
 .result-filename {
@@ -413,6 +420,9 @@ h1 {
   transition: transform 0.4s ease;
   z-index: 1000;
   max-width: 350px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .alert.show {
@@ -482,7 +492,9 @@ h1 {
 <div class="container">
   <!-- Header -->
   <div class="header">
-    <div class="logo"></div>
+    <div class="logo">
+      <i class="fas fa-cloud-upload-alt"></i>
+    </div>
     <h1>Marya Vault</h1>
     <p class="subtitle">Professional File Hosting • Permanent Links • Up to 2GB</p>
   </div>
@@ -490,24 +502,42 @@ h1 {
   <!-- Upload Card -->
   <div class="upload-card">
     <div class="dropzone" id="dropzone">
-      <div class="upload-icon">📁</div>
+      <i class="fas fa-file-upload upload-icon"></i>
       <div class="upload-text">Drop Your Files Here</div>
       <div class="upload-subtext">or click to browse from your device</div>
       <input type="file" id="fileInput" multiple style="display: none;">
       
       <div class="supported-formats">
-        <span class="format-badge">Images</span>
-        <span class="format-badge">Videos</span>
-        <span class="format-badge">Documents</span>
-        <span class="format-badge">Audio</span>
-        <span class="format-badge">Archives</span>
+        <span class="format-badge">
+          <i class="fas fa-images"></i>
+          Images
+        </span>
+        <span class="format-badge">
+          <i class="fas fa-video"></i>
+          Videos
+        </span>
+        <span class="format-badge">
+          <i class="fas fa-file-alt"></i>
+          Documents
+        </span>
+        <span class="format-badge">
+          <i class="fas fa-music"></i>
+          Audio
+        </span>
+        <span class="format-badge">
+          <i class="fas fa-archive"></i>
+          Archives
+        </span>
       </div>
     </div>
     
     <div class="url-section">
       <div class="url-form">
         <input type="url" id="urlInput" class="url-input" placeholder="https://example.com/video.mp4">
-        <button id="urlBtn" class="upload-btn">Upload URL</button>
+        <button id="urlBtn" class="upload-btn">
+          <i class="fas fa-link"></i>
+          Upload URL
+        </button>
       </div>
     </div>
   </div>
@@ -515,7 +545,8 @@ h1 {
   <!-- Results -->
   <div id="results" class="results" style="display: none;">
     <div class="results-header">
-      📋 Your Files
+      <i class="fas fa-folder-open"></i>
+      Your Files
     </div>
     <div id="resultsList"></div>
   </div>
@@ -636,7 +667,7 @@ async function handleUrlUpload() {
   }
 
   urlBtn.disabled = true;
-  urlBtn.textContent = 'Uploading...';
+  urlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
   results.style.display = 'block';
 
   try {
@@ -656,25 +687,33 @@ async function handleUrlUpload() {
     showAlert('URL upload failed: ' + error.message, 'error');
   } finally {
     urlBtn.disabled = false;
-    urlBtn.textContent = 'Upload URL';
+    urlBtn.innerHTML = '<i class="fas fa-link"></i> Upload URL';
   }
 }
 
 function getFileIcon(filename, contentType) {
   const ext = filename.split('.').pop().toLowerCase();
   
-  if (contentType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-    return '🖼️';
-  } else if (contentType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv'].includes(ext)) {
-    return '🎥';
-  } else if (contentType.startsWith('audio/') || ['mp3', 'wav', 'flac'].includes(ext)) {
-    return '🎵';
-  } else if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) {
-    return '📄';
-  } else if (['zip', 'rar', '7z'].includes(ext)) {
-    return '🗜️';
+  if (contentType && contentType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+    return 'fas fa-image';
+  } else if (contentType && contentType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
+    return 'fas fa-video';
+  } else if (contentType && contentType.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
+    return 'fas fa-music';
+  } else if (['pdf'].includes(ext)) {
+    return 'fas fa-file-pdf';
+  } else if (['doc', 'docx'].includes(ext)) {
+    return 'fas fa-file-word';
+  } else if (['xls', 'xlsx'].includes(ext)) {
+    return 'fas fa-file-excel';
+  } else if (['ppt', 'pptx'].includes(ext)) {
+    return 'fas fa-file-powerpoint';
+  } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+    return 'fas fa-file-archive';
+  } else if (['txt', 'md', 'json', 'xml', 'html', 'css', 'js'].includes(ext)) {
+    return 'fas fa-file-code';
   } else {
-    return '📁';
+    return 'fas fa-file';
   }
 }
 
@@ -686,12 +725,14 @@ function createResultElement(filename, size, contentType) {
   const el = document.createElement('div');
   el.className = 'result-item';
   
-  const icon = getFileIcon(filename, contentType || '');
+  const iconClass = getFileIcon(filename, contentType || '');
   const ext = getFileExtension(filename);
   
   el.innerHTML = `
     <div class="result-header">
-      <div class="file-icon">${icon}</div>
+      <div class="file-icon">
+        <i class="${iconClass}"></i>
+      </div>
       <div>
         <div class="result-filename">${filename}</div>
         <div class="result-meta">${formatBytes(size)} • ${ext} • Uploading...</div>
@@ -707,22 +748,36 @@ function createResultElement(filename, size, contentType) {
 }
 
 function updateResultElement(el, result) {
-  const icon = getFileIcon(result.filename, result.contentType || '');
+  const iconClass = getFileIcon(result.filename, result.contentType || '');
   const ext = getFileExtension(result.filename);
   
   el.innerHTML = `
     <div class="result-header">
-      <div class="file-icon">${icon}</div>
+      <div class="file-icon">
+        <i class="${iconClass}"></i>
+      </div>
       <div>
         <div class="result-filename">${result.filename}</div>
         <div class="result-meta">${formatBytes(result.size)} • ${ext} • Upload Complete</div>
       </div>
     </div>
     <div class="result-links">
-      <a href="${result.view_url}" target="_blank" class="result-link">👁️ View File</a>
-      <a href="${result.download_url}" class="result-link">⬇️ Download</a>
-      <button onclick="copyToClipboard('${result.view_url}')" class="result-link">📋 Copy Link</button>
-      <button onclick="shareFile('${result.filename}', '${result.view_url}')" class="result-link">🔗 Share</button>
+      <a href="${result.view_url}" target="_blank" class="result-link">
+        <i class="fas fa-eye"></i>
+        View File
+      </a>
+      <a href="${result.download_url}" class="result-link">
+        <i class="fas fa-download"></i>
+        Download
+      </a>
+      <button onclick="copyToClipboard('${result.view_url}')" class="result-link">
+        <i class="fas fa-copy"></i>
+        Copy Link
+      </button>
+      <button onclick="shareFile('${result.filename}', '${result.view_url}')" class="result-link">
+        <i class="fas fa-share-alt"></i>
+        Share
+      </button>
     </div>
   `;
 }
@@ -737,7 +792,7 @@ function formatBytes(bytes) {
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showAlert('Link copied to clipboard! 📋', 'success');
+    showAlert('Link copied to clipboard!', 'success');
   }).catch(() => {
     showAlert('Failed to copy link', 'error');
   });
@@ -755,8 +810,18 @@ function shareFile(filename, url) {
 }
 
 function showAlert(message, type) {
-  alertEl.textContent = message;
+  const iconMap = {
+    success: 'fas fa-check-circle',
+    error: 'fas fa-exclamation-circle',
+    info: 'fas fa-info-circle'
+  };
+  
+  alertEl.innerHTML = `
+    <i class="${iconMap[type] || iconMap.info}"></i>
+    <span>${message}</span>
+  `;
   alertEl.className = `alert ${type} show`;
+  
   setTimeout(() => {
     alertEl.classList.remove('show');
   }, 4000);
