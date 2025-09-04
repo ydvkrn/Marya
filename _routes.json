@@ -2,12 +2,12 @@
   "version": 1,
   "include": [
     "/upload",
-    "/f/*",
-    "/admin/*"
+    "/r2/sign",
+    "/r2/finalize",
+    "/btfstorage/file/*"
   ],
   "exclude": [
     "/assets/*",
-    "/static/*",
     "/favicon.ico",
     "/robots.txt"
   ]
