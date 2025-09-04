@@ -3,126 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marya Vault - Working</title>
+    <title>Marya Vault</title>
     <style>
-        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; }
-        h1 { color: #dc143c; text-align: center; }
-        .upload-area {
-            border: 3px dashed #dc143c;
-            padding: 50px;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #111827;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
             text-align: center;
+        }
+        
+        h1 {
+            color: #dc143c;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        
+        .upload-box {
+            border: 4px dashed #dc143c;
+            border-radius: 20px;
+            padding: 60px 20px;
             background: white;
-            border-radius: 10px;
+            margin: 30px 0;
             cursor: pointer;
-            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        .upload-area:hover { background: #fafafa; }
-        .btn { 
-            background: #dc143c; 
-            color: white; 
-            padding: 10px 20px; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            margin: 5px;
+        
+        .upload-box:hover,
+        .upload-box:active {
+            border-color: #b91c1c;
+            background: #fef2f2;
+            transform: translateY(-3px);
         }
-        .result { 
-            background: white; 
-            padding: 15px; 
-            margin: 10px 0; 
-            border-radius: 5px; 
+        
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #dc143c;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .file-input { display: none; }
+        
+        .results {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
             border-left: 4px solid #dc143c;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-        .hidden { display: none; }
+        
+        .result-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        
+        .result-info {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #dc143c;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: #b91c1c; transform: translateY(-1px); }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc143c, #b91c1c);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            color: #dc143c;
+            margin-top: 10px;
+        }
+        
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            transform: translateX(300px);
+            transition: transform 0.3s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .alert.show { transform: translateX(0); }
+        .alert.success { background: #10b981; }
+        .alert.error { background: #ef4444; }
+        
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            h1 { font-size: 2rem; }
+            .upload-box { padding: 40px 15px; min-height: 160px; }
+            .upload-text { font-size: 1.2rem; }
+            .result-actions { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; padding: 15px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🚀 Marya Vault</h1>
+        <p class="subtitle">Professional File Hosting • Up to 2GB per file</p>
         
-        <div class="upload-area" onclick="selectFile()">
-            <h2>📁 Click Here to Upload Files</h2>
-            <p>Maximum 2GB per file</p>
+        <div class="upload-box" onclick="selectFiles()">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click Here to Upload Files</div>
+            <div class="upload-subtext">or drag and drop files here</div>
         </div>
         
-        <input type="file" id="fileInput" class="hidden" multiple onchange="uploadFiles()">
+        <input type="file" id="fileInput" class="file-input" multiple onchange="handleFiles()">
         
-        <div id="results"></div>
+        <div id="results" class="results"></div>
     </div>
+    
+    <div id="alert" class="alert"></div>
 
     <script>
-        console.log('Script loaded');
+        console.log('🚀 Marya Vault - Ultra Simple Version');
         
-        function selectFile() {
-            console.log('Upload area clicked');
-            document.getElementById('fileInput').click();
-        }
-        
-        function uploadFiles() {
-            const files = document.getElementById('fileInput').files;
-            console.log('Files selected:', files.length);
-            
-            if (files.length === 0) return;
-            
-            for (let file of files) {
-                uploadSingleFile(file);
+        // CRITICAL: Multiple ways to trigger file selection
+        function selectFiles() {
+            console.log('📁 File selection triggered');
+            const input = document.getElementById('fileInput');
+            if (input) {
+                input.click();
+            } else {
+                console.error('File input not found!');
             }
         }
         
-        function uploadSingleFile(file) {
-            console.log('Uploading:', file.name);
+        // Add multiple event listeners for maximum compatibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadBox = document.querySelector('.upload-box');
+            const fileInput = document.getElementById('fileInput');
             
-            if (file.size > 2000000000) {
-                alert('File too large (max 2GB)');
+            if (uploadBox && fileInput) {
+                // Multiple event types for mobile/desktop compatibility
+                uploadBox.addEventListener('click', selectFiles);
+                uploadBox.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    selectFiles();
+                });
+                
+                // Drag and drop support
+                uploadBox.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    uploadBox.style.backgroundColor = '#fef2f2';
+                });
+                
+                uploadBox.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    uploadBox.style.backgroundColor = 'white';
+                });
+                
+                uploadBox.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    uploadBox.style.backgroundColor = 'white';
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        processFiles(files);
+                    }
+                });
+                
+                console.log('✅ All event listeners added successfully');
+            } else {
+                console.error('❌ Upload elements not found!');
+            }
+        });
+        
+        function handleFiles() {
+            const input = document.getElementById('fileInput');
+            const files = input.files;
+            console.log('📂 Files selected via input:', files.length);
+            if (files.length > 0) {
+                processFiles(files);
+            }
+        }
+        
+        function processFiles(files) {
+            console.log('🔄 Processing files:', files.length);
+            
+            const results = document.getElementById('results');
+            if (!results) {
+                console.error('Results container not found!');
                 return;
             }
             
-            // Create result div
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result';
-            resultDiv.innerHTML = `
-                <h3>${file.name}</h3>
-                <p>Size: ${formatBytes(file.size)} • Status: <span id="status-${file.name}">Uploading...</span></p>
-                <div id="actions-${file.name}"></div>
-            `;
-            document.getElementById('results').appendChild(resultDiv);
+            for (let i = 0; i < files.length; i++) {
+                uploadFile(files[i]);
+            }
+        }
+        
+        function uploadFile(file) {
+            console.log('⬆️ Starting upload:', file.name, 'Size:', formatBytes(file.size));
             
-            // Upload using XMLHttpRequest
+            // Size check
+            if (file.size > 2147483648) { // 2GB
+                showAlert('File too large (max 2GB): ' + file.name, 'error');
+                return;
+            }
+            
+            // Create result item
+            const results = document.getElementById('results');
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            
+            const fileIcon = getFileIcon(file.name);
+            
+            resultItem.innerHTML = `
+                <div class="result-name">${fileIcon} ${file.name}</div>
+                <div class="result-info">Size: ${formatBytes(file.size)} • Status: <span id="status-${Date.now()}">Uploading...</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-${Date.now()}"></div>
+                </div>
+                <div class="progress-text" id="progressText-${Date.now()}">0% uploaded</div>
+                <div id="actions-${Date.now()}" class="result-actions"></div>
+            `;
+            
+            const statusId = `status-${Date.now()}`;
+            const progressId = `progress-${Date.now()}`;
+            const progressTextId = `progressText-${Date.now()}`;
+            const actionsId = `actions-${Date.now()}`;
+            
+            results.appendChild(resultItem);
+            
+            // Upload using XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
             formData.append('file', file);
             
-            xhr.onload = function() {
-                console.log('Upload response:', xhr.status, xhr.responseText);
+            // Progress tracking
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    const progressBar = document.getElementById(progressId);
+                    const progressText = document.getElementById(progressTextId);
+                    
+                    if (progressBar) progressBar.style.width = percentComplete + '%';
+                    if (progressText) progressText.textContent = percentComplete + '% uploaded';
+                    
+                    console.log('📊 Progress:', percentComplete + '%');
+                }
+            });
+            
+            // Upload completion
+            xhr.addEventListener('load', function() {
+                const statusEl = document.getElementById(statusId);
+                const actionsEl = document.getElementById(actionsId);
+                const progressTextEl = document.getElementById(progressTextId);
+                
+                console.log('✅ Upload response:', xhr.status);
                 
                 if (xhr.status === 200) {
                     try {
                         const result = JSON.parse(xhr.responseText);
+                        console.log('📄 Parsed result:', result);
+                        
                         if (result.success) {
-                            document.getElementById(`status-${file.name}`).textContent = 'Complete ✅';
-                            document.getElementById(`actions-${file.name}`).innerHTML = `
-                                <button class="btn" onclick="window.open('${result.url}')">👁️ View</button>
-                                <button class="btn" onclick="window.open('${result.download}')">⬇️ Download</button>
-                                <button class="btn" onclick="copyText('${result.url}')">📋 Copy</button>
-                            `;
+                            if (statusEl) statusEl.textContent = 'Complete ✅';
+                            if (progressTextEl) progressTextEl.textContent = '100% complete';
+                            if (actionsEl) {
+                                actionsEl.innerHTML = `
+                                    <a href="${result.url}" target="_blank" class="btn">
+                                        👁️ View File
+                                    </a>
+                                    <a href="${result.download}" class="btn btn-success">
+                                        ⬇️ Download
+                                    </a>
+                                    <button onclick="copyToClipboard('${result.url}')" class="btn">
+                                        📋 Copy Link
+                                    </button>
+                                `;
+                            }
+                            showAlert('✅ ' + file.name + ' uploaded successfully!', 'success');
                         } else {
-                            document.getElementById(`status-${file.name}`).textContent = 'Failed: ' + result.error;
+                            throw new Error(result.error || 'Upload failed');
                         }
-                    } catch (e) {
-                        document.getElementById(`status-${file.name}`).textContent = 'Failed: Invalid response';
+                    } catch (parseError) {
+                        console.error('❌ Parse error:', parseError);
+                        if (statusEl) statusEl.textContent = 'Failed: Invalid response';
+                        showAlert('❌ Upload failed: Invalid response', 'error');
                     }
                 } else {
-                    document.getElementById(`status-${file.name}`).textContent = `Failed: HTTP ${xhr.status}`;
+                    console.error('❌ HTTP error:', xhr.status);
+                    if (statusEl) statusEl.textContent = `Failed: HTTP ${xhr.status}`;
+                    showAlert(`❌ Upload failed: HTTP ${xhr.status}`, 'error');
                 }
-            };
+            });
             
-            xhr.onerror = function() {
-                document.getElementById(`status-${file.name}`).textContent = 'Failed: Network error';
-            };
+            // Upload error
+            xhr.addEventListener('error', function() {
+                console.error('❌ Network error');
+                const statusEl = document.getElementById(statusId);
+                if (statusEl) statusEl.textContent = 'Failed: Network error';
+                showAlert('❌ Upload failed: Network error', 'error');
+            });
             
-            xhr.open('POST', '/upload');
+            // Start upload
+            xhr.open('POST', '/upload', true);
             xhr.send(formData);
+        }
+        
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            
+            const iconMap = {
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'webp': '🖼️',
+                'mp4': '🎥', 'mov': '🎥', 'avi': '🎥', 'mkv': '🎥', 'webm': '🎥',
+                'mp3': '🎵', 'wav': '🎵', 'flac': '🎵', 'aac': '🎵',
+                'pdf': '📄', 'doc': '📝', 'docx': '📝', 'txt': '📝',
+                'zip': '📦', 'rar': '📦', '7z': '📦'
+            };
+            
+            return iconMap[ext] || '📄';
         }
         
         function formatBytes(bytes) {
@@ -133,13 +403,42 @@
             return Math.round(bytes / Math.pow(k, i)) + ' ' + sizes[i];
         }
         
-        function copyText(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Link copied!');
-            });
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showAlert('📋 Link copied to clipboard!', 'success');
+                }).catch(function() {
+                    showAlert('❌ Could not copy link', 'error');
+                });
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showAlert('📋 Link copied to clipboard!', 'success');
+                } catch (err) {
+                    showAlert('❌ Could not copy link', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
         }
         
-        console.log('All functions loaded');
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            if (!alert) return;
+            
+            alert.textContent = message;
+            alert.className = `alert ${type} show`;
+            
+            setTimeout(function() {
+                alert.classList.remove('show');
+            }, 4000);
+        }
+        
+        console.log('✅ All functions loaded and ready!');
     </script>
 </body>
 </html>
