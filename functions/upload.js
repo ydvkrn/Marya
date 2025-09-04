@@ -60,27 +60,36 @@ export async function onRequest({ request, env }) {
     const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
     const slug = `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
 
-    // ✅ CRITICAL: Store URL as plain string (not JSON)
+    // Generate file ID in MSMfile format
+    const fileNumber = Math.floor(Math.random() * 100);
+    const randomPart1 = Math.random().toString(36).substr(2, 3);
+    const randomPart2 = Math.random().toString(36).substr(2, 3);
+    const fileIdCode = `MSMfile${fileNumber}/${randomPart1}-${randomPart2}`;
+
+    // Store in KV
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
         filename: file.name,
         size: file.size,
         contentType: file.type,
-        uploadedAt: Date.now()
+        uploadedAt: Date.now(),
+        fileIdCode: fileIdCode
       }
     });
 
     const baseUrl = new URL(request.url).origin;
-    const viewUrl = `${baseUrl}/m/${slug}`;
+    const streamUrl = `${baseUrl}/btf/${slug}/${fileIdCode}`;
+    const downloadUrl = `${baseUrl}/btf/${slug}/${fileIdCode}?dl=1`;
 
     return new Response(JSON.stringify({
       success: true,
       filename: file.name,
       size: file.size,
       contentType: file.type,
-      view_url: viewUrl,
-      download_url: viewUrl + '?dl=1',
-      stream_url: viewUrl
+      view_url: streamUrl,
+      stream_url: streamUrl,
+      download_url: downloadUrl,
+      file_id: fileIdCode
     }), {
       headers: { 'Content-Type': 'application/json', ...cors }
     });
