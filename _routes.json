@@ -2,8 +2,14 @@
   "version": 1,
   "include": [
     "/upload",
-    "/file/*",
+    "/f/*",
     "/admin/*"
   ],
-  "exclude": []
+  "exclude": [
+    "/assets/*",
+    "/_next/static/*",
+    "/favicon.ico",
+    "/robots.txt",
+    "/sitemap.xml"
+  ]
 }
