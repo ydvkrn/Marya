@@ -127,7 +127,7 @@ export async function onRequest(context) {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).slice(2, 8);
     const fileId_custom = `id${timestamp}${random}`;
-    
+
     // Get file extension
     const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
 
