@@ -15,8 +15,9 @@
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
             --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
             --gray-600: #4b5563;
-            --gray-700: #374151; /* Added missing gray-700 */
+            --gray-700: #374151;
             --gray-800: #1f2937;
             --gray-900: #111827;
             --success: #059669;
@@ -601,12 +602,10 @@
 
         <!-- Upload Section -->
         <section class="upload-section">
-            <div class="dropzone" id="dropzone">
+            <label class="dropzone" id="dropzone" for="fileInput">
                 <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
                 <h2 class="upload-title">Drop your files here</h2>
                 <p class="upload-description">or click to browse from your device</p>
-                
-                <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
                 
                 <div class="file-types">
                     <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
@@ -615,7 +614,8 @@
                     <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
                     <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
                 </div>
-            </div>
+            </label>
+            <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
         </section>
 
         <!-- Results Section -->
@@ -650,27 +650,16 @@
                 return;
             }
 
-            // File selection handlers
-            dropzone.addEventListener('click', function(e) {
-                // Removed e.preventDefault() to potentially fix click issue
-                console.log('📁 Dropzone clicked');
-                fileInput.click();
-            });
-
-            dropzone.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                console.log('📱 Touch event detected');
-                fileInput.click();
-            });
-
+            // File selection handler for input change (triggered by click or drop)
             fileInput.addEventListener('change', function(e) {
-                console.log('📂 Files selected:', e.target.files.length);
+                console.log('📂 Files selected via click:', e.target.files.length);
                 if (e.target.files.length > 0) {
                     handleFiles(Array.from(e.target.files));
+                    fileInput.value = ''; // Reset input for next selection
                 }
             });
 
-            // Drag and drop
+            // Drag and drop handlers
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropzone.addEventListener(eventName, preventDefaults, false);
                 document.body.addEventListener(eventName, preventDefaults, false);
@@ -715,8 +704,7 @@
                     return;
                 }
 
-                results.classList.add('show12 show) {
-                    results.classList.add('show');
+                results.classList.add('show');
                 fileCounter += files.length;
                 updateFilesCount();
 
@@ -852,7 +840,7 @@
                     'mp3': '<i class="fas fa-music"></i>', 'wav': '<i class="fas fa-music"></i>', 'flac': '<i class="fas fa-music"></i>', 'aac': '<i class="fas fa-music"></i>', 'm4a': '<i class="fas fa-headphones"></i>',
                     'pdf': '<i class="fas fa-file-pdf"></i>', 'doc': '<i class="fas fa-file-word"></i>', 'docx': '<i class="fas fa-file-word"></i>', 'txt': '<i class="fas fa-file-alt"></i>', 'rtf': '<i class="fas fa-file-lines"></i>',
                     'zip': '<i class="fas fa-file-archive"></i>', 'rar': '<i class="fas fa-file-archive"></i>', '7z': '<i class="fas fa-file-archive"></i>', 'tar': '<i class="fas fa-box-archive"></i>', 'gz': '<i class="fas fa-file-zipper"></i>',
-                    'js': '<i class="fas fa-code"></i>', 'html': '<i class="fas fa-globe"></i>', 'css': '<i class="fas fa-palette"></i>', 'py': '<i class="fas fa-snake"></i>', 'java': '<i class="fas fa-coffee"></i>'
+                    'js': '<i class="fas fa-code"></i>', 'html': '<i class="fas fa-globe"></i>', 'css': '<i class="fas fa-palette"></i>', 'py': '<i class="fab fa-python"></i>', 'java': '<i class="fab fa-java"></i>'
                 };
                 
                 return iconMap[ext] || '<i class="fas fa-file"></i>';
