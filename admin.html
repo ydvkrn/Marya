@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marya Vault Admin Panel</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --red: #E60023;
+  --red-dark: #B91C1C;
+  --white: #FFFFFF;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-600: #6B7280;
+  --gray-900: #111827;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--white);
+  color: var(--gray-900);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(230, 0, 35, 0.3);
+}
+
+.logo i {
+  font-size: 1.5rem;
+  color: var(--white);
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: var(--gray-600);
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--white);
+  border: 2px solid rgba(230, 0, 35, 0.1);
+  border-radius: 16px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  color: var(--gray-600);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
+.content-card {
+  background: var(--white);
+  border: 2px solid rgba(230, 0, 35, 0.1);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.table-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.refresh-btn {
+  background: var(--red);
+  color: var(--white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+  background: var(--red-dark);
+  transform: translateY(-2px);
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(230, 0, 35, 0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+}
+
+th {
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+  color: var(--white);
+  padding: 15px 20px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+td {
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(230, 0, 35, 0.1);
+  vertical-align: middle;
+}
+
+tr:nth-child(even) {
+  background: rgba(230, 0, 35, 0.03);
+}
+
+tr:hover {
+  background: rgba(230, 0, 35, 0.08);
+}
+
+.file-icon {
+  width: 35px;
+  height: 35px;
+  background: var(--red);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-size: 0.9rem;
+  margin-right: 12px;
+}
+
+.filename {
+  font-weight: 600;
+  color: var(--gray-900);
+  word-break: break-word;
+}
+
+.file-meta {
+  color: var(--gray-600);
+  font-size: 0.85rem;
+  margin-top: 3px;
+}
+
+.delete-btn {
+  background: #EF4444;
+  color: var(--white);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+  background: #DC2626;
+  transform: translateY(-1px);
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--gray-600);
+}
+
+.loading i {
+  font-size: 2rem;
+  color: var(--red);
+  margin-bottom: 15px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error {
+  background: #FEE2E2;
+  border: 2px solid #FECACA;
+  border-left: 6px solid #EF4444;
+  border-radius: 12px;
+  padding: 20px;
+  color: #B91C1C;
+  font-weight: 600;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--gray-600);
+}
+
+.empty-state i {
+  font-size: 4rem;
+  color: rgba(230, 0, 35, 0.3);
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  font-size: 1.3rem;
+  color: var(--gray-900);
+  margin-bottom: 10px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 15px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  .stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .content-card {
+    padding: 20px 15px;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  th, td {
+    padding: 12px 15px;
+  }
+  
+  .file-icon {
+    display: none;
+  }
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <h1>Admin Panel</h1>
+    <p class="subtitle">Marya Vault File Management System</p>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats" id="stats">
+    <div class="stat-card">
+      <div class="stat-number" id="totalFiles">0</div>
+      <div class="stat-label">Total Files</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="totalSize">0 MB</div>
+      <div class="stat-label">Storage Used</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="todayUploads">0</div>
+      <div class="stat-label">Today's Uploads</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content-card">
+    <div class="table-header">
+      <h2 class="table-title">
+        <i class="fas fa-database"></i>
+        File Database
+      </h2>
+      <button class="refresh-btn" onclick="loadFiles()">
+        <i class="fas fa-sync-alt"></i>
+        Refresh
+      </button>
+    </div>
+
+    <div id="content">
+      <div class="loading">
+        <i class="fas fa-spinner"></i>
+        <div>Loading files...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const content = document.getElementById('content');
+const totalFilesEl = document.getElementById('totalFiles');
+const totalSizeEl = document.getElementById('totalSize');
+const todayUploadsEl = document.getElementById('todayUploads');
+
+let filesData = [];
+
+async function loadFiles() {
+  try {
+    content.innerHTML = `
+      <div class="loading">
+        <i class="fas fa-spinner"></i>
+        <div>Loading files...</div>
+      </div>
+    `;
+
+    // Get passcode from URL hash
+    const hash = window.location.hash.substring(1);
+    const code = hash || 'MSM@MARYA';
+    
+    if (!code) {
+      content.innerHTML = `
+        <div class="error">
+          <i class="fas fa-exclamation-triangle"></i>
+          Access denied. Please use correct admin URL with passcode.
+        </div>
+      `;
+      return;
+    }
+
+    const response = await fetch(`/admin/list?code=${encodeURIComponent(code)}`);
+    const data = await response.json();
+
+    if (!data.success) {
+      content.innerHTML = `
+        <div class="error">
+          <i class="fas fa-exclamation-circle"></i>
+          ${data.error || 'Failed to load files'}
+        </div>
+      `;
+      return;
+    }
+
+    filesData = data.items || [];
+    renderFiles(filesData);
+    updateStats(filesData);
+
+  } catch (error) {
+    console.error('Load error:', error);
+    content.innerHTML = `
+      <div class="error">
+        <i class="fas fa-exclamation-circle"></i>
+        Error: ${error.message}
+      </div>
+    `;
+  }
+}
+
+function renderFiles(files) {
+  if (files.length === 0) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <h3>No Files Found</h3>
+        <p>Upload some files to see them here</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Size</th>
+            <th>Type</th>
+            <th>Uploaded</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  files.forEach(item => {
+    const metadata = item.metadata || {};
+    const filename = metadata.filename || item.key || 'Unknown';
+    const size = metadata.size || 0;
+    const uploadedAt = metadata.uploadedAt ? new Date(metadata.uploadedAt).toLocaleString() : 'Unknown';
+    const contentType = metadata.contentType || '';
+    const extension = filename.split('.').pop().toUpperCase() || 'FILE';
+    
+    const iconClass = getFileIcon(filename, contentType);
+
+    html += `
+      <tr class="fade-in">
+        <td>
+          <div style="display: flex; align-items: center;">
+            <div class="file-icon">
+              <i class="${iconClass}"></i>
+            </div>
+            <div>
+              <div class="filename">${escapeHtml(filename)}</div>
+              <div class="file-meta">${item.key}</div>
+            </div>
+          </div>
+        </td>
+        <td>${formatBytes(size)}</td>
+        <td>${extension}</td>
+        <td>${uploadedAt}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteFile('${item.key}', '${escapeHtml(filename)}')">
+            <i class="fas fa-trash"></i>
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += '</tbody></table></div>';
+  content.innerHTML = html;
+}
+
+function updateStats(files) {
+  const totalFiles = files.length;
+  const totalBytes = files.reduce((sum, item) => sum + (item.metadata?.size || 0), 0);
+  
+  // Calculate today's uploads
+  const today = new Date().toDateString();
+  const todayUploads = files.filter(item => {
+    const uploadDate = item.metadata?.uploadedAt ? new Date(item.metadata.uploadedAt).toDateString() : null;
+    return uploadDate === today;
+  }).length;
+
+  totalFilesEl.textContent = totalFiles.toLocaleString();
+  totalSizeEl.textContent = formatBytes(totalBytes);
+  todayUploadsEl.textContent = todayUploads.toLocaleString();
+}
+
+async function deleteFile(key, filename) {
+  if (!confirm(`Are you sure you want to delete "${filename}"?\n\nThis action cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    const hash = window.location.hash.substring(1);
+    const code = hash || 'MSM@MARYA';
+    
+    const response = await fetch(`/admin/del?code=${encodeURIComponent(code)}&key=${encodeURIComponent(key)}`, {
+      method: 'DELETE'
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Remove from local data
+      filesData = filesData.filter(item => item.key !== key);
+      renderFiles(filesData);
+      updateStats(filesData);
+      
+      // Show success message
+      showToast(`File "${filename}" deleted successfully`, 'success');
+    } else {
+      throw new Error(result.error || 'Delete failed');
+    }
+  } catch (error) {
+    console.error('Delete error:', error);
+    showToast(`Failed to delete file: ${error.message}`, 'error');
+  }
+}
+
+function getFileIcon(filename, contentType) {
+  const ext = filename.split('.').pop().toLowerCase();
+  
+  if (contentType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+    return 'fas fa-image';
+  } else if (contentType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv'].includes(ext)) {
+    return 'fas fa-video';
+  } else if (contentType.startsWith('audio/') || ['mp3', 'wav', 'flac'].includes(ext)) {
+    return 'fas fa-music';
+  } else if (['pdf'].includes(ext)) {
+    return 'fas fa-file-pdf';
+  } else if (['doc', 'docx'].includes(ext)) {
+    return 'fas fa-file-word';
+  } else if (['zip', 'rar', '7z'].includes(ext)) {
+    return 'fas fa-archive';
+  } else {
+    return 'fas fa-file';
+  }
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function showToast(message, type) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background: ${type === 'success' ? '#10B981' : '#EF4444'};
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    z-index: 1000;
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+  `;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+  setTimeout(() => {
+    toast.style.transform = 'translateX(400px)';
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 3000);
+}
+
+// Load files on page load
+loadFiles();
+
+// Auto refresh every 30 seconds
+setInterval(loadFiles, 30000);
+</script>
+</body>
+</html>
