@@ -60,7 +60,7 @@ export async function onRequest({ request, env }) {
     const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
     const slug = `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
 
-    // ✅ FIXED: Store URL as plain text (not JSON)
+    // ✅ CRITICAL: Store URL as plain string (not JSON)
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
         filename: file.name,
