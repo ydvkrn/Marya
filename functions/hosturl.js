@@ -16,10 +16,9 @@ export async function onRequest({ request, env }) {
     const fileUrl = url.searchParams.get('url');
     
     if (!fileUrl) {
-      return jsonResponse({ success: false, error: 'No URL provided' }, 400);
+      throw new Error('No URL provided');
     }
 
-    // Download file from URL
     const fileResponse = await fetch(fileUrl);
     if (!fileResponse.ok) {
       throw new Error('Failed to fetch file from URL');
@@ -29,7 +28,7 @@ export async function onRequest({ request, env }) {
     const filename = fileUrl.split('/').pop() || 'download';
     
     if (fileBlob.size > MAX_SIZE) {
-      return jsonResponse({ success: false, error: 'File too large (max 2GB)' }, 400);
+      throw new Error('File too large (max 2GB)');
     }
 
     // Upload to Telegram
@@ -48,7 +47,6 @@ export async function onRequest({ request, env }) {
       throw new Error(telegramResult.description || 'Telegram upload failed');
     }
 
-    // Get file path
     const fileId = telegramResult.result.document.file_id;
     const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
     const getFileResult = await getFileResponse.json();
@@ -60,58 +58,53 @@ export async function onRequest({ request, env }) {
     const filePath = getFileResult.result.file_path;
     const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // Generate slug and store
-    const slug = generateSlug(filename);
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 8);
+    const lastDot = filename.lastIndexOf('.');
+    const extension = lastDot !== -1 ? filename.substring(lastDot) : '';
+    const nameWithoutExt = lastDot !== -1 ? filename.substring(0, lastDot) : filename;
+    const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
+    const slug = `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
+
+    const fileNumber = Math.floor(Math.random() * 100);
+    const randomPart1 = Math.random().toString(36).substr(2, 3);
+    const randomPart2 = Math.random().toString(36).substr(2, 3);
+    const fileIdCode = `MSMfile${fileNumber}/${randomPart1}-${randomPart2}`;
+
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
         filename: filename,
         size: fileBlob.size,
         contentType: fileBlob.type,
-        uploadedAt: Date.now()
+        uploadedAt: Date.now(),
+        fileIdCode: fileIdCode
       }
     });
 
     const baseUrl = new URL(request.url).origin;
-    const viewUrl = `${baseUrl}/m/${slug}`;
+    const streamUrl = `${baseUrl}/btf/${slug}/${fileIdCode}`;
+    const downloadUrl = `${baseUrl}/btf/${slug}/${fileIdCode}?dl=1`;
 
-    return jsonResponse({
+    return new Response(JSON.stringify({
       success: true,
       filename: filename,
       size: fileBlob.size,
       contentType: fileBlob.type,
-      view_url: viewUrl,
-      download_url: viewUrl + '?dl=1',
-      stream_url: viewUrl
+      view_url: streamUrl,
+      stream_url: streamUrl,
+      download_url: downloadUrl,
+      file_id: fileIdCode
+    }), {
+      headers: { 'Content-Type': 'application/json', ...cors }
     });
 
   } catch (error) {
-    console.error('URL upload error:', error);
-    return jsonResponse({ 
+    return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 
-    }, 500);
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...cors }
+    });
   }
-}
-
-function generateSlug(filename) {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substr(2, 8);
-  
-  const lastDot = filename.lastIndexOf('.');
-  const extension = lastDot !== -1 ? filename.substring(lastDot) : '';
-  const nameWithoutExt = lastDot !== -1 ? filename.substring(0, lastDot) : filename;
-  
-  const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
-  
-  return `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
-}
-
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 
-      'Content-Type': 'application/json',
-      ...cors
-    }
-  });
 }
