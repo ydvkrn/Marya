@@ -8,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
         .container { max-width: 800px; margin: 0 auto; }
-        h1 { color: #dc143c; text-align: center; margin-bottom: 30px; }
+        h1 { color: #dc143c; text-align: center; margin-bottom: 30px; font-size: 2.5rem; }
         
         .upload-box {
             background: white;
@@ -38,7 +38,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .result-name { font-weight: bold; margin-bottom: 10px; }
+        .result-name { font-weight: bold; margin-bottom: 10px; word-break: break-all; }
         .result-info { color: #666; margin-bottom: 15px; }
         .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         
@@ -51,6 +51,9 @@
             border: none;
             cursor: pointer;
             font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .btn:hover { background: #b91c1c; }
         .btn-success { background: #28a745; }
@@ -76,6 +79,7 @@
             .container { padding: 10px; }
             .upload-box { padding: 30px 15px; }
             .result-actions { flex-direction: column; }
+            h1 { font-size: 2rem; }
         }
     </style>
 </head>
@@ -86,7 +90,7 @@
         <div class="upload-box" id="uploadBox">
             <div class="upload-icon">📁</div>
             <div class="upload-text">Drop Files Here</div>
-            <div class="upload-subtext">or click to select files</div>
+            <div class="upload-subtext">or click to select files (up to 2GB)</div>
             <input type="file" id="fileInput" class="file-input" multiple>
         </div>
         
@@ -112,7 +116,9 @@
         // File selection
         fileInput.onchange = (e) => {
             console.log('Files selected:', e.target.files.length);
-            handleFiles(e.target.files);
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
+            }
         };
 
         // Drag and drop
@@ -129,7 +135,9 @@
             e.preventDefault();
             uploadBox.classList.remove('dragover');
             console.log('Files dropped:', e.dataTransfer.files.length);
-            handleFiles(e.dataTransfer.files);
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
         };
 
         async function handleFiles(files) {
@@ -141,9 +149,9 @@
         }
 
         async function uploadFile(file) {
-            console.log('Uploading:', file.name);
+            console.log('Uploading:', file.name, 'Size:', file.size);
 
-            if (file.size > 2000000000) { // 2GB limit
+            if (file.size > 2147483648) { // 2GB limit
                 showAlert('File too large (max 2GB)', 'error');
                 return;
             }
@@ -153,7 +161,7 @@
             resultItem.className = 'result-item';
             resultItem.innerHTML = `
                 <div class="result-name">${file.name}</div>
-                <div class="result-info">Uploading... (${formatBytes(file.size)})</div>
+                <div class="result-info">⏳ Uploading... (${formatBytes(file.size)})</div>
             `;
             results.appendChild(resultItem);
 
@@ -161,34 +169,45 @@
                 const formData = new FormData();
                 formData.append('file', file);
 
-                console.log('Sending request...');
+                console.log('Sending upload request...');
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
 
-                console.log('Response status:', response.status);
+                console.log('Upload response:', response.status, response.ok);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('Upload error response:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const result = await response.json();
-                console.log('Result:', result);
+                console.log('Upload result:', result);
 
                 if (result.success) {
                     resultItem.innerHTML = `
                         <div class="result-name">${result.filename}</div>
                         <div class="result-info">✅ Upload complete (${formatBytes(result.size)})</div>
                         <div class="result-actions">
-                            <a href="${result.url}" target="_blank" class="btn">View File</a>
-                            <a href="${result.download}" class="btn btn-success">Download</a>
-                            <button onclick="copyText('${result.url}')" class="btn">Copy Link</button>
+                            <a href="${result.url}" target="_blank" class="btn">
+                                👁️ View File
+                            </a>
+                            <a href="${result.download}" class="btn btn-success">
+                                ⬇️ Download
+                            </a>
+                            <button onclick="copyText('${result.url}')" class="btn">
+                                📋 Copy Link
+                            </button>
+                            <button onclick="testUrl('${result.url}')" class="btn">
+                                🧪 Test URL
+                            </button>
                         </div>
                     `;
-                    showAlert(`${result.filename} uploaded!`, 'success');
+                    showAlert(`${result.filename} uploaded successfully!`, 'success');
                 } else {
-                    throw new Error(result.error);
+                    throw new Error(result.error || 'Upload failed');
                 }
             } catch (error) {
                 console.error('Upload failed:', error);
@@ -202,8 +221,27 @@
 
         function copyText(text) {
             navigator.clipboard.writeText(text).then(() => {
-                showAlert('Link copied!', 'success');
+                showAlert('Link copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy link', 'error');
             });
+        }
+
+        function testUrl(url) {
+            console.log('Testing URL:', url);
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    console.log('URL test result:', response.status, response.ok);
+                    if (response.ok) {
+                        showAlert('URL is working! ✅', 'success');
+                    } else {
+                        showAlert(`URL test failed: ${response.status}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('URL test error:', error);
+                    showAlert('URL test failed: ' + error.message, 'error');
+                });
         }
 
         function formatBytes(bytes) {
@@ -217,7 +255,7 @@
         function showAlert(message, type) {
             alert.textContent = message;
             alert.className = `alert ${type} show`;
-            setTimeout(() => alert.classList.remove('show'), 3000);
+            setTimeout(() => alert.classList.remove('show'), 4000);
         }
     </script>
 </body>
