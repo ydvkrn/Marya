@@ -1,37 +1,34 @@
-const ADMIN_PASS = 'MSM@MARYA';
-
 export async function onRequest(context) {
   const { request, env } = context;
-  const url = new URL(request.url);
-  const pass = url.searchParams.get('pass');
-  const slug = url.searchParams.get('slug');
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
-  };
-
-  if (pass !== ADMIN_PASS) {
-    return new Response(JSON.stringify({ success: false, error: 'Invalid password' }), {
-      status: 401,
-      headers
-    });
-  }
-
-  if (!slug) {
-    return new Response(JSON.stringify({ success: false, error: 'No slug provided' }), {
-      status: 400,
-      headers
-    });
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
   }
 
   try {
-    await env.FILES_KV.delete(slug);
-    return new Response(JSON.stringify({ success: true }), { headers });
+    const { fileId } = await request.json();
+    
+    if (!fileId) {
+      throw new Error('File ID is required');
+    }
+
+    // Delete from KV
+    await env.FILES_KV.delete(fileId);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'File deleted successfully'
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
   } catch (error) {
-    return new Response(JSON.stringify({ success: false, error: error.message }), {
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
       status: 500,
-      headers
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
