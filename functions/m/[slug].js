@@ -1,20 +1,35 @@
 import { CACHE_SECS } from '../_config.js';
 
-export async function onRequest({params,request,env}) {
-  const slug=params.slug; const kv=env.FILES_KV;
-  const tgURL = await kv.get(slug);
-  if(!tgURL) return new Response('404',{status:404});
+export async function onRequest({ params, request, env }) {
+  try {
+    const slug = params.slug;
+    const directUrl = await env.FILES_KV.get(slug);
 
-  const range = request.headers.get('Range');
-  const r = await fetch(tgURL,{headers: range?{Range:range}:{}});
+    if (!directUrl) {
+      return new Response('File not found', { status: 404 });
+    }
 
-  /* prepare headers */
-  const h=new Headers(r.headers);
-  h.set('Access-Control-Allow-Origin','*');
-  h.set('Cache-Control',`public,max-age=${CACHE_SECS},immutable`);
-  h.set('Expires',new Date(Date.now()+CACHE_SECS*1000).toUTCString());
-  if(request.url.includes('dl=1')) h.set('Content-Disposition','attachment');
-  if(!h.has('Accept-Ranges')) h.set('Accept-Ranges','bytes');
+    const response = await fetch(directUrl);
+    
+    if (!response.ok) {
+      return new Response('File not accessible', { status: 404 });
+    }
 
-  return new Response(r.body,{status:r.status,headers:h});
+    const headers = new Headers(response.headers);
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.set('Cache-Control', `public, max-age=${CACHE_SECS}`);
+    
+    if (request.url.includes('dl=1')) {
+      headers.set('Content-Disposition', 'attachment');
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      headers
+    });
+
+  } catch (error) {
+    console.error('Serve error:', error);
+    return new Response('Server error', { status: 500 });
+  }
 }
