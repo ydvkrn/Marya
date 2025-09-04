@@ -27,10 +27,12 @@ export async function onRequest({ request, env }) {
       return jsonResponse({ success: false, error: 'File too large (max 2GB)' }, 400);
     }
 
-    // Upload to Telegram as document (works for all file types)
+    console.log('Uploading:', file.name, 'Type:', file.type, 'Size:', file.size);
+
+    // ✅ FIXED: Always use sendDocument for ALL file types (most reliable)
     const telegramFormData = new FormData();
     telegramFormData.append('chat_id', CHANNEL_ID);
-    telegramFormData.append('document', file);
+    telegramFormData.append('document', file, file.name); // Important: include filename
 
     const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
     const telegramResponse = await fetch(telegramUrl, {
@@ -39,6 +41,7 @@ export async function onRequest({ request, env }) {
     });
 
     const telegramResult = await telegramResponse.json();
+    console.log('Telegram response:', telegramResult);
 
     if (!telegramResult.ok) {
       console.error('Telegram error:', telegramResult);
@@ -49,7 +52,13 @@ export async function onRequest({ request, env }) {
     }
 
     // Get file_id from document
-    const fileId = telegramResult.result.document.file_id;
+    const document = telegramResult.result.document;
+    if (!document) {
+      return jsonResponse({ success: false, error: 'No document in response' }, 500);
+    }
+
+    const fileId = document.file_id;
+    const fileName = document.file_name || file.name;
     
     // Get file path from Telegram
     const getFileUrl = `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`;
@@ -57,19 +66,20 @@ export async function onRequest({ request, env }) {
     const fileResult = await fileResponse.json();
 
     if (!fileResult.ok) {
+      console.error('GetFile error:', fileResult);
       return jsonResponse({ success: false, error: 'Failed to get file path' }, 500);
     }
 
     const filePath = fileResult.result.file_path;
     const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // ✅ FIXED: Generate proper slug with extension
-    const slug = generateSlug(file.name);
+    // Generate slug with extension
+    const slug = generateSlugWithExtension(fileName);
     
-    // ✅ FIXED: Store direct URL as string (not JSON)
+    // ✅ FIXED: Store as simple string, not JSON
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
-        filename: file.name,
+        filename: fileName,
         size: file.size,
         contentType: file.type,
         uploadedAt: Date.now()
@@ -81,7 +91,7 @@ export async function onRequest({ request, env }) {
 
     return jsonResponse({
       success: true,
-      filename: file.name,
+      filename: fileName,
       size: file.size,
       contentType: file.type,
       view_url: viewUrl,
@@ -98,11 +108,11 @@ export async function onRequest({ request, env }) {
   }
 }
 
-function generateSlug(filename) {
+function generateSlugWithExtension(filename) {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substr(2, 8);
   
-  // Keep original extension
+  // Preserve extension properly
   const lastDot = filename.lastIndexOf('.');
   const extension = lastDot !== -1 ? filename.substring(lastDot) : '';
   const nameWithoutExt = lastDot !== -1 ? filename.substring(0, lastDot) : filename;
