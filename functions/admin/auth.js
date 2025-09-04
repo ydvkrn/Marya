@@ -1,10 +1,10 @@
 export async function onRequest(context) {
   const { request, env } = context;
   
-  console.log('=== AUTH REQUEST ===');
+  console.log('=== SECURE AUTH REQUEST ===');
   console.log('Method:', request.method);
   console.log('Has env:', !!env);
-  console.log('Has ADMIN_PASS:', !!env.ADMIN_PASS);
+  console.log('Has ADMIN_PASSWORD:', !!env.ADMIN_PASSWORD);
   
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -27,11 +27,19 @@ export async function onRequest(context) {
   try {
     const { password } = await request.json();
     
-    // ✅ Access environment variable properly
-    const ADMIN_PASS = env.ADMIN_PASS || 'admin123'; // Fallback for testing
+    // ✅ SECURE: Access secret environment variable
+    const ADMIN_PASSWORD = env.ADMIN_PASSWORD;
     
     console.log('Password provided:', !!password);
-    console.log('Comparing with configured password...');
+    console.log('Environment variable configured:', !!ADMIN_PASSWORD);
+    
+    if (!ADMIN_PASSWORD) {
+      console.error('❌ ADMIN_PASSWORD environment variable not configured');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Server configuration error'
+      }), { status: 500, headers });
+    }
     
     if (!password) {
       return new Response(JSON.stringify({
@@ -40,14 +48,15 @@ export async function onRequest(context) {
       }), { status: 400, headers });
     }
     
-    if (password === ADMIN_PASS) {
+    // ✅ SECURE: Compare with environment variable
+    if (password === ADMIN_PASSWORD) {
       console.log('✅ Authentication successful');
       return new Response(JSON.stringify({
         success: true,
         message: 'Authentication successful'
       }), { headers });
     } else {
-      console.log('❌ Authentication failed');
+      console.log('❌ Authentication failed - Invalid password');
       return new Response(JSON.stringify({
         success: false,
         error: 'Invalid password'
