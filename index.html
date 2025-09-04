@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marya Vault - Professional File Hosting</title>
-    <link href="https://cdnjs.cloudflare.com```ax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --primary: #dc143c;
@@ -23,6 +23,8 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            /* ✅ CRITICAL: Mobile Safari fix */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -32,6 +34,9 @@
             padding: 15px;
             color: var(--gray-900);
             line-height: 1.6;
+            /* ✅ Mobile optimization */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
         }
 
         .container {
@@ -105,22 +110,42 @@
             pointer-events: none;
         }
 
+        /* ✅ CRITICAL FIX: Mobile click area */
         .dropzone {
             border: 3px dashed rgba(220, 20, 60, 0.3);
             border-radius: 15px;
             padding: 60px 20px;
             text-align: center;
-            cursor: pointer;
+            cursor: pointer; /* ✅ CRITICAL for mobile Safari */
             transition: all 0.3s ease;
             background: rgba(220, 20, 60, 0.02);
             position: relative;
+            /* ✅ CRITICAL: Touch optimizations */
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* ✅ Ensure clickable area */
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .dropzone:hover,
-        .dropzone.dragover {
+        .dropzone.dragover,
+        .dropzone:active,
+        .dropzone:focus {
             border-color: var(--primary);
             background: rgba(220, 20, 60, 0.08);
             transform: translateY(-5px);
+        }
+
+        /* ✅ CRITICAL: Touch states for mobile */
+        .dropzone:active {
+            transform: translateY(0) scale(0.98);
         }
 
         .upload-icon {
@@ -128,6 +153,8 @@
             color: var(--primary);
             margin-bottom: 20px;
             animation: bounce 2s ease-in-out infinite;
+            /* ✅ Prevent touch interference */
+            pointer-events: none;
         }
 
         @keyframes bounce {
@@ -142,11 +169,15 @@
             font-weight: 700;
             color: var(--primary);
             margin-bottom: 10px;
+            /* ✅ Prevent touch interference */
+            pointer-events: none;
         }
 
         .upload-subtext {
             color: var(--gray-600);
             font-size: 1rem;
+            /* ✅ Prevent touch interference */
+            pointer-events: none;
         }
 
         .supported-formats {
@@ -155,6 +186,8 @@
             gap: 10px;
             margin-top: 20px;
             flex-wrap: wrap;
+            /* ✅ Prevent touch interference */
+            pointer-events: none;
         }
 
         .format-badge {
@@ -258,6 +291,9 @@
             text-align: center;
             justify-content: center;
             min-width: 120px;
+            /* ✅ Mobile touch optimization */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .btn-primary {
@@ -265,7 +301,8 @@
             color: var(--white);
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover,
+        .btn-primary:active {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(220, 20, 60, 0.3);
@@ -276,13 +313,13 @@
             color: var(--white);
         }
 
-        .btn-success:hover {
+        .btn-success:hover,
+        .btn-success:active {
             background: #059669;
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
         }
 
-        /* ✅ Enhanced Progress Bar */
         .progress-container {
             margin: 15px 0;
             background: var(--gray-100);
@@ -355,29 +392,6 @@
             background: var(--error);
         }
 
-        .admin-link {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary);
-            color: var(--white);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            box-shadow: var(--shadow);
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .admin-link:hover {
-            transform: scale(1.1);
-            background: var(--primary-dark);
-        }
-
         /* Mobile Optimizations */
         @media (max-width: 768px) {
             body {
@@ -407,6 +421,9 @@
 
             .dropzone {
                 padding: 40px 15px;
+                /* ✅ CRITICAL: Larger touch area on mobile */
+                min-height: 180px;
+                border-width: 2px;
             }
 
             .upload-icon {
@@ -451,26 +468,20 @@
                 width: 100%;
                 padding: 15px;
                 font-size: 1rem;
+                /* ✅ CRITICAL: Minimum touch target size */
+                min-height: 48px;
             }
 
             .alert {
                 top: 10px;
                 right: 10px;
                 left: 10px;
-                transform: translateY```00px);
+                transform: translateY(-100px);
                 max-width: none;
             }
 
             .alert.show {
                 transform: translateY(0);
-            }
-
-            .admin-link {
-                bottom: 15px;
-                right: 15px;
-                width: 45px;
-                height: 45px;
-                font-size: 1rem;
             }
         }
 
@@ -490,6 +501,11 @@
             .upload-subtext {
                 font-size: 0.9rem;
             }
+
+            .dropzone {
+                padding: 30px 10px;
+                min-height: 160px;
+            }
         }
     </style>
 </head>
@@ -500,17 +516,18 @@
                 <i class="fas fa-cloud-upload-alt"></i>
             </div>
             <h1>Marya Vault</h1>
-            <p class="subtitle">Professional File Hosting •```rmanent Storage • Up to 2GB</p>
+            <p class="subtitle">Professional File Hosting • Permanent Storage • Up to 2GB</p>
         </div>
 
         <div class="upload-card">
-            <div class="dropzone" id="dropzone">
+            <!-- ✅ CRITICAL: Added explicit role and tabindex for accessibility -->
+            <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Click or drop files to upload">
                 <div class="upload-icon">
-                    <i class="fas fa```le-upload"></i>
+                    <i class="fas fa-file-upload"></i>
                 </div>
                 <div class="upload-text">Drop Files Here</div>
                 <div class="upload-subtext">or click to browse from your device</div>
-                <input type="file" i```fileInput" class="file-input" multiple>
+                <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
                 
                 <div class="supported-formats">
                     <span class="format-badge">
@@ -526,11 +543,11 @@
                         Documents
                     </span>
                     <span class="format-badge">
-                        <i class="fas```-music"></i>
+                        <i class="fas fa-music"></i>
                         Audio
                     </span>
                     <span class="format-badge">
-                        <i class="fas```-archive"></i>
+                        <i class="fas fa-archive"></i>
                         Archives
                     </span>
                 </div>
@@ -546,294 +563,338 @@
         </div>
     </div>
 
-    <a href="/admin.html" class="admin-link" title="Admin Panel">
-        <i class="fas fa-cog"></i>
-    </a>
+    <div id="alert" class="alert"></div>
 
-    <div id="alert" class="alert"></div```    <script>
-        console.log('🚀 Marya Vault loaded - Perfect Version');
+    <script>
+        console.log('🚀 Marya Vault - Mobile Optimized Version Loading...');
 
-        // Get DOM elements
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('fileInput');
-        const results = document.getElementById('results');
-        const resultsList = document.getElementById('resultsList');
-        const alert = document.getElementById('alert');
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM Ready - Initializing mobile-friendly handlers...');
 
-        // ✅ Simple event handlers
-        dropzone.onclick = () => {
-            console.log('Dropzone clicked');
-            fileInput.click();
-        };
+            // Get elements
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const results = document.getElementById('results');
+            const resultsList = document.getElementById('resultsList');
+            const alert = document.getElementById('alert');
 
-        fileInput.onchange = (e) => {
-            console.log('Files selected:', e.target.files.length);
-            if (e.target.files.length > 0) {
-                handleFiles(e.target.files);
-            }
-        };
-
-        // Drag and drop
-        dropzone.ondragover = (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        };
-
-        dropzone.ondragleave = () => {
-            dropzone.classList.remove('dragover');
-        };
-
-        dropzone.ondrop = (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            console.log('Files dropped:', e.dataTransfer.files.```gth);
-            if (e.dataTransfer.files.length > 0) {
-                handleFiles(e.dataTransfer.files);
-            }
-        };
-
-        function handleFiles(files) {
-            console.log('Processing files:', files.length);
-            
-            if (!files || files.length === 0) {
-                showAlert('No files selected', 'error');
-                return;
-            }
-            
-            results.style.display = 'block```            
-            Array.from(files).forEach(file => {
-                uploadFileWithProgress```le);
-            });
-        }
-
-        // ✅ Upload with REAL progress tracking
-        function uploadFileWithProgress(file) {
-            console.log('Starting upload with progress:', file.name);
-
-            if (file.size > 2147483648) { // 2GB
-                showAlert('File too large (max 2GB)', 'error');
+            if (!dropzone || !fileInput) {
+                console.error('❌ Critical elements missing!');
                 return;
             }
 
-            // Create result item
-            const resultItem = createResultItem(file);
-            resultsList.appendChild(resultItem);
-
-            // Get progress elements
-            const progressBar = resultItem.querySelector('.progress-bar');
-            const progressText = resultItem.querySelector('.progress-text');
-            const resultMeta = resultItem.querySelector('.result-meta');
-
-            // ✅ Use XMLHttpRequest for progress tracking```          const xhr = new XMLHttpRequest();
-
-            // ✅ Track upload progress
-            xhr.upload.addEventListener```rogress', (e) => {
-                if (e.lengthComputable) {
-                    const percentComplete = Math.round((e.loaded / e.total) * 100);
-                    
-                    // Update progress bar
-                    progressBar.style.width =```rcentComplete + '%';
-                    
-                    // Update text
-                    progressText.textContent = `${percentComplete}% uploaded`;
-                    resultMeta.textContent = `${formatBytes(e.loaded)} of ${formatBytes(e.total)} • ${percentComplete}%`;
-                    
-                    console.log(`Upload progress: ${percentComplete}%`);
-                }
-            });
-
-            // ✅ Handle upload completion
-            xhr.addEventListener('load', () => {
-                console.log('Upload completed, status:', xhr.status);
+            // ✅ CRITICAL FIX: Multiple event handlers for maximum compatibility
+            function openFileDialog(e) {
+                console.log('🎯 File dialog triggered via:', e.type);
+                e.preventDefault();
+                e.stopPropagation();
                 
-                if (xhr.status === 200) {
-                    try {
-                        const result = JSON.parse(xhr.responseText);
-                        console.log('Upload result:', result);
-
-                        if (result.success) {
-                            updateResultItemSuccess(resultItem, result);
-                            showAlert(`${result.filename} uploaded successfully!`, 'success');
-                        } else {
-                            throw new Error(result.error || 'Upload failed');
-                        }
-                    } catch (parseError) {
-                        console.error('Parse error:', parseError);
-                        updateResultItemError(resultItem, file, 'Invalid server response');
-                        showAlert('Upload failed: Invalid response', 'error');
+                try {
+                    fileInput.click();
+                } catch (error) {
+                    console.error('File input click error:', error);
+                    // Fallback method
+                    fileInput.focus();
+                    if (fileInput.click) {
+                        fileInput.click();
                     }
-                } else {
-                    console.error('Upload HTTP error:', xhr.status);
-                    updateResultItemError(resultItem, file, `HTTP ${xhr.status}`);
-                    showAlert(`Upload failed: HTTP ${xhr.status}`, 'error');
+                }
+            }
+
+            // ✅ CRITICAL: Multiple event types for mobile compatibility
+            dropzone.addEventListener('click', openFileDialog, { passive: false });
+            dropzone.addEventListener('touchstart', openFileDialog, { passive: false });
+            dropzone.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                console.log('🖱️ Touch end detected');
+                openFileDialog(e);
+            }, { passive: false });
+
+            // ✅ Keyboard support for accessibility
+            dropzone.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openFileDialog(e);
                 }
             });
 
-            // ✅ Handle upload error
-            xhr.addEventListener('error', () => {
-                console.error('Upload network error');
-                updateResultItemError```sultItem, file, 'Network error');
-                showAlert('Upload failed: Network error', 'error');
+            // File input change handler
+            fileInput.addEventListener('change', function(e) {
+                console.log('📁 Files selected:', e.target.files.length);
+                if (e.target.files && e.target.files.length > 0) {
+                    handleFiles(e.target.files);
+                }
             });
 
-            // ✅ Handle upload timeout
-            xhr.addEventListener('timeout', () => {
-                console.error('Upload timeout');
-                updateResultItemError(resultItem, file, 'Upload timeout');
-                showAlert('Upload failed: Timeout', 'error');
-            });
-
-            // ✅ Start upload
-            const formData = new FormData();
-            formData.append('file', file);
-
-            xhr.open('POST', '/upload', true);
-            xhr.timeout = 300000; // 5 minutes timeout
-            xhr.send(formData);
-        }
-
-        function createResultItem(file) {
-            const item = document.createElement('div');
-            item.className = 'result-item';
-            
-            const icon = getFileIcon(file.type, file.name);
-            
-            item.innerHTML = `
-                <div class="result-header">
-                    <div class="file-icon">
-                        <i class="${icon}"></i>
-                    </div>
-                    <div class="result-info">
-                        <h3>${file.name}</h3>
-                        <div class="result-meta">${formatBytes(file.size)} • Preparing...</div>
-                    </div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-bar"></div>
-                </div>
-                <div class="progress-text">0% uploaded</div>
-            `;
-            
-            return item;
-        }
-
-        function updateResultItemSuccess(item, result) {
-            const icon = getFileIcon(result.contentType, result.filename);
-            
-            item.innerHTML = `
-                <div class="result-header">
-                    <div class="file-icon">
-                        <i class="${icon}"></i>
-                    </div>
-                    <div class="result-info">
-                        <h3>${result.filename}</h3>
-                        <div class="result-meta">${formatBytes(result.size)} • Upload Complete ✅</div>
-                    </div>
-                </div>
-                <div class="result-actions">
-                    <a href="${result.url}" target="_blank" class="btn btn-primary">
-                        <i class="fas fa-eye"></i> View File
-                    </a>
-                    <a href="${result.download}" class="btn btn-success">
-                        <i class="fas fa-download"></i> Download
-                    </a>
-                    <button onclick="copyToClipboard('${result.url}')" class="btn btn-primary">
-                        <i class="fas fa-copy"></i> Copy Link
-                    </button>
-                </div>
-            `;
-        }
-
-        function updateResultItemError(item, file, error) {
-            const icon = getFileIcon(file.type, file.name);
-            
-            item.innerHTML = `
-                <div class="result-header">
-                    <div class="file-icon" style="background: var(--error);">
-                        <i class="${icon}"></i>
-                    </div>
-                    <div class="result-info">
-                        <h3>${file.name}</h3>
-                        <div class="result-meta" style="color: var(--error);">❌ Upload failed: ${error}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function getFileIcon(type, filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            
-            if (type && type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-                return 'fas fa-image';
-            } else if (type && type.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
-                return 'fas fa-video';
-            } else if (type && type.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
-                return 'fas fa-music';
-            } else if (['pdf'].includes(ext)) {
-                return 'fas fa-file-pdf';
-            } else if (['doc', 'docx'].includes(ext)) {
-                return 'fas fa-file-word';
-            } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
-                return 'fas fa-archive';
-            } else {
-                return 'fas fa-file';
+            // ✅ Drag and drop handlers (with mobile considerations)
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('dragover');
+                console.log('📋 Drag over detected');
             }
-        }
 
-        function formatBytes(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
+            function handleDragLeave(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('dragover');
+            }
 
-        // Global function for copy button```      window.copyToClipboard = function(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showAlert('Link copied to clipboard!', 'success```
-                }).catch(() => {
-                    fallbackCopyTextToClipboar```ext);
+            function handleDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('dragover');
+                
+                console.log('📋 Files dropped:', e.dataTransfer?.files?.length || 0);
+                
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            }
+
+            // Add drag and drop listeners
+            dropzone.addEventListener('dragover', handleDragOver);
+            dropzone.addEventListener('dragenter', handleDragOver);
+            dropzone.addEventListener('dragleave', handleDragLeave);
+            dropzone.addEventListener('drop', handleDrop);
+
+            // Main file handling function
+            function handleFiles(files) {
+                console.log('📂 Processing files:', files.length);
+                
+                if (!files || files.length === 0) {
+                    showAlert('No files selected', 'error');
+                    return;
+                }
+                
+                results.style.display = 'block';
+                
+                Array.from(files).forEach(file => {
+                    uploadFileWithProgress(file);
                 });
-            } else {
-                fallbackCopyTextToClipboard(text);
             }
-        };
 
-        function fallbackCopyTextToClipboard(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.opacity = '0';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                showAlert('Link copied to clipboard!', 'success');
-            } catch (err) {
-                showAlert('Could not copy link', 'error');
+            // Upload with progress tracking
+            function uploadFileWithProgress(file) {
+                console.log('🚀 Starting upload:', file.name, file.size);
+
+                if (file.size > 2147483648) { // 2GB
+                    showAlert('File too large (max 2GB)', 'error');
+                    return;
+                }
+
+                const resultItem = createResultItem(file);
+                resultsList.appendChild(resultItem);
+
+                const progressBar = resultItem.querySelector('.progress-bar');
+                const progressText = resultItem.querySelector('.progress-text');
+                const resultMeta = resultItem.querySelector('.result-meta');
+
+                // Use XMLHttpRequest for progress tracking
+                const xhr = new XMLHttpRequest();
+
+                // Track upload progress
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = Math.round((e.loaded / e.total) * 100);
+                        
+                        progressBar.style.width = percentComplete + '%';
+                        progressText.textContent = `${percentComplete}% uploaded`;
+                        resultMeta.textContent = `${formatBytes(e.loaded)} of ${formatBytes(e.total)} • ${percentComplete}%`;
+                        
+                        console.log(`📊 Upload progress: ${percentComplete}%`);
+                    }
+                });
+
+                // Handle completion
+                xhr.addEventListener('load', () => {
+                    console.log('✅ Upload completed:', xhr.status);
+                    
+                    if (xhr.status === 200) {
+                        try {
+                            const result = JSON.parse(xhr.responseText);
+                            if (result.success) {
+                                updateResultItemSuccess(resultItem, result);
+                                showAlert(`${result.filename} uploaded successfully!`, 'success');
+                            } else {
+                                throw new Error(result.error || 'Upload failed');
+                            }
+                        } catch (parseError) {
+                            updateResultItemError(resultItem, file, 'Invalid server response');
+                            showAlert('Upload failed: Invalid response', 'error');
+                        }
+                    } else {
+                        updateResultItemError(resultItem, file, `HTTP ${xhr.status}`);
+                        showAlert(`Upload failed: HTTP ${xhr.status}`, 'error');
+                    }
+                });
+
+                xhr.addEventListener('error', () => {
+                    updateResultItemError(resultItem, file, 'Network error');
+                    showAlert('Upload failed: Network error', 'error');
+                });
+
+                xhr.addEventListener('timeout', () => {
+                    updateResultItemError(resultItem, file, 'Upload timeout');
+                    showAlert('Upload failed: Timeout', 'error');
+                });
+
+                // Start upload
+                const formData = new FormData();
+                formData.append('file', file);
+
+                xhr.open('POST', '/upload', true);
+                xhr.timeout = 300000; // 5 minutes
+                xhr.send(formData);
             }
-            
-            document.body.removeChild(textArea);
-        }
 
-        function showAlert(message, type) {
-            alert.innerHTML = `
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
-                <span>${message}</span>
-            `;
-            alert.className = `alert ${type} show`;
-            
-            setTimeout(() => {
-                alert.classList.remove('show');
-            }, 4000);
-        }
+            function createResultItem(file) {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                
+                const icon = getFileIcon(file.type, file.name);
+                
+                item.innerHTML = `
+                    <div class="result-header">
+                        <div class="file-icon">
+                            <i class="${icon}"></i>
+                        </div>
+                        <div class="result-info">
+                            <h3>${file.name}</h3>
+                            <div class="result-meta">${formatBytes(file.size)} • Preparing...</div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <div class="progress-text">0% uploaded</div>
+                `;
+                
+                return item;
+            }
 
-        console.log('✅ Marya Vault Perfect Version Ready```;
+            function updateResultItemSuccess(item, result) {
+                const icon = getFileIcon(result.contentType, result.filename);
+                
+                item.innerHTML = `
+                    <div class="result-header">
+                        <div class="file-icon">
+                            <i class="${icon}"></i>
+                        </div>
+                        <div class="result-info">
+                            <h3>${result.filename}</h3>
+                            <div class="result-meta">${formatBytes(result.size)} • Upload Complete ✅</div>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <a href="${result.url}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View File
+                        </a>
+                        <a href="${result.download}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <button onclick="copyToClipboard('${result.url}')" class="btn btn-primary">
+                            <i class="fas fa-copy"></i> Copy Link
+                        </button>
+                    </div>
+                `;
+            }
+
+            function updateResultItemError(item, file, error) {
+                const icon = getFileIcon(file.type, file.name);
+                
+                item.innerHTML = `
+                    <div class="result-header">
+                        <div class="file-icon" style="background: var(--error);">
+                            <i class="${icon}"></i>
+                        </div>
+                        <div class="result-info">
+                            <h3>${file.name}</h3>
+                            <div class="result-meta" style="color: var(--error);">❌ Upload failed: ${error}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function getFileIcon(type, filename) {
+                const ext = filename.split('.').pop()?.toLowerCase() || '';
+                
+                if (type?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                    return 'fas fa-image';
+                } else if (type?.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
+                    return 'fas fa-video';
+                } else if (type?.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
+                    return 'fas fa-music';
+                } else if (['pdf'].includes(ext)) {
+                    return 'fas fa-file-pdf';
+                } else if (['doc', 'docx'].includes(ext)) {
+                    return 'fas fa-file-word';
+                } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+                    return 'fas fa-archive';
+                } else {
+                    return 'fas fa-file';
+                }
+            }
+
+            function formatBytes(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // Global functions for buttons
+            window.copyToClipboard = function(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showAlert('Link copied to clipboard!', 'success');
+                    }).catch(() => {
+                        fallbackCopyTextToClipboard(text);
+                    });
+                } else {
+                    fallbackCopyTextToClipboard(text);
+                }
+            };
+
+            function fallbackCopyTextToClipboard(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.top = '0';
+                textArea.style.left = '0';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showAlert('Link copied to clipboard!', 'success');
+                } catch (err) {
+                    showAlert('Could not copy link', 'error');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+
+            function showAlert(message, type) {
+                alert.innerHTML = `
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                    <span>${message}</span>
+                `;
+                alert.className = `alert ${type} show`;
+                
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                }, 4000);
+            }
+
+            console.log('✅ Marya Vault Mobile Version Ready - All handlers initialized!');
+        });
+
+        console.log('🎯 Script loaded - waiting for DOM...');
     </script>
 </body>
 </html>
