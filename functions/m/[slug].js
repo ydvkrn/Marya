@@ -2,51 +2,53 @@ export async function onRequest({ params, request, env }) {
   try {
     const slug = params.slug;
     
-    // ✅ Get URL as plain text (fixes JSON error)
-    const directUrl = await env.FILES_KV.get(slug, 'text');
-    const kvData = await env.FILES_KV.get(slug, { type: 'json' });
-
+    // ✅ MAIN FIX: Get as plain text, NOT JSON
+    const directUrl = await env.FILES_KV.get(slug);
+    
     if (!directUrl) {
       return new Response('File not found', { status: 404 });
     }
 
-    // Handle range requests for video streaming
+    console.log('Direct URL:', directUrl);
+
+    // Handle range requests
     const range = request.headers.get('Range');
-    const fetchOptions = { headers: {} };
+    const fetchOptions = {};
     
     if (range) {
-      fetchOptions.headers['Range'] = range;
+      fetchOptions.headers = { 'Range': range };
     }
 
     // Fetch from Telegram
     const response = await fetch(directUrl, fetchOptions);
     
     if (!response.ok) {
-      return new Response('File not accessible', { status: 404 });
+      return new Response('File not accessible', { status: response.status });
     }
 
-    // Copy headers from Telegram response
+    // Create new headers
     const headers = new Headers();
-    for (const [key, value] of response.headers.entries()) {
-      headers.set(key, value);
-    }
-
-    // Set custom headers
+    
+    // Copy essential headers
+    const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+    const contentLength = response.headers.get('Content-Length');
+    const contentRange = response.headers.get('Content-Range');
+    
+    headers.set('Content-Type', contentType);
+    if (contentLength) headers.set('Content-Length', contentLength);
+    if (contentRange) headers.set('Content-Range', contentRange);
+    
+    // Custom headers
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Cache-Control', 'public, max-age=315360000, immutable');
     headers.set('Accept-Ranges', 'bytes');
 
     // Content disposition
     const isDownload = request.url.includes('dl=1');
-    const filename = kvData?.metadata?.filename || slug;
-    const contentType = headers.get('Content-Type') || kvData?.metadata?.contentType;
-    
     if (isDownload) {
-      headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-    } else if (contentType && (contentType.startsWith('image/') || contentType.startsWith('video/') || contentType.startsWith('audio/'))) {
-      headers.set('Content-Disposition', 'inline');
+      headers.set('Content-Disposition', `attachment; filename="${slug}"`);
     } else {
-      headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+      headers.set('Content-Disposition', 'inline');
     }
 
     return new Response(response.body, {
@@ -56,6 +58,6 @@ export async function onRequest({ params, request, env }) {
 
   } catch (error) {
     console.error('Serve error:', error);
-    return new Response(`Server error: ${error.message}`, { status: 500 });
+    return new Response(`Error: ${error.message}`, { status: 500 });
   }
 }
