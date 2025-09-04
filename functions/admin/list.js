@@ -21,14 +21,10 @@ export async function onRequest({ request, env }) {
 
   try {
     const list = await env.FILES_KV.list();
-    const items = [];
-    
-    for (const key of list.keys) {
-      items.push({
-        key: key.name,
-        metadata: key.metadata
-      });
-    }
+    const items = list.keys.map(key => ({
+      key: key.name,
+      metadata: key.metadata
+    }));
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -37,7 +33,6 @@ export async function onRequest({ request, env }) {
       headers
     });
   } catch (error) {
-    console.error('Admin list error:', error);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 
