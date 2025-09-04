@@ -64,6 +64,7 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
         }
 
@@ -147,6 +148,8 @@
 
         .files-list {
             padding: 0;
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         .file-item {
@@ -190,6 +193,7 @@
             color: var(--gray-900);
             margin-bottom: 5px;
             word-break: break-all;
+            max-width: 300px;
         }
 
         .file-meta {
@@ -286,6 +290,29 @@
             margin-bottom: 10px;
         }
 
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--primary);
+            color: var(--white);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(220, 20, 60, 0.3);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
+        }
+
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             body {
@@ -325,6 +352,10 @@
                 gap: 10px;
             }
 
+            .file-details h3 {
+                max-width: none;
+            }
+
             .file-actions {
                 width: 100%;
                 justify-content: center;
@@ -334,6 +365,14 @@
                 flex: 1;
                 justify-content: center;
                 padding: 12px 16px;
+            }
+
+            .back-btn {
+                top: 15px;
+                left: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
             }
         }
 
@@ -357,6 +396,10 @@
     </style>
 </head>
 <body>
+    <a href="/" class="back-btn" title="Back to Home">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
     <div class="container">
         <div class="header">
             <div class="logo">
@@ -405,22 +448,33 @@
             const totalFiles = document.getElementById('totalFiles');
             const totalSize = document.getElementById('totalSize');
 
+            console.log('Loading files...');
             filesList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><div>Loading files...</div></div>';
 
             try {
-                const response = await fetch(`/admin/files?action=list&pass=${ADMIN_PASS}`);
+                const url = `/admin/files?action=list&pass=${encodeURIComponent(ADMIN_PASS)}`;
+                console.log('Fetching:', url);
                 
+                const response = await fetch(url);
+                
+                console.log('Response status:', response.status);
+                console.log('Response OK:', response.ok);
+
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const result = await response.json();
+                console.log('Admin result:', result);
 
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to load files');
                 }
 
                 const files = result.files || [];
+                console.log('Files loaded:', files.length);
 
                 if (files.length === 0) {
                     filesList.innerHTML = `
@@ -457,7 +511,7 @@
                                 <div class="file-details">
                                     <h3>${escapeHtml(filename)}</h3>
                                     <div class="file-meta">
-                                        ${formatBytes(size)} • ${uploadedAt}
+                                        ${formatBytes(size)} • ${uploadedAt} • ${file.slug}
                                     </div>
                                 </div>
                             </div>
@@ -489,16 +543,26 @@
                 return;
             }
 
+            console.log('Deleting file:', slug, filename);
+
             try {
-                const response = await fetch(`/admin/files?action=delete&pass=${ADMIN_PASS}&slug=${encodeURIComponent(slug)}`, {
+                const url = `/admin/files?action=delete&pass=${encodeURIComponent(ADMIN_PASS)}&slug=${encodeURIComponent(slug)}`;
+                console.log('Delete URL:', url);
+                
+                const response = await fetch(url, {
                     method: 'DELETE'
                 });
 
+                console.log('Delete response status:', response.status);
+
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Delete error response:', errorText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const result = await response.json();
+                console.log('Delete result:', result);
 
                 if (result.success) {
                     alert(`"${filename}" deleted successfully!`);
