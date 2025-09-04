@@ -3,551 +3,194 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marya Vault Admin Panel</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<title>Admin Panel</title>
 <style>
-:root {
-  --red: #E60023;
-  --red-dark: #B91C1C;
-  --white: #FFFFFF;
-  --gray-50: #F9FAFB;
-  --gray-600: #6B7280;
-  --gray-900: #111827;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--white);
-  color: var(--gray-900);
-  line-height: 1.6;
-  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f5f5;
+  padding: 20px;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.logo {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-  border-radius: 50%;
-  margin: 0 auto 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10px 30px rgba(230, 0, 35, 0.3);
-}
-
-.logo i {
-  font-size: 1.5rem;
-  color: var(--white);
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 10px;
-}
-
-.subtitle {
-  color: var(--gray-600);
-  font-size: 1.1rem;
-  font-weight: 500;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
-  background: var(--white);
-  border: 2px solid rgba(230, 0, 35, 0.1);
-  border-radius: 16px;
-  padding: 25px;
+  color: #dc143c;
   text-align: center;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-}
-
-.stat-number {
+  margin-bottom: 30px;
   font-size: 2rem;
-  font-weight: 800;
-  color: var(--red);
-  margin-bottom: 8px;
-}
-
-.stat-label {
-  color: var(--gray-600);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-}
-
-.content-card {
-  background: var(--white);
-  border: 2px solid rgba(230, 0, 35, 0.1);
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.table-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--red);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.refresh-btn {
-  background: var(--red);
-  color: var(--white);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.refresh-btn:hover {
-  background: var(--red-dark);
-  transform: translateY(-2px);
-}
-
-.table-container {
-  overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(230, 0, 35, 0.1);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--white);
+  margin-top: 20px;
 }
 
 th {
-  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-  color: var(--white);
-  padding: 15px 20px;
+  background: #dc143c;
+  color: white;
+  padding: 12px;
   text-align: left;
-  font-weight: 700;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 td {
-  padding: 15px 20px;
-  border-bottom: 1px solid rgba(230, 0, 35, 0.1);
-  vertical-align: middle;
+  padding: 10px 12px;
+  border-bottom: 1px solid #ddd;
 }
 
 tr:nth-child(even) {
-  background: rgba(230, 0, 35, 0.03);
+  background: #f9f9f9;
 }
 
 tr:hover {
-  background: rgba(230, 0, 35, 0.08);
+  background: #f0f0f0;
 }
 
-.file-icon {
-  width: 35px;
-  height: 35px;
-  background: var(--red);
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--white);
-  font-size: 0.9rem;
-  margin-right: 12px;
-}
-
-.filename {
-  font-weight: 600;
-  color: var(--gray-900);
-  word-break: break-word;
-}
-
-.file-meta {
-  color: var(--gray-600);
-  font-size: 0.85rem;
-  margin-top: 3px;
-}
-
-.action-btn {
-  background: #10B981;
-  color: var(--white);
+.btn {
+  background: #dc143c;
+  color: white;
   border: none;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 0.8rem;
-  margin-right: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  margin-right: 5px;
   text-decoration: none;
+  display: inline-block;
 }
 
-.action-btn:hover {
-  transform: translateY(-1px);
+.btn:hover {
+  background: #b91c1c;
 }
 
-.action-btn.delete {
-  background: #EF4444;
+.btn.view {
+  background: #28a745;
 }
 
-.action-btn.delete:hover {
-  background: #DC2626;
+.btn.view:hover {
+  background: #218838;
+}
+
+.extension {
+  background: #dc143c;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .loading {
   text-align: center;
-  padding: 60px 20px;
-  color: var(--gray-600);
-}
-
-.loading i {
-  font-size: 2rem;
-  color: var(--red);
-  margin-bottom: 15px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  padding: 50px;
+  color: #666;
 }
 
 .error {
-  background: #FEE2E2;
-  border: 2px solid #FECACA;
-  border-left: 6px solid #EF4444;
-  border-radius: 12px;
-  padding: 20px;
-  color: #B91C1C;
-  font-weight: 600;
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 5px;
   margin: 20px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--gray-600);
-}
-
-.empty-state i {
-  font-size: 4rem;
-  color: rgba(230, 0, 35, 0.3);
-  margin-bottom: 20px;
-}
-
-.empty-state h3 {
-  font-size: 1.3rem;
-  color: var(--gray-900);
-  margin-bottom: 10px;
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 20px 15px;
-  }
-  
-  h1 {
-    font-size: 2rem;
-  }
-  
-  .stats {
-    grid-template-columns: 1fr;
-  }
-  
-  .content-card {
-    padding: 20px 15px;
-  }
-  
-  .table-header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
-  }
-  
-  th, td {
-    padding: 12px 15px;
-  }
-  
-  .file-icon {
-    display: none;
-  }
-  
-  .action-btn {
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    margin-right: 4px;
-  }
+  border: 1px solid #f5c6cb;
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <div class="logo">
-      <i class="fas fa-shield-alt"></i>
-    </div>
-    <h1>Admin Panel</h1>
-    <p class="subtitle">Marya Vault File Management System</p>
-  </div>
-
-  <div class="stats">
-    <div class="stat-card">
-      <div class="stat-number" id="totalFiles">0</div>
-      <div class="stat-label">Total Files</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="totalSize">0 MB</div>
-      <div class="stat-label">Storage Used</div>
-    </div>
-  </div>
-
-  <div class="content-card">
-    <div class="table-header">
-      <h2 class="table-title">
-        <i class="fas fa-database"></i>
-        File Database
-      </h2>
-      <button class="refresh-btn" onclick="loadFiles()">
-        <i class="fas fa-sync-alt"></i>
-        Refresh
-      </button>
-    </div>
-
-    <div id="content">
-      <div class="loading">
-        <i class="fas fa-spinner"></i>
-        <div>Loading files...</div>
-      </div>
-    </div>
+  <h1>🛡️ Admin Panel</h1>
+  <div id="content">
+    <div class="loading">Loading files...</div>
   </div>
 </div>
 
 <script>
 const content = document.getElementById('content');
-const totalFilesEl = document.getElementById('totalFiles');
-const totalSizeEl = document.getElementById('totalSize');
 
 async function loadFiles() {
   try {
-    content.innerHTML = `
-      <div class="loading">
-        <i class="fas fa-spinner"></i>
-        <div>Loading files...</div>
-      </div>
-    `;
-
-    const hash = window.location.hash.substring(1);
-    const code = hash || 'MSM@MARYA';
-    
-    if (!code) {
-      content.innerHTML = `
-        <div class="error">
-          <i class="fas fa-exclamation-triangle"></i>
-          Access denied. Please use correct admin URL with passcode.
-        </div>
-      `;
-      return;
-    }
-
-    const response = await fetch(`/admin/list?code=${encodeURIComponent(code)}`);
+    const hash = window.location.hash.substring(1) || 'MSM@MARYA';
+    const response = await fetch(`/admin/list?code=${hash}`);
     const data = await response.json();
 
     if (!data.success) {
-      content.innerHTML = `
-        <div class="error">
-          <i class="fas fa-exclamation-circle"></i>
-          ${data.error || 'Failed to load files'}
-        </div>
-      `;
+      content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
       return;
     }
 
-    const files = data.items || [];
-    renderFiles(files);
-    updateStats(files);
+    if (data.items.length === 0) {
+      content.innerHTML = '<div class="loading">No files found</div>';
+      return;
+    }
 
-  } catch (error) {
-    console.error('Load error:', error);
-    content.innerHTML = `
-      <div class="error">
-        <i class="fas fa-exclamation-circle"></i>
-        Error: ${error.message}
-      </div>
-    `;
-  }
-}
-
-function renderFiles(files) {
-  if (files.length === 0) {
-    content.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-folder-open"></i>
-        <h3>No Files Found</h3>
-        <p>Upload some files to see them here</p>
-      </div>
-    `;
-    return;
-  }
-
-  let html = `
-    <div class="table-container">
+    let html = `
       <table>
         <thead>
           <tr>
-            <th>File</th>
+            <th>Filename</th>
+            <th>Extension</th>
             <th>Size</th>
-            <th>Type</th>
             <th>Uploaded</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-  `;
-
-  files.forEach(item => {
-    const metadata = item.metadata || {};
-    const filename = metadata.filename || item.key || 'Unknown';
-    const size = metadata.size || 0;
-    const uploadedAt = metadata.uploadedAt ? new Date(metadata.uploadedAt).toLocaleString() : 'Unknown';
-    const contentType = metadata.contentType || '';
-    const extension = filename.split('.').pop().toUpperCase() || 'FILE';
-    const fileIdCode = metadata.fileIdCode || 'MSMfile0/old-fmt';
-    
-    const iconClass = getFileIcon(filename, contentType);
-    const viewUrl = `${window.location.origin}/btf/${item.key}/${fileIdCode}`;
-
-    html += `
-      <tr>
-        <td>
-          <div style="display: flex; align-items: center;">
-            <div class="file-icon">
-              <i class="${iconClass}"></i>
-            </div>
-            <div>
-              <div class="filename">${escapeHtml(filename)}</div>
-              <div class="file-meta">${item.key}</div>
-            </div>
-          </div>
-        </td>
-        <td>${formatBytes(size)}</td>
-        <td>${extension}</td>
-        <td>${uploadedAt}</td>
-        <td>
-          <a href="${viewUrl}" target="_blank" class="action-btn">
-            <i class="fas fa-eye"></i>
-            View
-          </a>
-          <button class="action-btn delete" onclick="deleteFile('${item.key}', '${escapeHtml(filename)}')">
-            <i class="fas fa-trash"></i>
-            Delete
-          </button>
-        </td>
-      </tr>
     `;
-  });
 
-  html += '</tbody></table></div>';
-  content.innerHTML = html;
-}
+    data.items.forEach(item => {
+      const meta = item.metadata || {};
+      const filename = meta.filename || item.slug;
+      const size = meta.size ? formatBytes(meta.size) : 'Unknown';
+      const uploaded = meta.uploadedAt ? new Date(meta.uploadedAt).toLocaleString() : 'Unknown';
+      const viewUrl = `${window.location.origin}/m/${item.slug}`;
 
-function updateStats(files) {
-  const totalFiles = files.length;
-  const totalBytes = files.reduce((sum, item) => sum + (item.metadata?.size || 0), 0);
-
-  totalFilesEl.textContent = totalFiles.toLocaleString();
-  totalSizeEl.textContent = formatBytes(totalBytes);
-}
-
-async function deleteFile(key, filename) {
-  if (!confirm(`Are you sure you want to delete "${filename}"?\n\nThis action cannot be undone.`)) {
-    return;
-  }
-
-  try {
-    const hash = window.location.hash.substring(1);
-    const code = hash || 'MSM@MARYA';
-    
-    const response = await fetch(`/admin/del?code=${encodeURIComponent(code)}&key=${encodeURIComponent(key)}`, {
-      method: 'DELETE'
+      html += `
+        <tr>
+          <td>${filename}</td>
+          <td><span class="extension">${item.extension}</span></td>
+          <td>${size}</td>
+          <td>${uploaded}</td>
+          <td>
+            <a href="${viewUrl}" target="_blank" class="btn view">View</a>
+            <button onclick="deleteFile('${item.slug}')" class="btn">Delete</button>
+          </td>
+        </tr>
+      `;
     });
 
-    const result = await response.json();
+    html += '</tbody></table>';
+    content.innerHTML = html;
 
-    if (result.success) {
-      showToast(`File "${filename}" deleted successfully`, 'success');
-      loadFiles();
-    } else {
-      throw new Error(result.error || 'Delete failed');
-    }
   } catch (error) {
-    console.error('Delete error:', error);
-    showToast(`Failed to delete file: ${error.message}`, 'error');
+    content.innerHTML = `<div class="error">Error loading files: ${error.message}</div>`;
   }
 }
 
-function getFileIcon(filename, contentType) {
-  const ext = filename.split('.').pop().toLowerCase();
+async function deleteFile(slug) {
+  if (!confirm('Delete this file?')) return;
   
-  if (contentType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-    return 'fas fa-image';
-  } else if (contentType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv'].includes(ext)) {
-    return 'fas fa-video';
-  } else if (contentType.startsWith('audio/') || ['mp3', 'wav', 'flac'].includes(ext)) {
-    return 'fas fa-music';
-  } else if (['pdf'].includes(ext)) {
-    return 'fas fa-file-pdf';
-  } else if (['doc', 'docx'].includes(ext)) {
-    return 'fas fa-file-word';
-  } else if (['zip', 'rar', '7z'].includes(ext)) {
-    return 'fas fa-archive';
-  } else {
-    return 'fas fa-file';
+  try {
+    const hash = window.location.hash.substring(1) || 'MSM@MARYA';
+    const response = await fetch(`/admin/list?code=${hash}&delete=${slug}`, { method: 'DELETE' });
+    
+    if (response.ok) {
+      alert('File deleted');
+      loadFiles();
+    } else {
+      alert('Delete failed');
+    }
+  } catch (error) {
+    alert('Delete error: ' + error.message);
   }
 }
 
@@ -557,44 +200,6 @@ function formatBytes(bytes) {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, m => map[m]);
-}
-
-function showToast(message, type) {
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    position: fixed;
-    top: 30px;
-    right: 30px;
-    background: ${type === 'success' ? '#10B981' : '#EF4444'};
-    color: white;
-    padding: 15px 25px;
-    border-radius: 10px;
-    font-weight: 600;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    z-index: 1000;
-    transform: translateX(400px);
-    transition: transform 0.3s ease;
-  `;
-  toast.textContent = message;
-  
-  document.body.appendChild(toast);
-  
-  setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-  setTimeout(() => {
-    toast.style.transform = 'translateX(400px)';
-    setTimeout(() => document.body.removeChild(toast), 300);
-  }, 3000);
 }
 
 loadFiles();
