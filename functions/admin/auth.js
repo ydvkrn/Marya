@@ -1,95 +1,65 @@
 export async function onRequest(context) {
   const { request, env } = context;
   
-  // Debug logging
-  console.log('=== ADMIN AUTH DEBUG ===');
-  console.log('Method:', request.method);
-  console.log('URL:', request.url);
-  console.log('Has ADMIN_PASS:', !!env.ADMIN_PASS);
-  
-  const corsHeaders = {
+  // Basic CORS
+  const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
   };
 
+  // Handle preflight
   if (request.method === 'OPTIONS') {
-    console.log('OPTIONS request handled');
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
+  // Only POST allowed
   if (request.method !== 'POST') {
-    console.log('Invalid method:', request.method);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Method not allowed' 
-    }), { 
-      status: 405,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Only POST method allowed'
+    }), { status: 405, headers });
   }
 
   try {
-    const body = await request.text();
-    console.log('Request body:', body);
+    // Parse request
+    const data = await request.json();
+    const { password } = data;
     
-    const { password } = JSON.parse(body);
+    // Get environment variable
     const ADMIN_PASS = env.ADMIN_PASS;
     
+    // Debug info (remove in production)
     console.log('Password received:', !!password);
-    console.log('Admin pass configured:', !!ADMIN_PASS);
-    console.log('Password length:', password?.length);
-    console.log('Admin pass length:', ADMIN_PASS?.length);
-
+    console.log('Admin pass exists:', !!ADMIN_PASS);
+    
+    // Check if admin pass is configured
     if (!ADMIN_PASS) {
-      console.log('ERROR: Admin password not configured');
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Admin password not configured in environment' 
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'ADMIN_PASS environment variable not set'
+      }), { status: 500, headers });
     }
-
-    if (!password) {
-      console.log('ERROR: No password provided');
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Password is required' 
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    console.log('Comparing passwords...');
+    
+    // Check password
     if (password === ADMIN_PASS) {
-      console.log('✅ Password match - Login successful');
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         success: true,
-        message: 'Authentication successful' 
-      }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+        message: 'Login successful'
+      }), { headers });
     } else {
-      console.log('❌ Password mismatch - Login failed');
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Invalid password' 
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid password'
+      }), { status: 401, headers });
     }
+    
   } catch (error) {
     console.error('Auth error:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Authentication failed: ' + error.message 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Server error: ' + error.message
+    }), { status: 500, headers });
   }
 }
