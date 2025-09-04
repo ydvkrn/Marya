@@ -1,180 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Marya Vault – Professional Uploader</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marya Vault • Pro Uploader</title>
 <style>
-  :root { --primary:#dc143c; --primaryDark:#b91c1c; --bg:#f6f7fb; --text:#111827; --muted:#6b7280; --ok:#10b981; --err:#ef4444; }
-  *{box-sizing:border-box} body{margin:0;background:linear-gradient(135deg,#fff 0%,var(--bg) 100%);font:16px/1.6 system-ui,Segoe UI,Arial;color:var(--text);padding:20px}
-  .wrap{max-width:980px;margin:0 auto}
-  header{display:flex;align-items:center;gap:16px;margin:10px 0 24px}
-  .logo{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primaryDark));box-shadow:0 16px 30px rgba(220,20,60,.25)}
-  h1{margin:0;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--primaryDark));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .sub{color:var(--muted)}
-  .card{background:#fff;border:2px solid var(--primary);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:28px;margin:20px 0}
-  .drop{border:3px dashed rgba(220,20,60,.35);border-radius:12px;padding:50px;text-align:center;cursor:pointer;background:rgba(220,20,60,.03);transition:.2s}
-  .drop:hover,.drop.drag{border-color:var(--primary);background:rgba(220,20,60,.08);transform:translateY(-2px)}
-  .big{font-size:3rem;color:var(--primary);margin-bottom:10px}
-  .title{font-size:1.3rem;font-weight:800;color:var(--primary)}
-  .muted{color:var(--muted)}
-  .badge{display:inline-block;margin:6px 6px 0 0;background:var(--primary);color:#fff;padding:6px 12px;border-radius:16px;font-size:.8rem}
-  .hidden{display:none}
-  .list{margin-top:22px}
-  .item{background:#fff;border:1px solid rgba(220,20,60,.25);border-left:5px solid var(--primary);border-radius:10px;padding:16px;margin:12px 0}
-  .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .name{font-weight:700;word-break:break-all}
-  .meta{color:var(--muted)}
-  .bar{height:10px;background:#edf0f5;border-radius:6px;overflow:hidden;margin:10px 0}
-  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--primaryDark));transition:width .25s}
-  .act a,.act button{display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;margin-right:10px}
-  .act a:hover,.act button:hover{background:var(--primaryDark)}
-  .ok{color:var(--ok)} .err{color:var(--err)}
-  .toast{position:fixed;right:16px;top:16px;background:var(--primary);color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.15);transform:translateX(140%);transition:.3s}
-  .toast.show{transform:none}
-  @media (max-width:640px){ .drop{padding:28px} .big{font-size:2.4rem} header{flex-direction:column;align-items:flex-start} }
+ :root{--p:#dc143c;--pd:#b91c1c;--bg:#f8f9fc;--txt:#111827;--muted:#6b7280;--ok:#10b981;--err:#ef4444}
+ *{box-sizing:border-box;margin:0}
+ body{font:16px/1.6 system-ui,Segoe UI,Arial;background:linear-gradient(135deg,#fff 0%,var(--bg) 100%);color:var(--txt);padding:24px}
+ .wrap{max-width:960px;margin:auto}
+ header{display:flex;align-items:center;gap:18px;margin-bottom:28px}
+ .logo{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--pd));box-shadow:0 16px 28px rgba(0,0,0,.15)}
+ h1{font-weight:900;font-size:2.2rem;background:linear-gradient(135deg,var(--p),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+ .sub{color:var(--muted)}
+ .card{background:#fff;border:2px solid var(--p);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:32px}
+ .drop{border:3px dashed rgba(220,20,60,.4);border-radius:12px;padding:60px 24px;text-align:center;cursor:pointer;background:rgba(220,20,60,.03);transition:.2s}
+ .drop:hover,.drop.drag{border-color:var(--p);background:rgba(220,20,60,.08);transform:translateY(-2px)}
+ .big{font-size:3.2rem;color:var(--p);margin-bottom:12px}
+ .ttl{font-size:1.4rem;font-weight:800;color:var(--p)}
+ .muted{color:var(--muted)}
+ .badge{display:inline-block;background:var(--p);color:#fff;padding:6px 14px;border-radius:16px;font-size:.8rem;margin:6px 6px 0 0}
+ .list{margin-top:26px}
+ .item{background:#fff;border:1px solid rgba(220,20,60,.25);border-left:6px solid var(--p);border-radius:10px;padding:18px;margin-bottom:14px}
+ .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+ .name{font-weight:700;word-break:break-all}
+ .meta{color:var(--muted)}
+ .bar{height:10px;background:#eceff3;border-radius:6px;overflow:hidden;margin:12px 0}
+ .fill{height:100%;width:0;background:linear-gradient(90deg,var(--p),var(--pd))}
+ .act a,.act button{display:inline-flex;align-items:center;gap:8px;background:var(--p);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:700;text-decoration:none;margin-right:10px;cursor:pointer}
+ .act a:hover,.act button:hover{background:var(--pd)}
+ .ok{color:var(--ok)} .err{color:var(--err)}
+ .toast{position:fixed;right:18px;top:18px;background:var(--p);color:#fff;padding:14px 18px;border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.15);transform:translateX(140%);transition:.3s}
+ .toast.show{transform:none}
+ @media(max-width:600px){ .drop{padding:38px} .big{font-size:2.4rem}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="logo"></div>
-    <div>
-      <h1>Marya Vault</h1>
-      <div class="sub">Professional File Hosting • Red/White Theme • Up to 2GB via Telegram</div>
-    </div>
-  </header>
-
+  <header><div class="logo"></div><div><h1>Marya Vault</h1><div class="sub">Professional Photo & Video Hosting</div></div></header>
   <div class="card">
     <div id="drop" class="drop">
-      <div class="big">📁</div>
-      <div class="title">Drop Files Here</div>
-      <div class="muted">or click to browse from your device</div>
-      <div>
-        <span class="badge">Images</span>
-        <span class="badge">Videos</span>
-        <span class="badge">Documents</span>
-        <span class="badge">Audio</span>
-        <span class="badge">Archives</span>
-      </div>
+      <div class="big">📁</div><div class="ttl">Drop Files Here</div><div class="muted">or tap to browse</div>
+      <div><span class="badge">Images</span><span class="badge">Videos</span><span class="badge">Docs</span></div>
     </div>
-    <input id="picker" type="file" multiple class="hidden" />
+    <input id="picker" type="file" multiple hidden>
     <div id="list" class="list"></div>
   </div>
 </div>
-
-<div id="toast" class="toast">Uploaded</div>
+<div id="toast" class="toast">Done</div>
 
 <script>
-const drop = document.getElementById('drop');
-const picker = document.getElementById('picker');
-const list = document.getElementById('list');
-const toast = document.getElementById('toast');
-
-drop.addEventListener('click', () => picker.click());
-drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
-drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
-drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
-picker.addEventListener('change', e => handleFiles(e.target.files));
-
-function handleFiles(files) {
-  [...files].forEach(f => startUpload(f));
+const drop=document.getElementById('drop'),pick=document.getElementById('picker'),list=document.getElementById('list'),toast=document.getElementById('toast');
+drop.onclick=()=>pick.click();
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e,x=>{x.preventDefault();drop.classList.add('drag')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,()=>drop.classList.remove('drag')));
+drop.addEventListener('drop',e=>{e.preventDefault();handle(e.dataTransfer.files)});
+pick.addEventListener('change',e=>handle(e.target.files));
+function handle(files){[...files].forEach(f=>upload(f))}
+function upload(file){
+ const id=Math.random().toString(36).slice(2,8);
+ list.insertAdjacentHTML('afterbegin',`
+  <div class=item id="item-${id}">
+   <div class=row><div class=name>${file.name}</div><div class=meta id="m-${id}">${fmt(file.size)} • starting…</div></div>
+   <div class=bar><div class=fill id="f-${id}"></div></div>
+   <div class=row act id="a-${id}"></div>
+  </div>`);
+ const fd=new FormData();fd.append('file',file);
+ ajax('/upload',fd,p=>progress(id,p),res=>{
+   if(res.needR2){showErr(id,'>50 MB limit; use Local Bot-API or MTProto');return;}
+   res.success?done(id,file,res):showErr(id,res.error||'fail');
+ });
 }
-
-function startUpload(file) {
-  const item = document.createElement('div');
-  item.className='item';
-  item.innerHTML = `
-    <div class="row">
-      <div class="name">${file.name}</div>
-      <div class="meta" id="meta-${rand()}">${fmt(file.size)} • Preparing...</div>
-    </div>
-    <div class="bar"><div class="fill" id="fill-${rand()}"></div></div>
-    <div class="row act" id="act-${rand()}"></div>`;
-  list.prepend(item);
-
-  // First try direct function (≤100MB). Server will reply needR2 for bigger.
-  const form = new FormData(); form.append('file', file);
-  xhrPost('/upload', form, (p) => setProgress(item, p), async (res, status, text) => {
-    if (status === 200) {
-      const j = JSON.parse(text);
-      if (j.needR2) return uploadViaR2(file, item);
-      if (j.success) return showSuccess(file, item, j);
-      return showError(file, item, j.error || 'Upload failed');
-    }
-    return showError(file, item, `HTTP ${status}`);
-  });
+function progress(id,p){document.getElementById('f-'+id).style.width=p+'%';document.getElementById('m-'+id).textContent=document.getElementById('m-'+id).textContent.replace(/•.*/,'• '+p.toFixed(0)+' %');}
+function done(id,f,r){
+ document.getElementById('m-'+id).innerHTML=`${fmt(f.size)} • <span class=ok>done</span>`;
+ document.getElementById('f-'+id).style.width='100%';
+ document.getElementById('a-'+id).innerHTML=`
+  <a href="${r.url}" target=_blank>👁️ View</a>
+  <a href="${r.download}">⬇️ Download</a>
+  <button onclick="copy('${r.url}')">📋 Copy</button>`;
+ pop('✅ '+f.name+' uploaded');
 }
-
-function uploadViaR2(file, item) {
-  // 1) ask for pre-signed URL
-  fetch('/r2/sign', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ name:file.name, size:file.size, type:file.type||'application/octet-stream' })
-  }).then(r=>r.json()).then(async sig => {
-    if (!sig.success) return showError(file, item, sig.error||'sign failed');
-    // 2) PUT to R2 with progress
-    await xhrPut(sig.uploadUrl, file, p => setProgress(item, p));
-    // 3) finalize (tell Telegram to fetch)
-    const fin = await fetch(sig.finalizeUrl, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ slug:sig.slug, objectKey:sig.objectKey, name:file.name, size:file.size, type:file.type||'application/octet-stream' })
-    });
-    const j = await fin.json();
-    if (j.success) return showSuccess(file, item, j);
-    return showError(file, item, j.error||'finalize failed');
-  }).catch(e => showError(file, item, e.message));
-}
-
-function showSuccess(file, item, j) {
-  setProgress(item, 100);
-  const meta = item.querySelector('.meta'); if (meta) meta.innerHTML = `${fmt(file.size)} • <span class="ok">Complete</span>`;
-  const act = item.querySelector('.act');
-  act.innerHTML = `
-    <a href="${j.url}" target="_blank">👁️ View</a>
-    <a href="${j.download}">⬇️ Download</a>
-    <button onclick="copy('${j.url}')">📋 Copy Link</button>`;
-  flash('✅ ' + file.name + ' uploaded');
-}
-
-function showError(file, item, msg) {
-  const meta = item.querySelector('.meta'); if (meta) meta.innerHTML = `${fmt(file.size)} • <span class="err">Failed: ${msg}</span>`;
-  setProgress(item, 0);
-  flash('❌ ' + file.name + ': ' + msg, true);
-}
-
-function setProgress(item, percent) {
-  const fill = item.querySelector('.fill');
-  const meta = item.querySelector('.meta');
-  if (fill) fill.style.width = Math.max(0, Math.min(100, Math.round(percent))) + '%';
-  if (meta) meta.textContent = meta.textContent.replace(/•.*/,'• ' + Math.round(percent) + '%');
-}
-
-function xhrPost(url, formData, onProgress, onDone) {
-  const xhr = new XMLHttpRequest();
-  xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress((e.loaded/e.total)*100); };
-  xhr.onload = () => onDone(null, xhr.status, xhr.responseText);
-  xhr.onerror = () => onDone(null, xhr.status||0, 'network error');
-  xhr.open('POST', url, true);
-  xhr.send(formData);
-}
-
-function xhrPut(url, blob, onProgress) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress((e.loaded/e.total)*100); };
-    xhr.onload = () => xhr.status>=200 && xhr.status<300 ? resolve() : reject(new Error('R2 PUT '+xhr.status));
-    xhr.onerror = () => reject(new Error('R2 PUT network error'));
-    xhr.open('PUT', url, true);
-    xhr.setRequestHeader('Content-Type', blob.type||'application/octet-stream');
-    xhr.send(blob);
-  });
-}
-
-function flash(text, err=false){ toast.textContent=text; toast.style.background=err?'#ef4444':'#dc143c'; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 3500); }
-function copy(t){ navigator.clipboard.writeText(t).then(()=>flash('Link copied')); }
-function fmt(b){ if(!b) return '0 B'; const k=1024,s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(2)+' '+s[i]; }
-function rand(){ return Math.random().toString(36).slice(2,8); }
+function showErr(id,txt){document.getElementById('m-'+id).innerHTML=`<span class=err>${txt}</span>`;pop('❌ '+txt,true);}
+function ajax(u,d,prog,cb){const x=new XMLHttpRequest();x.upload.onprogress=e=>e.lengthComputable&&prog(e.loaded*100/e.total);x.onload=()=>cb(JSON.parse(x.response||'{}'));x.onerror=()=>cb({error:'net'});x.open('POST',u);x.send(d);}
+function fmt(b){const k=1024,s=['B','KB','MB','GB'];let i=Math.floor(Math.log(b)/Math.log(k));return( b/Math.pow(k,i)).toFixed(2)+' '+s[i];}
+function copy(t){navigator.clipboard.writeText(t).then(()=>pop('copied'));}
+function pop(t,err){toast.textContent=t;toast.style.background=err?'var(--err)':'var(--p)';toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3e3);}
 </script>
 </body>
 </html>
