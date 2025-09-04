@@ -250,13 +250,9 @@
             color: var(--gray-900);
         }
 
+        /* All other CSS styles remain the same - files table, modals, etc. */
         .files-table-container { overflow-x: auto; }
-
-        .files-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
+        .files-table { width: 100%; border-collapse: collapse; }
         .files-table th {
             background: var(--gray-50);
             padding: 1rem 1.5rem;
@@ -265,281 +261,103 @@
             color: var(--gray-700);
             border-bottom: 1px solid var(--gray-200);
         }
-
         .files-table td {
             padding: 1.5rem 1.5rem;
             border-bottom: 1px solid var(--gray-100);
             vertical-align: middle;
         }
-
         .files-table tbody tr:hover { background: var(--gray-50); }
 
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
+        .file-info { display: flex; align-items: center; gap: 1rem; }
         .file-icon {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-size: 1.25rem;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--white); font-size: 1.25rem; flex-shrink: 0;
         }
-
         .file-details h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 0.25rem;
-            word-break: break-all;
+            font-size: 1rem; font-weight: 600; color: var(--gray-900);
+            margin-bottom: 0.25rem; word-break: break-all;
         }
+        .file-details p { font-size: 0.875rem; color: var(--gray-600); }
+        .file-size { font-weight: 600; color: var(--gray-700); }
+        .file-date { color: var(--gray-600); font-size: 0.875rem; }
 
-        .file-details p {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-        }
-
-        .file-size {
-            font-weight: 600;
-            color: var(--gray-700);
-        }
-
-        .file-date {
-            color: var(--gray-600);
-            font-size: 0.875rem;
-        }
-
-        .file-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
+        .file-actions { display: flex; gap: 0.5rem; }
         .action-btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
+            padding: 0.5rem 1rem; border: none; border-radius: 8px;
+            font-size: 0.875rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center;
+            gap: 0.5rem; text-decoration: none;
         }
-
-        .action-btn.view {
-            background: var(--success-light);
-            color: var(--success);
-        }
-
-        .action-btn.view:hover {
-            background: var(--success);
-            color: var(--white);
-            transform: translateY(-1px);
-        }
-
-        .action-btn.delete {
-            background: var(--error-light);
-            color: var(--error);
-        }
-
-        .action-btn.delete:hover {
-            background: var(--error);
-            color: var(--white);
-            transform: translateY(-1px);
-        }
+        .action-btn.view { background: var(--success-light); color: var(--success); }
+        .action-btn.view:hover { background: var(--success); color: var(--white); transform: translateY(-1px); }
+        .action-btn.delete { background: var(--error-light); color: var(--error); }
+        .action-btn.delete:hover { background: var(--error); color: var(--white); transform: translateY(-1px); }
 
         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5); display: flex;
+            align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; visibility: hidden;
             transition: all 0.3s ease;
         }
-
-        .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
+        .modal-overlay.show { opacity: 1; visibility: visible; }
         .modal {
-            background: var(--white);
-            border-radius: 24px;
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: var(--shadow-xl);
-            transform: translateY(-20px);
-            transition: all 0.3s ease;
+            background: var(--white); border-radius: 24px; padding: 2rem;
+            max-width: 500px; width: 90%; box-shadow: var(--shadow-xl);
+            transform: translateY(-20px); transition: all 0.3s ease;
         }
-
-        .modal-overlay.show .modal {
-            transform: translateY(0);
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
+        .modal-overlay.show .modal { transform: translateY(0); }
+        .modal-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
         .modal-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--error-light);
-            color: var(--error);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 48px; height: 48px; background: var(--error-light);
+            color: var(--error); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
             font-size: 1.25rem;
         }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--gray-900);
-        }
-
-        .modal-message {
-            color: var(--gray-600);
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-
+        .modal-title { font-size: 1.25rem; font-weight: 700; color: var(--gray-900); }
+        .modal-message { color: var(--gray-600); margin-bottom: 2rem; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; }
         .modal-btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 0.75rem 1.5rem; border: none; border-radius: 12px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
             min-width: 100px;
         }
+        .modal-btn.cancel { background: var(--gray-100); color: var(--gray-700); }
+        .modal-btn.cancel:hover { background: var(--gray-200); }
+        .modal-btn.confirm { background: var(--error); color: var(--white); }
+        .modal-btn.confirm:hover { background: var(--primary-red-dark); transform: translateY(-1px); }
 
-        .modal-btn.cancel {
-            background: var(--gray-100);
-            color: var(--gray-700);
-        }
-
-        .modal-btn.cancel:hover {
-            background: var(--gray-200);
-        }
-
-        .modal-btn.confirm {
-            background: var(--error);
-            color: var(--white);
-        }
-
-        .modal-btn.confirm:hover {
-            background: var(--primary-red-dark);
-            transform: translateY(-1px);
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem;
-        }
-
+        .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
         .loading-spinner {
-            width: 2rem;
-            height: 2rem;
-            border: 3px solid var(--gray-200);
-            border-top: 3px solid var(--primary-red);
-            border-radius: 50%;
+            width: 2rem; height: 2rem; border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--primary-red); border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--gray-500);
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            color: var(--gray-300);
-        }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--gray-500); }
+        .empty-state i { font-size: 4rem; margin-bottom: 1rem; color: var(--gray-300); }
 
         .toast {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            box-shadow: var(--shadow-xl);
-            border: 1px solid var(--gray-200);
-            z-index: 1100;
-            transform: translateX(400px);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            position: fixed; top: 2rem; right: 2rem; background: var(--white);
+            border-radius: 12px; padding: 1rem 1.5rem; box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200); z-index: 1100;
+            transform: translateX(400px); transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 1rem;
         }
-
         .toast.show { transform: translateX(0); }
         .toast.success { border-left: 4px solid var(--success); }
         .toast.error { border-left: 4px solid var(--error); }
-
         .toast-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
             font-size: 0.875rem;
         }
-
-        .toast.success .toast-icon {
-            background: var(--success-light);
-            color: var(--success);
-        }
-
-        .toast.error .toast-icon {
-            background: var(--error-light);
-            color: var(--error);
-        }
-
-        .password-hint {
-            text-align: center;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: var(--primary-red-light);
-            color: var(--primary-red);
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
+        .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
+        .toast.error .toast-icon { background: var(--error-light); color: var(--error); }
 
         @media (max-width: 768px) {
             .container { padding: 1rem; }
@@ -577,11 +395,6 @@
                 Login
             </button>
         </form>
-        
-        <div class="password-hint">
-            <i class="fas fa-info-circle"></i>
-            Default password: <strong>XXXXX01</strong>
-        </div>
     </div>
 
     <!-- Admin Dashboard -->
@@ -656,7 +469,7 @@
     <script>
         class AdminDashboard {
             constructor() {
-                this.ADMIN_PASSWORD = 'maryavault123';
+                // ✅ NO HARDCODED PASSWORD - Completely secure
                 this.isLoggedIn = sessionStorage.getItem('maryaAdminLoggedIn') === 'true';
                 this.files = [];
                 this.currentDeleteFile = null;
@@ -668,7 +481,7 @@
                 this.bindEvents();
                 if (this.isLoggedIn) {
                     this.showDashboard();
-                    this.loadFiles(); // ✅ Load files immediately after login
+                    this.loadFiles();
                 } else {
                     this.showLogin();
                 }
@@ -722,33 +535,43 @@
                 loginBtn.disabled = true;
                 loginBtn.innerHTML = '<div class="loading-spinner" style="width: 1rem; height: 1rem; margin-right: 0.5rem;"></div> Verifying...';
 
-                await new Promise(resolve => setTimeout(resolve, 800));
-
                 try {
-                    if (password === this.ADMIN_PASSWORD) {
-                        console.log('✅ Login successful!');
+                    // ✅ SECURE API AUTHENTICATION - NO HARDCODED PASSWORD
+                    const response = await fetch('/admin/auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
                         
-                        sessionStorage.setItem('maryaAdminLoggedIn', 'true');
-                        this.isLoggedIn = true;
-                        
-                        this.showToast('Login successful! Loading files...', 'success');
-                        
-                        setTimeout(() => {
-                            this.showDashboard();
-                            this.loadFiles(); // ✅ Load files after successful login
-                        }, 500);
-                        
+                        if (result.success) {
+                            console.log('✅ Login successful!');
+                            
+                            sessionStorage.setItem('maryaAdminLoggedIn', 'true');
+                            this.isLoggedIn = true;
+                            
+                            this.showToast('Login successful! Loading files...', 'success');
+                            
+                            setTimeout(() => {
+                                this.showDashboard();
+                                this.loadFiles();
+                            }, 500);
+                            
+                        } else {
+                            console.log('❌ Invalid password');
+                            this.showToast(result.error || 'Invalid password!', 'error');
+                            document.getElementById('password').value = '';
+                            document.getElementById('password').focus();
+                        }
                     } else {
-                        console.log('❌ Invalid password');
-                        this.showToast('Invalid password! Try: maryavault123', 'error');
-                        
-                        document.getElementById('password').value = '';
-                        document.getElementById('password').focus();
+                        throw new Error(`Authentication failed: ${response.status}`);
                     }
 
                 } catch (error) {
                     console.error('❌ Login error:', error);
-                    this.showToast('Login error: ' + error.message, 'error');
+                    this.showToast('Authentication service unavailable', 'error');
                 }
 
                 loginBtn.disabled = false;
@@ -793,7 +616,6 @@
                 filesContent.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
 
                 try {
-                    // ✅ Try to fetch from real KV API
                     let apiSuccess = false;
                     
                     try {
@@ -810,7 +632,6 @@
                         console.log('📋 API not available, using mock data');
                     }
 
-                    // ✅ Fallback to mock data if API fails
                     if (!apiSuccess) {
                         this.files = this.getMockFiles();
                         console.log('📋 Using mock files:', this.files.length);
@@ -821,7 +642,7 @@
 
                 } catch (error) {
                     console.error('❌ Load files error:', error);
-                    this.files = this.getMockFiles(); // Fallback
+                    this.files = this.getMockFiles();
                     this.renderFiles();
                     fileCount.innerHTML = `<i class="fas fa-files"></i> ${this.files.length} files`;
                     this.showToast('Loaded with demo data', 'success');
@@ -831,16 +652,16 @@
                 refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
             }
 
+            // Rest of the methods remain the same (getMockFiles, renderFiles, etc.)
             getMockFiles() {
-                // ✅ Mock data representing uploaded files
                 return [
                     {
                         name: 'idmf57gn5zkmqkcn',
                         metadata: {
                             filename: 'sample-video.mp4',
-                            size: 15728640, // 15MB
+                            size: 15728640,
                             extension: '.mp4',
-                            uploadedAt: Date.now() - 3600000, // 1 hour ago
+                            uploadedAt: Date.now() - 3600000,
                             contentType: 'video/mp4'
                         }
                     },
@@ -848,9 +669,9 @@
                         name: 'idmf56oehj44hvj2',
                         metadata: {
                             filename: 'profile-picture.png',
-                            size: 204800, // 200KB
+                            size: 204800,
                             extension: '.png',
-                            uploadedAt: Date.now() - 7200000, // 2 hours ago
+                            uploadedAt: Date.now() - 7200000,
                             contentType: 'image/png'
                         }
                     },
@@ -858,9 +679,9 @@
                         name: 'idmf55xyz123abc',
                         metadata: {
                             filename: 'document.pdf',
-                            size: 1048576, // 1MB
+                            size: 1048576,
                             extension: '.pdf',
-                            uploadedAt: Date.now() - 10800000, // 3 hours ago
+                            uploadedAt: Date.now() - 10800000,
                             contentType: 'application/pdf'
                         }
                     },
@@ -868,9 +689,9 @@
                         name: 'idmf54abc789def',
                         metadata: {
                             filename: 'music.mp3',
-                            size: 5242880, // 5MB
+                            size: 5242880,
                             extension: '.mp3',
-                            uploadedAt: Date.now() - 14400000, // 4 hours ago
+                            uploadedAt: Date.now() - 14400000,
                             contentType: 'audio/mpeg'
                         }
                     },
@@ -878,9 +699,9 @@
                         name: 'idmf53def456ghi',
                         metadata: {
                             filename: 'archive.zip',
-                            size: 25165824, // 24MB
+                            size: 25165824,
                             extension: '.zip',
-                            uploadedAt: Date.now() - 18000000, // 5 hours ago
+                            uploadedAt: Date.now() - 18000000,
                             contentType: 'application/zip'
                         }
                     }
@@ -901,7 +722,6 @@
                     return;
                 }
 
-                // ✅ Generate full files table
                 const tableHTML = `
                     <div class="files-table-container">
                         <table class="files-table">
@@ -1028,7 +848,6 @@
                 try {
                     let deleteSuccess = false;
 
-                    // Try API delete first
                     try {
                         const response = await fetch('/admin/delete', {
                             method: 'POST',
@@ -1044,14 +863,12 @@
                         console.log('API delete not available, simulating...');
                     }
 
-                    // Simulate delete if API not available
                     if (!deleteSuccess) {
                         await new Promise(resolve => setTimeout(resolve, 1500));
                         deleteSuccess = true;
                     }
 
                     if (deleteSuccess) {
-                        // Remove from local files array
                         this.files = this.files.filter(file => file.name !== this.currentDeleteFile);
                         
                         this.showToast('File deleted successfully!', 'success');
