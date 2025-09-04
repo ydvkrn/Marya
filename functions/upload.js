@@ -27,8 +27,6 @@ export async function onRequest({ request, env }) {
       return jsonResponse({ success: false, error: 'File too large (max 2GB)' }, 400);
     }
 
-    console.log('Uploading file:', file.name, 'Size:', file.size);
-
     // Upload to Telegram
     const telegramFormData = new FormData();
     telegramFormData.append('chat_id', CHANNEL_ID);
@@ -43,7 +41,6 @@ export async function onRequest({ request, env }) {
     const telegramResult = await telegramResponse.json();
 
     if (!telegramResult.ok) {
-      console.error('Telegram error:', telegramResult);
       return jsonResponse({ 
         success: false, 
         error: telegramResult.description || 'Telegram upload failed' 
@@ -63,14 +60,15 @@ export async function onRequest({ request, env }) {
     const filePath = fileResult.result.file_path;
     const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // Generate slug
-    const slug = generateSlug(file.name);
+    // Generate slug WITH extension - ✅ FIXED
+    const slug = generateSlugWithExtension(file.name);
     
     // Store in KV
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
         filename: file.name,
         size: file.size,
+        contentType: file.type,
         uploadedAt: Date.now()
       }
     });
@@ -82,6 +80,7 @@ export async function onRequest({ request, env }) {
       success: true,
       filename: file.name,
       size: file.size,
+      contentType: file.type,
       view_url: viewUrl,
       download_url: viewUrl + '?dl=1',
       stream_url: viewUrl
@@ -96,11 +95,20 @@ export async function onRequest({ request, env }) {
   }
 }
 
-function generateSlug(filename) {
+// ✅ FIXED: Preserve file extensions
+function generateSlugWithExtension(filename) {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substr(2, 8);
-  const name = filename.replace(/[^a-zA-Z0-9]/g, '').substr(0, 20);
-  return `${timestamp}-${random}-${name}`;
+  const random = Math.random().toString(36).substr(2, 6);
+  
+  // Extract extension
+  const lastDot = filename.lastIndexOf('.');
+  const extension = lastDot !== -1 ? filename.substring(lastDot) : '';
+  const nameWithoutExt = lastDot !== -1 ? filename.substring(0, lastDot) : filename;
+  
+  // Clean name
+  const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
+  
+  return `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
 }
 
 function jsonResponse(data, status = 200) {
