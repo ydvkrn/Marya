@@ -38,7 +38,6 @@ export async function onRequest({ request, env }) {
       headers
     });
   } catch (error) {
-    console.error('Admin delete error:', error);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 
