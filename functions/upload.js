@@ -1,56 +1,183 @@
 export async function onRequest(context) {
   const { request, env } = context;
-  const cors = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
+
+  console.log('=== MARYA VAULT UPLOAD START ===');
+
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
   };
-  if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Method not allowed'
+    }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
 
   try {
+    // ✅ Use environment variables from Cloudflare Pages
     const BOT_TOKEN = env.BOT_TOKEN;
     const CHANNEL_ID = env.CHANNEL_ID;
-    const MAX_DIRECT = 100 * 1024 * 1024; // 100 MB cap at Cloudflare edge
-    const form = await request.formData();
-    const file = form.get("file");
-    if (!file) return Response.json({ success: false, error: "No file" }, { status: 400, headers: cors });
 
-    if (file.size > MAX_DIRECT) {
-      // Tell client to use R2 flow
-      return Response.json({ success: true, needR2: true, size: file.size }, { headers: cors });
-    }
-
-    const tgForm = new FormData();
-    tgForm.append("chat_id", CHANNEL_ID);
-    tgForm.append("document", file, file.name);
-    const tgResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: "POST", body: tgForm });
-    if (!tgResp.ok) return Response.json({ success: false, error: `Telegram ${tgResp.status}` }, { status: 502, headers: cors });
-    const tgJson = await tgResp.json();
-    if (!tgJson.ok || !tgJson.result?.document?.file_id) return Response.json({ success: false, error: tgJson.description || "Telegram failed" }, { status: 502, headers: cors });
-
-    const fid = tgJson.result.document.file_id;
-    const gf = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(fid)}`);
-    if (!gf.ok) return Response.json({ success: false, error: `getFile ${gf.status}` }, { status: 502, headers: cors });
-    const gfJson = await gf.json();
-    if (!gfJson.ok || !gfJson.result?.file_path) return Response.json({ success: false, error: gfJson.description || "getFile failed" }, { status: 502, headers: cors });
-
-    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${gfJson.result.file_path}`;
-    const ext = file.name.includes(".") ? "." + file.name.split(".").pop().toLowerCase() : "";
-    const slug = `id${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}${ext}`;
-    await env.FILES_KV.put(slug, directUrl, {
-      metadata: { filename: file.name, size: file.size, contentType: file.type, uploadedAt: Date.now() }
+    console.log('Environment check:', {
+      BOT_TOKEN: !!BOT_TOKEN,
+      CHANNEL_ID: !!CHANNEL_ID,
+      FILES_KV: !!env.FILES_KV
     });
 
-    const base = new URL(request.url).origin;
-    return Response.json({
+    if (!BOT_TOKEN || !CHANNEL_ID) {
+      throw new Error('Missing bot credentials in environment variables');
+    }
+
+    if (!env.FILES_KV) {
+      throw new Error('FILES_KV binding not found');
+    }
+
+    // Parse form data
+    const formData = await request.formData();
+    const file = formData.get('file');
+
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
+    console.log('File received:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+
+    // Size validation (2GB)
+    if (file.size > 2147483648) {
+      throw new Error(`File too large: ${Math.round(file.size / 1024 / 1024)}MB (max 2GB)`);
+    }
+
+    // Upload to Telegram
+    console.log('Uploading to Telegram...');
+    const telegramForm = new FormData();
+    telegramForm.append('chat_id', CHANNEL_ID);
+    telegramForm.append('document', file, file.name);
+
+    const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+      method: 'POST',
+      body: telegramForm
+    });
+
+    console.log('Telegram response status:', telegramResponse.status);
+
+    if (!telegramResponse.ok) {
+      const errorText = await telegramResponse.text();
+      console.error('Telegram API error:', errorText);
+      throw new Error(`Telegram upload failed: ${telegramResponse.status}`);
+    }
+
+    // Parse Telegram response safely
+    let telegramData;
+    try {
+      const responseText = await telegramResponse.text();
+      telegramData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      throw new Error('Invalid JSON response from Telegram');
+    }
+
+    if (!telegramData.ok || !telegramData.result?.document?.file_id) {
+      console.error('Invalid Telegram response:', telegramData);
+      throw new Error('Invalid Telegram response structure');
+    }
+
+    const fileId = telegramData.result.document.file_id;
+    console.log('File uploaded to Telegram, file_id:', fileId);
+
+    // Get file URL
+    console.log('Getting file URL...');
+    const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(fileId)}`);
+
+    if (!getFileResponse.ok) {
+      throw new Error(`GetFile API failed: ${getFileResponse.status}`);
+    }
+
+    let getFileData;
+    try {
+      const responseText = await getFileResponse.text();
+      getFileData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('GetFile JSON parse error:', parseError);
+      throw new Error('Invalid JSON response from GetFile');
+    }
+
+    if (!getFileData.ok || !getFileData.result?.file_path) {
+      console.error('Invalid GetFile response:', getFileData);
+      throw new Error('No file_path in GetFile response');
+    }
+
+    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
+    console.log('Direct URL created');
+
+    // ✅ Generate ID in your custom format: id + timestamp + random
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).slice(2, 8);
+    const fileId_custom = `id${timestamp}${random}`;
+    
+    // Get file extension
+    const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
+
+    // Store in KV
+    console.log('Storing in KV...');
+    await env.FILES_KV.put(fileId_custom, directUrl, {
+      metadata: {
+        filename: file.name,
+        size: file.size,
+        contentType: file.type,
+        extension: extension,
+        uploadedAt: Date.now()
+      }
+    });
+
+    console.log('File stored in KV with ID:', fileId_custom);
+
+    // ✅ Return URLs in your custom format
+    const baseUrl = new URL(request.url).origin;
+    const customUrl = `${baseUrl}/btfstorage/file/${fileId_custom}${extension}`;
+    const downloadUrl = `${baseUrl}/btfstorage/file/${fileId_custom}${extension}?dl=1`;
+
+    const result = {
       success: true,
       filename: file.name,
       size: file.size,
       contentType: file.type,
-      url: `${base}/btfstorage/file/${slug}`,
-      download: `${base}/btfstorage/file/${slug}?dl=1`
-    }, { headers: cors });
-  } catch (e) {
-    return Response.json({ success: false, error: e.message }, { status: 500, headers: cors });
+      url: customUrl,
+      download: downloadUrl,
+      id: fileId_custom
+    };
+
+    console.log('Upload completed successfully:', result);
+    console.log('=== MARYA VAULT UPLOAD END ===');
+
+    return new Response(JSON.stringify(result), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+
+  } catch (error) {
+    console.error('=== UPLOAD ERROR ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
   }
 }
