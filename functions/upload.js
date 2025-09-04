@@ -1,7 +1,8 @@
 export async function onRequest(context) {
-  console.log('=== UPLOAD STARTED ===');
-  
   const { request, env } = context;
+
+  console.log('=== UPLOAD REQUEST ===');
+
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -12,21 +13,39 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: 'Method not allowed' 
+    }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+
   try {
-    // Simple environment check
+    // Environment variables (use hardcoded for now)
     const BOT_TOKEN = '8360624116:AAEEJha8CRgL8TnrEKk5zOuCNXXRawmbuaE';
     const CHANNEL_ID = '-1003071466750';
-    
+
+    // Parse form data
     console.log('Getting form data...');
     const formData = await request.formData();
     const file = formData.get('file');
-    
-    console.log('File:', file ? file.name : 'NOT FOUND');
-    
+
     if (!file) {
-      return new Response(JSON.stringify({ success: false, error: 'No file' }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error('No file provided');
+    }
+
+    console.log('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+
+    // Size check
+    if (file.size > 2147483648) { // 2GB
+      throw new Error('File too large (max 2GB)');
     }
 
     // Upload to Telegram
@@ -40,56 +59,78 @@ export async function onRequest(context) {
       body: telegramForm
     });
 
-    console.log('Telegram status:', telegramResponse.status);
-    
+    console.log('Telegram response status:', telegramResponse.status);
+
     if (!telegramResponse.ok) {
-      throw new Error(`Telegram error: ${telegramResponse.status}`);
+      const errorText = await telegramResponse.text();
+      throw new Error(`Telegram upload failed: ${telegramResponse.status} - ${errorText}`);
     }
 
     const telegramData = await telegramResponse.json();
-    
+
     if (!telegramData.ok || !telegramData.result?.document?.file_id) {
       throw new Error('Invalid Telegram response');
     }
 
     // Get file URL
     const fileId = telegramData.result.document.file_id;
+    console.log('Getting file URL...');
+
     const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+    
+    if (!getFileResponse.ok) {
+      throw new Error(`GetFile failed: ${getFileResponse.status}`);
+    }
+
     const getFileData = await getFileResponse.json();
     
     if (!getFileData.ok || !getFileData.result?.file_path) {
-      throw new Error('Failed to get file URL');
+      throw new Error('Failed to get file path');
     }
 
     const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
-    
-    // Generate simple slug
-    const slug = Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
-    const extension = file.name.includes('.') ? '.' + file.name.split('.').pop() : '';
-    const finalSlug = slug + extension;
+    console.log('Direct URL created');
 
-    // Store in KV (if available)
+    // Generate slug
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 8);
+    const extension = file.name.includes('.') ? '.' + file.name.split('.').pop().toLowerCase() : '';
+    const slug = `${timestamp}${random}${extension}`;
+
+    // Store in KV
     if (env.FILES_KV) {
-      await env.FILES_KV.put(finalSlug, directUrl, {
-        metadata: { filename: file.name, size: file.size, uploadedAt: Date.now() }
+      console.log('Storing in KV...');
+      await env.FILES_KV.put(slug, directUrl, {
+        metadata: {
+          filename: file.name,
+          size: file.size,
+          contentType: file.type,
+          uploadedAt: Date.now()
+        }
       });
+      console.log('Stored in KV successfully');
     }
 
+    // Return result
     const baseUrl = new URL(request.url).origin;
-    
+    const viewUrl = `${baseUrl}/f/${slug}`;
+    const downloadUrl = `${baseUrl}/f/${slug}?dl=1`;
+
+    console.log('Generated URLs:', { viewUrl, downloadUrl });
+
     return new Response(JSON.stringify({
       success: true,
       filename: file.name,
       size: file.size,
-      url: `${baseUrl}/f/${finalSlug}`,
-      download: `${baseUrl}/f/${finalSlug}?dl=1`,
-      direct: directUrl // For testing
+      contentType: file.type,
+      url: viewUrl,
+      download: downloadUrl
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('Upload error:', error.message);
     return new Response(JSON.stringify({
       success: false,
       error: error.message
