@@ -12,7 +12,10 @@ export async function onRequest({ request, env }) {
   }
 
   if (request.method !== 'POST') {
-    return jsonResponse({ success: false, error: 'Method not allowed' }, 405);
+    return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', ...cors }
+    });
   }
 
   try {
@@ -20,64 +23,73 @@ export async function onRequest({ request, env }) {
     const file = formData.get('file');
 
     if (!file) {
-      return jsonResponse({ success: false, error: 'No file uploaded' }, 400);
+      return new Response(JSON.stringify({ success: false, error: 'No file uploaded' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...cors }
+      });
     }
 
     if (file.size > MAX_SIZE) {
-      return jsonResponse({ success: false, error: 'File too large (max 2GB)' }, 400);
+      return new Response(JSON.stringify({ success: false, error: 'File too large (max 2GB)' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...cors }
+      });
     }
 
-    console.log('Uploading:', file.name, 'Type:', file.type, 'Size:', file.size);
+    // Upload to Telegram
+    const telegramData = new FormData();
+    telegramData.append('chat_id', CHANNEL_ID);
+    telegramData.append('document', file, file.name);
 
-    // ✅ FIXED: Always use sendDocument for ALL file types (most reliable)
-    const telegramFormData = new FormData();
-    telegramFormData.append('chat_id', CHANNEL_ID);
-    telegramFormData.append('document', file, file.name); // Important: include filename
-
-    const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
-    const telegramResponse = await fetch(telegramUrl, {
+    const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: 'POST',
-      body: telegramFormData
+      body: telegramData
     });
 
     const telegramResult = await telegramResponse.json();
-    console.log('Telegram response:', telegramResult);
 
     if (!telegramResult.ok) {
       console.error('Telegram error:', telegramResult);
-      return jsonResponse({ 
+      return new Response(JSON.stringify({ 
         success: false, 
         error: telegramResult.description || 'Telegram upload failed' 
-      }, 500);
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...cors }
+      });
     }
 
-    // Get file_id from document
+    // Get file info
     const document = telegramResult.result.document;
-    if (!document) {
-      return jsonResponse({ success: false, error: 'No document in response' }, 500);
-    }
-
     const fileId = document.file_id;
     const fileName = document.file_name || file.name;
-    
-    // Get file path from Telegram
-    const getFileUrl = `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`;
-    const fileResponse = await fetch(getFileUrl);
-    const fileResult = await fileResponse.json();
 
-    if (!fileResult.ok) {
-      console.error('GetFile error:', fileResult);
-      return jsonResponse({ success: false, error: 'Failed to get file path' }, 500);
+    // Get file URL from Telegram
+    const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+    const getFileResult = await getFileResponse.json();
+
+    if (!getFileResult.ok) {
+      console.error('GetFile error:', getFileResult);
+      return new Response(JSON.stringify({ success: false, error: 'Failed to get file URL' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...cors }
+      });
     }
 
-    const filePath = fileResult.result.file_path;
-    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+    const filePath = getFileResult.result.file_path;
+    const telegramFileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // Generate slug with extension
-    const slug = generateSlugWithExtension(fileName);
-    
-    // ✅ FIXED: Store as simple string, not JSON
-    await env.FILES_KV.put(slug, directUrl, {
+    // Generate slug
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 8);
+    const lastDot = fileName.lastIndexOf('.');
+    const extension = lastDot !== -1 ? fileName.substring(lastDot) : '';
+    const nameWithoutExt = lastDot !== -1 ? fileName.substring(0, lastDot) : fileName;
+    const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
+    const slug = `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
+
+    // Store in KV - SIMPLE STRING STORAGE
+    await env.FILES_KV.put(slug, telegramFileUrl, {
       metadata: {
         filename: fileName,
         size: file.size,
@@ -89,7 +101,7 @@ export async function onRequest({ request, env }) {
     const baseUrl = new URL(request.url).origin;
     const viewUrl = `${baseUrl}/m/${slug}`;
 
-    return jsonResponse({
+    return new Response(JSON.stringify({
       success: true,
       filename: fileName,
       size: file.size,
@@ -97,37 +109,18 @@ export async function onRequest({ request, env }) {
       view_url: viewUrl,
       download_url: viewUrl + '?dl=1',
       stream_url: viewUrl
+    }), {
+      headers: { 'Content-Type': 'application/json', ...cors }
     });
 
   } catch (error) {
     console.error('Upload error:', error);
-    return jsonResponse({ 
+    return new Response(JSON.stringify({ 
       success: false, 
       error: error.message || 'Server error' 
-    }, 500);
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...cors }
+    });
   }
-}
-
-function generateSlugWithExtension(filename) {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substr(2, 8);
-  
-  // Preserve extension properly
-  const lastDot = filename.lastIndexOf('.');
-  const extension = lastDot !== -1 ? filename.substring(lastDot) : '';
-  const nameWithoutExt = lastDot !== -1 ? filename.substring(0, lastDot) : filename;
-  
-  const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
-  
-  return `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
-}
-
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 
-      'Content-Type': 'application/json',
-      ...cors
-    }
-  });
 }
