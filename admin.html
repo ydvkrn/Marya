@@ -3,9 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marya Vault - Admin</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Admin Panel - Marya Vault</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary: #dc143c;
+            --primary-dark: #b91c1c;
+            --white: #ffffff;
+            --gray-100: #f3f4f6;
+            --gray-600: #6b7280;
+            --gray-900: #111827;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,8 +22,9 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-100);
+            color: var(--gray-900);
             padding: 20px;
         }
 
@@ -23,11 +33,39 @@
             margin: 0 auto;
         }
 
-        h1 {
+        .header {
             text-align: center;
-            color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            color: var(--white);
+        }
+
+        h1 {
             font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--gray-600);
+            font-size: 1.1rem;
         }
 
         .stats {
@@ -38,76 +76,82 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--white);
+            border: 1px solid rgba(220, 20, 60, 0.2);
+            border-radius: 12px;
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         }
 
         .stat-number {
             font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
+            font-weight: 800;
+            color: var(--primary);
             margin-bottom: 5px;
         }
 
         .stat-label {
-            color: #666;
+            color: var(--gray-600);
             text-transform: uppercase;
             font-size: 0.9rem;
-            letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .files-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             overflow: hidden;
         }
 
         .files-header {
-            background: #667eea;
-            color: white;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            padding: 20px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .files-title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.3rem;
+            font-weight: 700;
         }
 
         .refresh-btn {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
-            color: white;
+            color: var(--white);
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            transition: background 0.3s ease;
         }
 
         .refresh-btn:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .files-list {
-            padding: 20px;
+            padding: 0;
         }
 
         .file-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--gray-100);
         }
 
         .file-item:last-child {
             border-bottom: none;
+        }
+
+        .file-item:hover {
+            background: rgba(220, 20, 60, 0.02);
         }
 
         .file-info {
@@ -115,14 +159,15 @@
         }
 
         .file-name {
-            font-weight: bold;
-            color: #333;
+            font-weight: 600;
+            color: var(--gray-900);
             margin-bottom: 5px;
+            word-break: break-all;
         }
 
         .file-meta {
             font-size: 0.9rem;
-            color: #666;
+            color: var(--gray-600);
         }
 
         .file-actions {
@@ -131,65 +176,103 @@
         }
 
         .btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.85rem;
+            font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            transition: all 0.3s ease;
         }
 
         .btn-view {
-            background: #28a745;
-            color: white;
+            background: #10b981;
+            color: var(--white);
+        }
+
+        .btn-view:hover {
+            background: #059669;
+            transform: translateY(-1px);
         }
 
         .btn-delete {
-            background: #dc3545;
-            color: white;
+            background: #ef4444;
+            color: var(--white);
         }
 
-        .btn:hover {
-            opacity: 0.9;
+        .btn-delete:hover {
+            background: #dc2626;
             transform: translateY(-1px);
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 60px 20px;
+            color: var(--gray-600);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 6px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 8px;
             margin: 20px;
+            text-align: center;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-600);
         }
 
         @media (max-width: 768px) {
             .file-item {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
+                gap: 15px;
             }
-            
+
             .file-actions {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: center;
+            }
+
+            .files-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><i class="fas fa-shield-alt"></i> Admin Panel</h1>
-        
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>Admin Panel</h1>
+            <p class="subtitle">Marya Vault File Management</p>
+        </div>
+
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number" id="totalFiles">0</div>
@@ -203,14 +286,17 @@
 
         <div class="files-container">
             <div class="files-header">
-                <div class="files-title">File Database</div>
+                <div class="files-title">
+                    <i class="fas fa-database"></i> File Database
+                </div>
                 <button class="refresh-btn" onclick="loadFiles()">
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
             </div>
             <div class="files-list" id="filesList">
                 <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                    <i class="fas fa-spinner"></i>
+                    <div>Loading files...</div>
                 </div>
             </div>
         </div>
@@ -224,10 +310,10 @@
             const totalFiles = document.getElementById('totalFiles');
             const totalSize = document.getElementById('totalSize');
 
-            filesList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            filesList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><div>Loading files...</div></div>';
 
             try {
-                const response = await fetch(`/admin?action=list&pass=${ADMIN_PASS}`);
+                const response = await fetch(`/admin/list?pass=${ADMIN_PASS}`);
                 const result = await response.json();
 
                 if (!result.success) {
@@ -235,15 +321,15 @@
                 }
 
                 const files = result.files;
-                
+
                 if (files.length === 0) {
-                    filesList.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No files found</div>';
+                    filesList.innerHTML = '<div class="empty">No files found</div>';
                     totalFiles.textContent = '0';
                     totalSize.textContent = '0 MB';
                     return;
                 }
 
-                // Calculate stats
+                // Update stats
                 totalFiles.textContent = files.length.toLocaleString();
                 const totalBytes = files.reduce((sum, file) => sum + (file.size || 0), 0);
                 totalSize.textContent = formatBytes(totalBytes);
@@ -259,7 +345,7 @@
                             </div>
                         </div>
                         <div class="file-actions">
-                            <a href="/f/${file.slug}" target="_blank" class="btn btn-view">
+                            <a href="/file/${file.slug}" target="_blank" class="btn btn-view">
                                 <i class="fas fa-eye"></i> View
                             </a>
                             <button onclick="deleteFile('${file.slug}', '${(file.filename || file.slug).replace(/'/g, "\\'")}')" class="btn btn-delete">
@@ -275,18 +361,16 @@
         }
 
         async function deleteFile(slug, filename) {
-            if (!confirm(`Delete "${filename}"? This cannot be undone.`)) {
+            if (!confirm(`Delete "${filename}"?\n\nThis action cannot be undone.`)) {
                 return;
             }
 
             try {
-                const response = await fetch(`/admin?action=delete&pass=${ADMIN_PASS}&slug=${slug}`, {
-                    method: 'DELETE'
-                });
+                const response = await fetch(`/admin/delete?pass=${ADMIN_PASS}&slug=${slug}`);
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('File deleted successfully');
+                    alert(`"${filename}" deleted successfully`);
                     loadFiles();
                 } else {
                     alert('Delete failed: ' + result.error);
