@@ -11,29 +11,16 @@ export async function onRequest({ request, env }) {
     return new Response(null, { headers: cors });
   }
 
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json', ...cors }
-    });
-  }
-
   try {
     const formData = await request.formData();
     const file = formData.get('file');
 
     if (!file) {
-      return new Response(JSON.stringify({ success: false, error: 'No file uploaded' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...cors }
-      });
+      throw new Error('No file uploaded');
     }
 
     if (file.size > MAX_SIZE) {
-      return new Response(JSON.stringify({ success: false, error: 'File too large (max 2GB)' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...cors }
-      });
+      throw new Error('File too large (max 2GB)');
     }
 
     // Upload to Telegram
@@ -49,49 +36,34 @@ export async function onRequest({ request, env }) {
     const telegramResult = await telegramResponse.json();
 
     if (!telegramResult.ok) {
-      console.error('Telegram error:', telegramResult);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: telegramResult.description || 'Telegram upload failed' 
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...cors }
-      });
+      throw new Error(telegramResult.description || 'Telegram upload failed');
     }
 
-    // Get file info
-    const document = telegramResult.result.document;
-    const fileId = document.file_id;
-    const fileName = document.file_name || file.name;
-
-    // Get file URL from Telegram
+    // Get file URL
+    const fileId = telegramResult.result.document.file_id;
     const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
     const getFileResult = await getFileResponse.json();
 
     if (!getFileResult.ok) {
-      console.error('GetFile error:', getFileResult);
-      return new Response(JSON.stringify({ success: false, error: 'Failed to get file URL' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...cors }
-      });
+      throw new Error('Failed to get file URL');
     }
 
     const filePath = getFileResult.result.file_path;
-    const telegramFileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // Generate slug
+    // Generate slug with extension
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substr(2, 8);
-    const lastDot = fileName.lastIndexOf('.');
-    const extension = lastDot !== -1 ? fileName.substring(lastDot) : '';
-    const nameWithoutExt = lastDot !== -1 ? fileName.substring(0, lastDot) : fileName;
+    const lastDot = file.name.lastIndexOf('.');
+    const extension = lastDot !== -1 ? file.name.substring(lastDot) : '';
+    const nameWithoutExt = lastDot !== -1 ? file.name.substring(0, lastDot) : file.name;
     const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9]/g, '').substr(0, 15);
     const slug = `${timestamp}-${random}-${cleanName}${extension}`.toLowerCase();
 
-    // Store in KV - SIMPLE STRING STORAGE
-    await env.FILES_KV.put(slug, telegramFileUrl, {
+    // ✅ FIXED: Store URL as plain text (not JSON)
+    await env.FILES_KV.put(slug, directUrl, {
       metadata: {
-        filename: fileName,
+        filename: file.name,
         size: file.size,
         contentType: file.type,
         uploadedAt: Date.now()
@@ -103,7 +75,7 @@ export async function onRequest({ request, env }) {
 
     return new Response(JSON.stringify({
       success: true,
-      filename: fileName,
+      filename: file.name,
       size: file.size,
       contentType: file.type,
       view_url: viewUrl,
@@ -114,10 +86,9 @@ export async function onRequest({ request, env }) {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message || 'Server error' 
+      error: error.message 
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...cors }
