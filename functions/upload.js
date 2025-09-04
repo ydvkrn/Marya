@@ -1,23 +1,24 @@
-import { BOT_TOKEN, CHANNEL_ID } from './config.js';
+const BOT_TOKEN = '8360624116:AAEEJha8CRgL8TnrEKk5zOuCNXXRawmbuaE';
+const CHANNEL_ID = '-1003071466750';
 
 export async function onRequest(context) {
   const { request, env } = context;
   
   // CORS headers
-  const corsHeaders = {
+  const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type'
   };
 
   if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
   }
 
@@ -25,19 +26,12 @@ export async function onRequest(context) {
     const formData = await request.formData();
     const file = formData.get('file');
 
-    if (!file || file.size === 0) {
-      return new Response(JSON.stringify({ success: false, error: 'No file provided' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+    if (!file) {
+      throw new Error('No file provided');
     }
 
-    // Size limit: 2GB
-    if (file.size > 2147483648) {
-      return new Response(JSON.stringify({ success: false, error: 'File too large (max 2GB)' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+    if (file.size > 2000000000) { // 2GB limit
+      throw new Error('File too large (max 2GB)');
     }
 
     // Upload to Telegram
@@ -45,41 +39,36 @@ export async function onRequest(context) {
     telegramForm.append('chat_id', CHANNEL_ID);
     telegramForm.append('document', file, file.name);
 
-    const telegramRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+    const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: 'POST',
       body: telegramForm
     });
 
-    const telegramData = await telegramRes.json();
+    const telegramData = await telegramResponse.json();
 
     if (!telegramData.ok) {
-      return new Response(JSON.stringify({ success: false, error: telegramData.description }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error(telegramData.description || 'Telegram upload failed');
     }
 
     // Get file URL
     const fileId = telegramData.result.document.file_id;
-    const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
-    const fileData = await fileRes.json();
+    const fileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+    const fileData = await fileResponse.json();
 
     if (!fileData.ok) {
-      return new Response(JSON.stringify({ success: false, error: 'Failed to get file URL' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+      throw new Error('Failed to get file URL');
     }
 
     const telegramURL = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileData.result.file_path}`;
 
-    // Generate unique slug
-    const slug = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    const extension = file.name.includes('.') ? file.name.split('.').pop() : '';
-    const finalSlug = extension ? `${slug}.${extension}` : slug;
+    // Generate slug
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 8);
+    const extension = file.name.includes('.') ? '.' + file.name.split('.').pop() : '';
+    const slug = `${timestamp}${random}${extension}`;
 
     // Store in KV
-    await env.VAULT_KV.put(finalSlug, telegramURL, {
+    await env.FILES_KV.put(slug, telegramURL, {
       metadata: {
         filename: file.name,
         size: file.size,
@@ -88,27 +77,28 @@ export async function onRequest(context) {
       }
     });
 
-    // Generate URLs
     const baseURL = new URL(request.url).origin;
-    const fileURL = `${baseURL}/f/${finalSlug}`;
-    const downloadURL = `${baseURL}/f/${finalSlug}?dl=1`;
+    const viewURL = `${baseURL}/file/${slug}`;
+    const downloadURL = `${baseURL}/file/${slug}?dl=1`;
 
     return new Response(JSON.stringify({
       success: true,
       filename: file.name,
       size: file.size,
       type: file.type,
-      url: fileURL,
-      download: downloadURL,
-      slug: finalSlug
+      url: viewURL,
+      download: downloadURL
     }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ success: false, error: error.message }), {
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
   }
 }
