@@ -295,6 +295,23 @@
             background: linear-gradient(90deg, var(--primary), var(--primary-dark));
             width: 0%;
             transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
 
         .alert {
@@ -325,29 +342,6 @@
 
         .alert.error {
             background: var(--error);
-        }
-
-        .admin-link {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary);
-            color: var(--white);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            box-shadow: var(--shadow);
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .admin-link:hover {
-            transform: scale(1.1);
-            background: var(--primary-dark);
         }
 
         /* Mobile Optimizations */
@@ -436,14 +430,6 @@
             .alert.show {
                 transform: translateY(0);
             }
-
-            .admin-link {
-                bottom: 15px;
-                right: 15px;
-                width: 45px;
-                height: 45px;
-                font-size: 1rem;
-            }
         }
 
         @media (max-width: 480px) {
@@ -461,6 +447,39 @@
 
             .upload-subtext {
                 font-size: 0.9rem;
+            }
+        }
+
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: var(--white);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .admin-link:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
+        }
+
+        @media (max-width: 768px) {
+            .admin-link {
+                bottom: 15px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
             }
         }
     </style>
@@ -525,266 +544,245 @@
     <div id="alert" class="alert"></div>
 
     <script>
-        console.log('🚀 Marya Vault loading...');
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const results = document.getElementById('results');
+        const resultsList = document.getElementById('resultsList');
+        const alert = document.getElementById('alert');
 
-        // Wait for DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM loaded, initializing...');
+        // Click to browse
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFiles);
+
+        // Drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults);
+            document.body.addEventListener(eventName, preventDefaults);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight);
+        });
+
+        function highlight() {
+            dropzone.classList.add('dragover');
+        }
+
+        function unhighlight() {
+            dropzone.classList.remove('dragover');
+        }
+
+        dropzone.addEventListener('drop', handleDrop);
+
+        function handleDrop(e) {
+            const files = e.dataTransfer.files;
+            handleFiles({ target: { files } });
+        }
+
+        function handleFiles(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
             
-            // Get elements
-            const dropzone = document.getElementById('dropzone');
-            const fileInput = document.getElementById('fileInput');
-            const results = document.getElementById('results');
-            const resultsList = document.getElementById('resultsList');
-            const alert = document.getElementById('alert');
+            results.style.display = 'block';
+            files.forEach(uploadFile);
+        }
 
-            if (!dropzone || !fileInput) {
-                console.error('❌ Required elements not found!');
+        async function uploadFile(file) {
+            if (file.size > 2147483648) { // 2GB
+                showAlert('File too large (max 2GB)', 'error');
                 return;
             }
 
-            console.log('✅ Elements found, setting up handlers...');
+            const resultItem = createResultItem(file);
+            resultsList.appendChild(resultItem);
 
-            // ✅ FIXED: Simple click handler
-            dropzone.onclick = function(e) {
-                console.log('🖱️ Dropzone clicked');
-                e.preventDefault();
-                e.stopPropagation();
-                fileInput.click();
-            };
+            const formData = new FormData();
+            formData.append('file', file);
 
-            // ✅ FIXED: File input change
-            fileInput.onchange = function(e) {
-                console.log('📁 Files selected:', e.target.files.length);
-                if (e.target.files.length > 0) {
-                    handleFiles(e.target.files);
-                }
-            };
-
-            // Drag and drop handlers
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            // Drag events
-            dropzone.ondragenter = function(e) {
-                preventDefaults(e);
-                dropzone.classList.add('dragover');
-            };
-
-            dropzone.ondragover = function(e) {
-                preventDefaults(e);
-                dropzone.classList.add('dragover');
-            };
-
-            dropzone.ondragleave = function(e) {
-                preventDefaults(e);
-                dropzone.classList.remove('dragover');
-            };
-
-            dropzone.ondrop = function(e) {
-                preventDefaults(e);
-                dropzone.classList.remove('dragover');
-                console.log('📋 Files dropped:', e.dataTransfer.files.length);
-                if (e.dataTransfer.files.length > 0) {
-                    handleFiles(e.dataTransfer.files);
-                }
-            };
-
-            // Main file handling function
-            function handleFiles(files) {
-                console.log('📂 Processing files:', files.length);
+            try {
+                console.log('Starting upload for:', file.name);
                 
-                if (!files || files.length === 0) {
-                    console.warn('⚠️ No files provided');
-                    showAlert('No files selected', 'error');
-                    return;
-                }
-                
-                results.style.display = 'block';
-                
-                Array.from(files).forEach(function(file) {
-                    uploadFile(file);
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
                 });
-            }
 
-            // Upload function
-            async function uploadFile(file) {
-                console.log('🚀 Starting upload:', file.name, file.size);
+                console.log('Upload response status:', response.status);
+                console.log('Upload response OK:', response.ok);
 
-                if (file.size > 2147483648) { // 2GB
-                    showAlert('File too large (max 2GB)', 'error');
-                    return;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Upload error response:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const resultItem = createResultItem(file);
-                resultsList.appendChild(resultItem);
+                const result = await response.json();
+                console.log('Upload result:', result);
 
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    console.log('📤 Sending to server...');
-                    
-                    const response = await fetch('/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    console.log('📨 Response received:', response.status, response.ok);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    console.log('✅ Upload result:', result);
-
-                    if (result.success) {
-                        updateResultItem(resultItem, result);
-                        showAlert(`${result.filename} uploaded successfully!`, 'success');
-                    } else {
-                        throw new Error(result.error || 'Upload failed');
-                    }
-                } catch (error) {
-                    console.error('❌ Upload error:', error);
-                    resultItem.innerHTML = `
-                        <div style="color: var(--error); font-weight: 600; text-align: center; padding: 20px;">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Upload failed: ${error.message}
-                        </div>
-                    `;
-                    showAlert('Upload failed: ' + error.message, 'error');
+                if (result.success) {
+                    updateResultItem(resultItem, result);
+                    showAlert(`${result.filename} uploaded successfully!`, 'success');
+                } else {
+                    throw new Error(result.error || 'Upload failed');
                 }
-            }
-
-            function createResultItem(file) {
-                const item = document.createElement('div');
-                item.className = 'result-item';
-                
-                const icon = getFileIcon(file.type, file.name);
-                
-                item.innerHTML = `
-                    <div class="result-header">
-                        <div class="file-icon">
-                            <i class="${icon}"></i>
-                        </div>
-                        <div class="result-info">
-                            <h3>${file.name}</h3>
-                            <div class="result-meta">${formatBytes(file.size)} • Uploading...</div>
-                        </div>
-                    </div>
-                    <div class="progress">
-                        <div class="progress-bar" style="width: 45%;"></div>
+            } catch (error) {
+                console.error('Upload error:', error);
+                resultItem.innerHTML = `
+                    <div style="color: var(--error); font-weight: 600; text-align: center; padding: 20px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Upload failed: ${error.message}
                     </div>
                 `;
-                return item;
+                showAlert('Upload failed: ' + error.message, 'error');
             }
+        }
 
-            function updateResultItem(item, result) {
-                const icon = getFileIcon(result.contentType, result.filename);
-                
-                item.innerHTML = `
-                    <div class="result-header">
-                        <div class="file-icon">
-                            <i class="${icon}"></i>
-                        </div>
-                        <div class="result-info">
-                            <h3>${result.filename}</h3>
-                            <div class="result-meta">${formatBytes(result.size)} • Upload Complete</div>
-                        </div>
+        function createResultItem(file) {
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            
+            const icon = getFileIcon(file.type, file.name);
+            
+            item.innerHTML = `
+                <div class="result-header">
+                    <div class="file-icon">
+                        <i class="${icon}"></i>
                     </div>
-                    <div class="result-actions">
-                        <a href="${result.url}" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-eye"></i> View File
-                        </a>
-                        <a href="${result.download}" class="btn btn-success">
-                            <i class="fas fa-download"></i> Download
-                        </a>
-                        <button onclick="copyToClipboard('${result.url}')" class="btn btn-primary">
-                            <i class="fas fa-copy"></i> Copy Link
-                        </button>
+                    <div class="result-info">
+                        <h3>${file.name}</h3>
+                        <div class="result-meta">${formatBytes(file.size)} • Uploading...</div>
                     </div>
-                `;
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: 45%;"></div>
+                </div>
+            `;
+            return item;
+        }
+
+        function updateResultItem(item, result) {
+            const icon = getFileIcon(result.contentType, result.filename);
+            
+            item.innerHTML = `
+                <div class="result-header">
+                    <div class="file-icon">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="result-info">
+                        <h3>${result.filename}</h3>
+                        <div class="result-meta">${formatBytes(result.size)} • Upload Complete</div>
+                    </div>
+                </div>
+                <div class="result-actions">
+                    <a href="${result.url}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View File
+                    </a>
+                    <a href="${result.download}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                    <button onclick="copyToClipboard('${result.url}')" class="btn btn-primary">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                </div>
+            `;
+        }
+
+        function getFileIcon(type, filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            
+            if (type && type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                return 'fas fa-image';
+            } else if (type && type.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
+                return 'fas fa-video';
+            } else if (type && type.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
+                return 'fas fa-music';
+            } else if (['pdf'].includes(ext)) {
+                return 'fas fa-file-pdf';
+            } else if (['doc', 'docx'].includes(ext)) {
+                return 'fas fa-file-word';
+            } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+                return 'fas fa-archive';
+            } else {
+                return 'fas fa-file';
             }
+        }
 
-            function getFileIcon(type, filename) {
-                const ext = filename.split('.').pop().toLowerCase();
-                
-                if (type && type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-                    return 'fas fa-image';
-                } else if (type && type.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
-                    return 'fas fa-video';
-                } else if (type && type.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
-                    return 'fas fa-music';
-                } else if (['pdf'].includes(ext)) {
-                    return 'fas fa-file-pdf';
-                } else if (['doc', 'docx'].includes(ext)) {
-                    return 'fas fa-file-word';
-                } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
-                    return 'fas fa-archive';
-                } else {
-                    return 'fas fa-file';
-                }
-            }
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
 
-            function formatBytes(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
-
-            // Global functions for buttons
-            window.copyToClipboard = function(text) {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        showAlert('Link copied to clipboard!', 'success');
-                    }).catch(() => {
-                        fallbackCopyTextToClipboard(text);
-                    });
-                } else {
-                    fallbackCopyTextToClipboard(text);
-                }
-            };
-
-            function fallbackCopyTextToClipboard(text) {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.top = '0';
-                textArea.style.left = '0';
-                textArea.style.opacity = '0';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                
-                try {
-                    document.execCommand('copy');
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
                     showAlert('Link copied to clipboard!', 'success');
-                } catch (err) {
-                    showAlert('Could not copy link', 'error');
-                }
-                
-                document.body.removeChild(textArea);
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text);
             }
+        }
 
-            function showAlert(message, type) {
-                alert.innerHTML = `
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
-                    <span>${message}</span>
-                `;
-                alert.className = `alert ${type} show`;
-                
-                setTimeout(() => {
-                    alert.classList.remove('show');
-                }, 4000);
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '0';
+            textArea.style.left = '0';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showAlert('Link copied to clipboard!', 'success');
+            } catch (err) {
+                showAlert('Could not copy link', 'error');
             }
+            
+            document.body.removeChild(textArea);
+        }
 
-            console.log('✅ Marya Vault initialized successfully!');
-        });
+        function showAlert(message, type) {
+            alert.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                <span>${message}</span>
+            `;
+            alert.className = `alert ${type} show`;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 4000);
+        }
+
+        // Touch support for mobile
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        dropzone.addEventListener('touchstart', (e) => {
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        dropzone.addEventListener('touchend', (e) => {
+            touchEndY = e.changedTouches[0].screenY;
+            if (Math.abs(touchEndY - touchStartY) < 10) {
+                fileInput.click();
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>
