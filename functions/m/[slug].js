@@ -4,17 +4,18 @@ export async function onRequest({ params, request, env }) {
   try {
     const slug = params.slug;
     
-    // ✅ Get direct URL from KV (stored as string)
-    const directUrl = await env.FILES_KV.get(slug);
-    const metadata = await env.FILES_KV.get(slug, 'json');
+    // ✅ FIXED: Get URL as text (not JSON)
+    const directUrl = await env.FILES_KV.get(slug, 'text');
+    const metadata = await env.FILES_KV.get(slug, { type: 'json' });
 
     if (!directUrl) {
       return new Response('File not found', { status: 404 });
     }
 
-    console.log('Serving file:', slug, 'URL:', directUrl);
+    console.log('Serving file:', slug);
+    console.log('Direct URL:', directUrl);
 
-    // ✅ FIXED: Proxy request through our worker
+    // ✅ Handle range requests for video streaming
     const range = request.headers.get('Range');
     const fetchHeaders = {};
     
@@ -22,43 +23,51 @@ export async function onRequest({ params, request, env }) {
       fetchHeaders['Range'] = range;
     }
 
+    // Fetch file from Telegram
     const response = await fetch(directUrl, { 
-      headers: fetchHeaders,
-      cf: {
-        cacheTtl: CACHE_SECS,
-        cacheEverything: true
-      }
+      headers: fetchHeaders
     });
     
     if (!response.ok) {
+      console.error('Telegram fetch error:', response.status, response.statusText);
       return new Response('File not accessible', { status: 404 });
     }
 
     const headers = new Headers();
     
-    // Copy important headers
-    if (response.headers.get('Content-Type')) {
-      headers.set('Content-Type', response.headers.get('Content-Type'));
+    // ✅ FIXED: Set proper content type
+    let contentType = response.headers.get('Content-Type');
+    if (metadata?.metadata?.contentType) {
+      contentType = metadata.metadata.contentType;
     }
     
-    if (response.headers.get('Content-Length')) {
-      headers.set('Content-Length', response.headers.get('Content-Length'));
-    }
-    
-    if (response.headers.get('Content-Range')) {
-      headers.set('Content-Range', response.headers.get('Content-Range'));
-    }
+    // Determine if should be inline or attachment
+    const isDownload = request.url.includes('dl=1');
+    const isViewable = contentType && (
+      contentType.startsWith('image/') ||
+      contentType.startsWith('video/') ||
+      contentType.startsWith('audio/') ||
+      contentType === 'application/pdf'
+    );
 
-    // Set our headers
+    // Set headers
+    headers.set('Content-Type', contentType || 'application/octet-stream');
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Cache-Control', `public, max-age=${CACHE_SECS}, immutable`);
     headers.set('Accept-Ranges', 'bytes');
     
-    // ✅ FIXED: Proper Content-Disposition based on request
-    const isDownload = request.url.includes('dl=1');
+    // Copy range headers if present
+    if (response.headers.get('Content-Range')) {
+      headers.set('Content-Range', response.headers.get('Content-Range'));
+    }
+    if (response.headers.get('Content-Length')) {
+      headers.set('Content-Length', response.headers.get('Content-Length'));
+    }
+
+    // ✅ FIXED: Proper disposition based on file type and request
     const filename = metadata?.metadata?.filename || slug;
     
-    if (isDownload) {
+    if (isDownload || !isViewable) {
       headers.set('Content-Disposition', `attachment; filename="${filename}"`);
     } else {
       headers.set('Content-Disposition', 'inline');
