@@ -26,8 +26,6 @@
             --success-light: #d1fae5;
             --error: #dc2626;
             --error-light: #fee2e2;
-            --warning: #d97706;
-            --warning-light: #fef3c7;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
@@ -54,6 +52,117 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
+        }
+
+        /* Login Form */
+        .login-container {
+            max-width: 400px;
+            margin: 8rem auto;
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            padding: 3rem;
+            border: 1px solid var(--gray-100);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border-radius: 20px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
+        }
+
+        .login-subtitle {
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: var(--gray-50);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            background: var(--white);
+            box-shadow: 0 0 0 3px var(--primary-red-light);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: var(--primary-red);
+            color: var(--white);
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-red-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* Header */
@@ -171,118 +280,7 @@
             transform: translateY(-1px);
         }
 
-        /* Login Form */
-        .login-container {
-            max-width: 400px;
-            margin: 8rem auto;
-            background: var(--white);
-            border-radius: 24px;
-            box-shadow: var(--shadow-xl);
-            padding: 3rem;
-            border: 1px solid var(--gray-100);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .login-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-radius: 20px;
-            margin: 0 auto 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-size: 2rem;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .login-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: var(--gray-900);
-        }
-
-        .login-subtitle {
-            color: var(--gray-600);
-            font-weight: 500;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--gray-700);
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid var(--gray-200);
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.2s;
-            background: var(--gray-50);
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-            background: var(--white);
-            box-shadow: 0 0 0 3px var(--primary-red-light);
-        }
-
-        .login-btn {
-            width: 100%;
-            background: var(--primary-red);
-            color: var(--white);
-            border: none;
-            padding: 1rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .login-btn:hover {
-            background: var(--primary-red-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Files Table */
+        /* Files Section */
         .files-section {
             background: var(--white);
             border-radius: 24px;
@@ -413,7 +411,7 @@
             transform: translateY(-1px);
         }
 
-        /* Confirmation Modal */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -516,7 +514,6 @@
             transform: translateY(-1px);
         }
 
-        /* Loading States */
         .loading {
             display: flex;
             align-items: center;
@@ -549,7 +546,6 @@
             color: var(--gray-300);
         }
 
-        /* Toast Messages */
         .toast {
             position: fixed;
             top: 2rem;
@@ -599,57 +595,17 @@
             color: var(--error);
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .files-table th,
-            .files-table td {
-                padding: 0.75rem;
-                font-size: 0.875rem;
-            }
-
-            .file-info {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-
-            .file-actions {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .action-btn {
-                justify-content: center;
-            }
-
-            .modal {
-                margin: 1rem;
-                width: calc(100% - 2rem);
-            }
-
-            .modal-actions {
-                flex-direction: column;
-            }
-
-            .toast {
-                top: 1rem;
-                right: 1rem;
-                left: 1rem;
-                transform: translateY(-100px);
-            }
-
-            .toast.show {
-                transform: translateY(0);
-            }
+            .container { padding: 1rem; }
+            .header-content { flex-direction: column; align-items: flex-start; }
+            .files-table th, .files-table td { padding: 0.75rem; font-size: 0.875rem; }
+            .file-info { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .file-actions { flex-direction: column; width: 100%; }
+            .action-btn { justify-content: center; }
+            .modal { margin: 1rem; width: calc(100% - 2rem); }
+            .modal-actions { flex-direction: column; }
+            .toast { top: 1rem; right: 1rem; left: 1rem; transform: translateY(-100px); }
+            .toast.show { transform: translateY(0); }
         }
     </style>
 </head>
@@ -680,7 +636,6 @@
     <!-- Admin Dashboard -->
     <div id="adminDashboard" style="display: none;">
         <div class="container">
-            <!-- Header -->
             <header class="header">
                 <div class="header-content">
                     <div class="header-title">
@@ -709,7 +664,6 @@
                 </div>
             </header>
 
-            <!-- Files Section -->
             <div class="files-section">
                 <div class="files-header">
                     <h2 class="files-title">File Storage</h2>
@@ -746,7 +700,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
     <script>
@@ -766,13 +719,11 @@
             }
 
             bindEvents() {
-                // Login form
                 document.getElementById('loginForm').addEventListener('submit', (e) => {
                     e.preventDefault();
                     this.handleLogin();
                 });
 
-                // Dashboard actions
                 document.getElementById('refreshBtn').addEventListener('click', () => {
                     this.loadFiles();
                 });
@@ -781,7 +732,6 @@
                     this.handleLogout();
                 });
 
-                // Modal events
                 document.getElementById('cancelBtn').addEventListener('click', () => {
                     this.hideModal();
                 });
@@ -790,7 +740,6 @@
                     this.confirmDelete();
                 });
 
-                // Click outside modal to close
                 document.getElementById('confirmModal').addEventListener('click', (e) => {
                     if (e.target.id === 'confirmModal') {
                         this.hideModal();
@@ -821,7 +770,7 @@
                         this.loadFiles();
                         this.showToast('Login successful!', 'success');
                     } else {
-                        this.showToast('Invalid password!', 'error');
+                        this.showToast(result.error || 'Invalid password!', 'error');
                         document.getElementById('password').value = '';
                         document.getElementById('password').focus();
                     }
@@ -1034,7 +983,7 @@
                     if (result.success) {
                         this.showToast('File deleted successfully!', 'success');
                         this.hideModal();
-                        this.loadFiles(); // Reload files list
+                        this.loadFiles();
                     } else {
                         throw new Error(result.error || 'Delete failed');
                     }
@@ -1064,7 +1013,6 @@
             }
         }
 
-        // Initialize admin dashboard
         const admin = new AdminDashboard();
     </script>
 </body>
