@@ -13,6 +13,8 @@
             --gray-100: #f3f4f6;
             --gray-600: #6b7280;
             --gray-900: #111827;
+            --success: #10b981;
+            --error: #ef4444;
         }
 
         * {
@@ -26,6 +28,7 @@
             background: var(--gray-100);
             color: var(--gray-900);
             padding: 20px;
+            line-height: 1.6;
         }
 
         .container {
@@ -47,6 +50,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 10px 25px rgba(220, 20, 60, 0.3);
         }
 
         .logo i {
@@ -66,6 +70,7 @@
         .subtitle {
             color: var(--gray-600);
             font-size: 1.1rem;
+            font-weight: 500;
         }
 
         .stats {
@@ -117,6 +122,9 @@
         .files-title {
             font-size: 1.3rem;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .refresh-btn {
@@ -128,6 +136,9 @@
             cursor: pointer;
             font-weight: 600;
             transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .refresh-btn:hover {
@@ -144,6 +155,7 @@
             align-items: center;
             padding: 20px 25px;
             border-bottom: 1px solid var(--gray-100);
+            transition: background 0.3s ease;
         }
 
         .file-item:last-child {
@@ -156,9 +168,24 @@
 
         .file-info {
             flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .file-name {
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        .file-details h3 {
             font-weight: 600;
             color: var(--gray-900);
             margin-bottom: 5px;
@@ -190,7 +217,7 @@
         }
 
         .btn-view {
-            background: #10b981;
+            background: var(--success);
             color: var(--white);
         }
 
@@ -200,7 +227,7 @@
         }
 
         .btn-delete {
-            background: #ef4444;
+            background: var(--error);
             color: var(--white);
         }
 
@@ -235,6 +262,10 @@
             border-radius: 8px;
             margin: 20px;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .empty {
@@ -243,11 +274,55 @@
             color: var(--gray-600);
         }
 
+        .empty i {
+            font-size: 4rem;
+            color: rgba(220, 20, 60, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .empty h3 {
+            font-size: 1.3rem;
+            color: var(--gray-900);
+            margin-bottom: 10px;
+        }
+
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .files-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
             .file-item {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
+                padding: 20px 15px;
+            }
+
+            .file-info {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
 
             .file-actions {
@@ -255,10 +330,28 @@
                 justify-content: center;
             }
 
+            .btn {
+                flex: 1;
+                justify-content: center;
+                padding: 12px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
             .files-header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+                padding: 20px 15px;
+            }
+
+            .file-item {
+                padding: 15px;
             }
         }
     </style>
@@ -287,10 +380,12 @@
         <div class="files-container">
             <div class="files-header">
                 <div class="files-title">
-                    <i class="fas fa-database"></i> File Database
+                    <i class="fas fa-database"></i>
+                    File Database
                 </div>
                 <button class="refresh-btn" onclick="loadFiles()">
-                    <i class="fas fa-sync-alt"></i> Refresh
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
                 </button>
             </div>
             <div class="files-list" id="filesList">
@@ -313,17 +408,28 @@
             filesList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><div>Loading files...</div></div>';
 
             try {
-                const response = await fetch(`/admin/list?pass=${ADMIN_PASS}`);
+                const response = await fetch(`/admin/files?action=list&pass=${ADMIN_PASS}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
                 if (!result.success) {
-                    throw new Error(result.error);
+                    throw new Error(result.error || 'Failed to load files');
                 }
 
-                const files = result.files;
+                const files = result.files || [];
 
                 if (files.length === 0) {
-                    filesList.innerHTML = '<div class="empty">No files found</div>';
+                    filesList.innerHTML = `
+                        <div class="empty">
+                            <i class="fas fa-folder-open"></i>
+                            <h3>No Files Found</h3>
+                            <p>Upload some files to see them here</p>
+                        </div>
+                    `;
                     totalFiles.textContent = '0';
                     totalSize.textContent = '0 MB';
                     return;
@@ -335,57 +441,120 @@
                 totalSize.textContent = formatBytes(totalBytes);
 
                 // Render files
-                filesList.innerHTML = files.map(file => `
-                    <div class="file-item">
-                        <div class="file-info">
-                            <div class="file-name">${file.filename || file.slug}</div>
-                            <div class="file-meta">
-                                ${formatBytes(file.size || 0)} • 
-                                ${file.uploaded ? new Date(file.uploaded).toLocaleString() : 'Unknown'}
+                filesList.innerHTML = files.map(file => {
+                    const filename = file.filename || file.slug || 'Unknown';
+                    const size = file.size || 0;
+                    const uploadedAt = file.uploadedAt ? new Date(file.uploadedAt).toLocaleString() : 'Unknown';
+                    const contentType = file.contentType || '';
+                    const icon = getFileIcon(filename, contentType);
+
+                    return `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-icon">
+                                    <i class="${icon}"></i>
+                                </div>
+                                <div class="file-details">
+                                    <h3>${escapeHtml(filename)}</h3>
+                                    <div class="file-meta">
+                                        ${formatBytes(size)} • ${uploadedAt}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                <a href="/f/${file.slug}" target="_blank" class="btn btn-view">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <button onclick="deleteFile('${file.slug}', '${escapeHtml(filename)}')" class="btn btn-delete">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
                             </div>
                         </div>
-                        <div class="file-actions">
-                            <a href="/file/${file.slug}" target="_blank" class="btn btn-view">
-                                <i class="fas fa-eye"></i> View
-                            </a>
-                            <button onclick="deleteFile('${file.slug}', '${(file.filename || file.slug).replace(/'/g, "\\'")}')" class="btn btn-delete">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
             } catch (error) {
-                filesList.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                console.error('Load files error:', error);
+                filesList.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Error: ${error.message}
+                    </div>
+                `;
             }
         }
 
         async function deleteFile(slug, filename) {
-            if (!confirm(`Delete "${filename}"?\n\nThis action cannot be undone.`)) {
+            if (!confirm(`Are you sure you want to delete "${filename}"?\n\nThis action cannot be undone.`)) {
                 return;
             }
 
             try {
-                const response = await fetch(`/admin/delete?pass=${ADMIN_PASS}&slug=${slug}`);
+                const response = await fetch(`/admin/files?action=delete&pass=${ADMIN_PASS}&slug=${encodeURIComponent(slug)}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(`"${filename}" deleted successfully`);
-                    loadFiles();
+                    alert(`"${filename}" deleted successfully!`);
+                    loadFiles(); // Reload the file list
                 } else {
-                    alert('Delete failed: ' + result.error);
+                    throw new Error(result.error || 'Delete failed');
                 }
             } catch (error) {
-                alert('Delete failed: ' + error.message);
+                console.error('Delete error:', error);
+                alert(`Failed to delete "${filename}": ${error.message}`);
+            }
+        }
+
+        function getFileIcon(filename, contentType) {
+            const ext = filename.split('.').pop()?.toLowerCase() || '';
+            
+            if (contentType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                return 'fas fa-image';
+            } else if (contentType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) {
+                return 'fas fa-video';
+            } else if (contentType.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac', 'm4a'].includes(ext)) {
+                return 'fas fa-music';
+            } else if (['pdf'].includes(ext)) {
+                return 'fas fa-file-pdf';
+            } else if (['doc', 'docx'].includes(ext)) {
+                return 'fas fa-file-word';
+            } else if (['xls', 'xlsx'].includes(ext)) {
+                return 'fas fa-file-excel';
+            } else if (['ppt', 'pptx'].includes(ext)) {
+                return 'fas fa-file-powerpoint';
+            } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+                return 'fas fa-archive';
+            } else if (['txt', 'md', 'json', 'xml', 'csv'].includes(ext)) {
+                return 'fas fa-file-text';
+            } else {
+                return 'fas fa-file';
             }
         }
 
         function formatBytes(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
 
         // Load files on page load
