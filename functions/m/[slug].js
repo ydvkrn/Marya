@@ -1,81 +1,69 @@
-import { CACHE_SECS } from '../_config.js';
-
 export async function onRequest({ params, request, env }) {
   try {
     const slug = params.slug;
     
-    // ✅ FIXED: Get URL as text (not JSON)
-    const directUrl = await env.FILES_KV.get(slug, 'text');
+    // Get Telegram URL from KV
+    const telegramUrl = await env.FILES_KV.get(slug, 'text');
     const metadata = await env.FILES_KV.get(slug, { type: 'json' });
 
-    if (!directUrl) {
+    if (!telegramUrl) {
       return new Response('File not found', { status: 404 });
     }
 
-    console.log('Serving file:', slug);
-    console.log('Direct URL:', directUrl);
+    console.log('Serving:', slug, 'URL:', telegramUrl);
 
-    // ✅ Handle range requests for video streaming
+    // Handle range requests for video streaming
     const range = request.headers.get('Range');
-    const fetchHeaders = {};
+    const fetchOptions = { method: 'GET', headers: {} };
     
     if (range) {
-      fetchHeaders['Range'] = range;
+      fetchOptions.headers['Range'] = range;
     }
 
-    // Fetch file from Telegram
-    const response = await fetch(directUrl, { 
-      headers: fetchHeaders
-    });
+    // Fetch from Telegram
+    const response = await fetch(telegramUrl, fetchOptions);
     
     if (!response.ok) {
-      console.error('Telegram fetch error:', response.status, response.statusText);
+      console.error('Telegram fetch failed:', response.status);
       return new Response('File not accessible', { status: 404 });
     }
 
+    // Create response headers
     const headers = new Headers();
     
-    // ✅ FIXED: Set proper content type
-    let contentType = response.headers.get('Content-Type');
-    if (metadata?.metadata?.contentType) {
-      contentType = metadata.metadata.contentType;
+    // Copy important headers from Telegram response
+    for (const [key, value] of response.headers.entries()) {
+      if (['content-type', 'content-length', 'content-range', 'accept-ranges'].includes(key.toLowerCase())) {
+        headers.set(key, value);
+      }
     }
-    
-    // Determine if should be inline or attachment
-    const isDownload = request.url.includes('dl=1');
-    const isViewable = contentType && (
-      contentType.startsWith('image/') ||
-      contentType.startsWith('video/') ||
-      contentType.startsWith('audio/') ||
-      contentType === 'application/pdf'
-    );
 
-    // Set headers
-    headers.set('Content-Type', contentType || 'application/octet-stream');
+    // Set our custom headers
     headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Cache-Control', `public, max-age=${CACHE_SECS}, immutable`);
+    headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    headers.set('Access-Control-Allow-Headers', 'Range');
+    headers.set('Cache-Control', 'public, max-age=315360000, immutable');
     headers.set('Accept-Ranges', 'bytes');
-    
-    // Copy range headers if present
-    if (response.headers.get('Content-Range')) {
-      headers.set('Content-Range', response.headers.get('Content-Range'));
-    }
-    if (response.headers.get('Content-Length')) {
-      headers.set('Content-Length', response.headers.get('Content-Length'));
-    }
 
-    // ✅ FIXED: Proper disposition based on file type and request
+    // Content disposition
+    const isDownload = request.url.includes('dl=1');
     const filename = metadata?.metadata?.filename || slug;
+    const contentType = response.headers.get('Content-Type') || metadata?.metadata?.contentType || 'application/octet-stream';
     
-    if (isDownload || !isViewable) {
+    if (isDownload) {
       headers.set('Content-Disposition', `attachment; filename="${filename}"`);
     } else {
-      headers.set('Content-Disposition', 'inline');
+      // For images/videos/audio, show inline
+      if (contentType.startsWith('image/') || contentType.startsWith('video/') || contentType.startsWith('audio/')) {
+        headers.set('Content-Disposition', 'inline');
+      } else {
+        headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+      }
     }
 
     return new Response(response.body, {
       status: response.status,
-      headers
+      headers: headers
     });
 
   } catch (error) {
