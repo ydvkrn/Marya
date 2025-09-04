@@ -1,7 +1,6 @@
 export async function onRequest(context) {
   const { request, env } = context;
   
-  // Basic CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -9,12 +8,10 @@ export async function onRequest(context) {
     'Content-Type': 'application/json'
   };
 
-  // Handle preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers });
   }
 
-  // Only POST allowed
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({
       success: false,
@@ -23,30 +20,27 @@ export async function onRequest(context) {
   }
 
   try {
-    // Parse request
-    const data = await request.json();
-    const { password } = data;
-    
-    // Get environment variable
+    const { password } = await request.json();
     const ADMIN_PASS = env.ADMIN_PASS;
     
-    // Debug info (remove in production)
-    console.log('Password received:', !!password);
-    console.log('Admin pass exists:', !!ADMIN_PASS);
-    
-    // Check if admin pass is configured
     if (!ADMIN_PASS) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'ADMIN_PASS environment variable not set'
+        error: 'Admin password not configured'
       }), { status: 500, headers });
     }
     
-    // Check password
+    if (!password) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Password required'
+      }), { status: 400, headers });
+    }
+    
     if (password === ADMIN_PASS) {
       return new Response(JSON.stringify({
         success: true,
-        message: 'Login successful'
+        message: 'Authentication successful'
       }), { headers });
     } else {
       return new Response(JSON.stringify({
@@ -56,7 +50,6 @@ export async function onRequest(context) {
     }
     
   } catch (error) {
-    console.error('Auth error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: 'Server error: ' + error.message
