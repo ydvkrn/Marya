@@ -72,6 +72,7 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
         }
 
@@ -448,6 +449,39 @@
                 font-size: 0.9rem;
             }
         }
+
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: var(--white);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .admin-link:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
+        }
+
+        @media (max-width: 768px) {
+            .admin-link {
+                bottom: 15px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -502,6 +536,10 @@
             <div id="resultsList"></div>
         </div>
     </div>
+
+    <a href="/admin.html" class="admin-link" title="Admin Panel">
+        <i class="fas fa-cog"></i>
+    </a>
 
     <div id="alert" class="alert"></div>
 
@@ -571,7 +609,7 @@
             formData.append('file', file);
 
             try {
-                console.log('Uploading file:', file.name);
+                console.log('Starting upload for:', file.name);
                 
                 const response = await fetch('/upload', {
                     method: 'POST',
@@ -579,8 +617,11 @@
                 });
 
                 console.log('Upload response status:', response.status);
+                console.log('Upload response OK:', response.ok);
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Upload error response:', errorText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
