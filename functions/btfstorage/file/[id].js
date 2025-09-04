@@ -4,24 +4,31 @@ const MIME_TYPES = {
   'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 
   'gif': 'image/gif', 'webp': 'image/webp', 'svg': 'image/svg+xml',
   'bmp': 'image/bmp', 'tiff': 'image/tiff', 'ico': 'image/x-icon',
-  
+
   // Videos
   'mp4': 'video/mp4', 'webm': 'video/webm', 'mkv': 'video/x-matroska',
   'mov': 'video/quicktime', 'avi': 'video/x-msvideo', 'm4v': 'video/x-m4v',
-  
+
   // Audio
   'mp3': 'audio/mpeg', 'm4a': 'audio/mp4', 'wav': 'audio/wav',
   'flac': 'audio/flac', 'aac': 'audio/aac', 'ogg': 'audio/ogg',
-  
+
   // Documents
   'pdf': 'application/pdf', 'txt': 'text/plain', 'json': 'application/json',
   'csv': 'text/csv', 'xml': 'application/xml', 'html': 'text/html',
   'css': 'text/css', 'js': 'application/javascript',
-  
+  'doc': 'application/msword',
+  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'rtf': 'application/rtf',
+
   // Archives
   'zip': 'application/zip', 'rar': 'application/vnd.rar', 
   '7z': 'application/x-7z-compressed', 'tar': 'application/x-tar',
-  'gz': 'application/gzip'
+  'gz': 'application/gzip',
+
+  // Code
+  'py': 'text/x-python',
+  'java': 'text/x-java-source'
 };
 
 function getMimeType(extension) {
@@ -61,7 +68,7 @@ export async function onRequest(context) {
     // Handle Range requests for video streaming
     const range = request.headers.get('Range');
     const fetchOptions = {};
-    
+
     if (range) {
       console.log('Range request:', range);
       fetchOptions.headers = { 'Range': range };
@@ -69,9 +76,9 @@ export async function onRequest(context) {
 
     // Fetch from Telegram
     const response = await fetch(directUrl, fetchOptions);
-    
+
     console.log('Telegram response:', response.status, response.ok);
-    
+
     if (!response.ok) {
       return new Response(`File not accessible: ${response.status}`, { 
         status: response.status,
@@ -129,7 +136,7 @@ export async function onRequest(context) {
     }
 
     console.log('Serving file successfully');
-    
+
     return new Response(response.body, {
       status: response.status,
       headers: headers
