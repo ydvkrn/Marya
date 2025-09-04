@@ -1,11 +1,20 @@
-const BOT_TOKEN = '8360624116:AAEEJha8CRgL8TnrEKk5zOuCNXXRawmbuaE';
-const CHANNEL_ID = '-1003071466750';
-const MAX_SIZE = 2147483648; // 2GB
-
 export async function onRequest(context) {
   const { request, env } = context;
 
-  // CORS headers
+  // 🔒 SECURE: Bot token from environment variables
+  const BOT_TOKEN = env.BOT_TOKEN || env.TELEGRAM_BOT_TOKEN;
+  const CHANNEL_ID = env.CHANNEL_ID || env.TELEGRAM_CHANNEL_ID;
+
+  if (!BOT_TOKEN || !CHANNEL_ID) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Server configuration error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -34,6 +43,7 @@ export async function onRequest(context) {
       });
     }
 
+    const MAX_SIZE = 2147483648; // 2GB
     if (file.size > MAX_SIZE) {
       return new Response(JSON.stringify({ success: false, error: 'File too large (max 2GB)' }), {
         status: 400,
@@ -41,47 +51,36 @@ export async function onRequest(context) {
       });
     }
 
-    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    console.log('Uploading file:', file.name, 'Size:', file.size);
 
-    // Create FormData for Telegram
+    // Upload to Telegram
     const telegramForm = new FormData();
     telegramForm.append('chat_id', CHANNEL_ID);
     telegramForm.append('document', file, file.name);
 
-    // Upload to Telegram
     const telegramResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
       method: 'POST',
       body: telegramForm
     });
-
-    console.log('Telegram response status:', telegramResponse.status);
 
     if (!telegramResponse.ok) {
       throw new Error(`Telegram API error: ${telegramResponse.status}`);
     }
 
     const telegramData = await telegramResponse.json();
-    console.log('Telegram data received:', JSON.stringify(telegramData, null, 2));
+    console.log('Telegram response:', telegramData.ok ? 'Success' : 'Failed');
 
     if (!telegramData.ok) {
       throw new Error(telegramData.description || 'Telegram upload failed');
     }
 
-    // ✅ FIXED: Proper error handling for file_id
-    if (!telegramData.result || !telegramData.result.document) {
-      throw new Error('No document in Telegram response');
+    if (!telegramData.result?.document?.file_id) {
+      throw new Error('Invalid Telegram response structure');
     }
 
-    const document = telegramData.result.document;
-    const fileId = document.file_id;
+    const fileId = telegramData.result.document.file_id;
 
-    if (!fileId) {
-      throw new Error('No file_id in Telegram response');
-    }
-
-    console.log('File uploaded to Telegram, file_id:', fileId);
-
-    // Get file URL from Telegram
+    // Get file URL
     const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
     
     if (!getFileResponse.ok) {
@@ -89,20 +88,13 @@ export async function onRequest(context) {
     }
 
     const getFileData = await getFileResponse.json();
-    console.log('GetFile response:', JSON.stringify(getFileData, null, 2));
 
-    if (!getFileData.ok) {
-      throw new Error(getFileData.description || 'Failed to get file URL');
+    if (!getFileData.ok || !getFileData.result?.file_path) {
+      throw new Error('Failed to get file URL from Telegram');
     }
 
-    if (!getFileData.result || !getFileData.result.file_path) {
-      throw new Error('No file_path in getFile response');
-    }
-
-    const filePath = getFileData.result.file_path;
-    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
-
-    console.log('Direct Telegram URL:', directUrl);
+    const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
+    console.log('Direct URL obtained successfully');
 
     // Generate slug
     const timestamp = Date.now().toString(36);
@@ -110,9 +102,7 @@ export async function onRequest(context) {
     const extension = file.name.includes('.') ? '.' + file.name.split('.').pop().toLowerCase() : '';
     const slug = `${timestamp}${random}${extension}`;
 
-    console.log('Generated slug:', slug);
-
-    // ✅ FIXED: Store URL as plain string in KV
+    // Store in KV
     await env.FILES_KV.put(slug, directUrl, {
       metadata: {
         filename: file.name,
@@ -122,7 +112,7 @@ export async function onRequest(context) {
       }
     });
 
-    console.log('File stored in KV successfully');
+    console.log('File stored in KV with slug:', slug);
 
     const baseUrl = new URL(request.url).origin;
     const viewUrl = `${baseUrl}/f/${slug}`;
