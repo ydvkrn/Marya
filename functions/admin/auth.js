@@ -1,17 +1,22 @@
 export async function onRequest(context) {
   const { request, env } = context;
   
+  console.log('🔐 Auth function called');
+  console.log('Method:', request.method);
+  console.log('URL:', request.url);
+  
   // ✅ Complete CORS Headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept',
     'Access-Control-Max-Age': '86400',
+    'Content-Type': 'application/json'
   };
 
-  // ✅ Handle OPTIONS (Preflight) Request
+  // ✅ Handle OPTIONS (Preflight) - MANDATORY for CORS
   if (request.method === 'OPTIONS') {
-    console.log('✅ OPTIONS preflight request handled');
+    console.log('✅ OPTIONS preflight handled');
     return new Response(null, {
       status: 200,
       headers: corsHeaders
@@ -23,28 +28,30 @@ export async function onRequest(context) {
     console.log('📡 POST request received');
     
     try {
+      // Parse request body
       const requestBody = await request.text();
-      console.log('Request body length:', requestBody.length);
+      console.log('Request body received:', !!requestBody);
       
       if (!requestBody) {
         return new Response(JSON.stringify({
           success: false,
-          error: 'Request body is required'
+          error: 'Request body required'
         }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          headers: corsHeaders
         });
       }
 
       const { password } = JSON.parse(requestBody);
       console.log('Password provided:', !!password);
       
-      // ✅ Get Environment Variable
+      // ✅ Environment Variable Access
       const ADMIN_PASSWORD = env.ADMIN_PASSWORD;
       console.log('Environment variable exists:', !!ADMIN_PASSWORD);
       
-      // ✅ Fallback Password for Testing
+      // ✅ Fallback Password (Remove after testing)
       const EXPECTED_PASSWORD = ADMIN_PASSWORD || 'Admin@MSM-Marya';
+      console.log('Using fallback:', !ADMIN_PASSWORD);
       
       if (!password) {
         return new Response(JSON.stringify({
@@ -52,7 +59,7 @@ export async function onRequest(context) {
           error: 'Password is required'
         }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          headers: corsHeaders
         });
       }
 
@@ -65,16 +72,16 @@ export async function onRequest(context) {
           timestamp: Date.now()
         }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          headers: corsHeaders
         });
       } else {
-        console.log('❌ Invalid password');
+        console.log('❌ Invalid password attempt');
         return new Response(JSON.stringify({
           success: false,
           error: 'Invalid password'
         }), {
           status: 401,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          headers: corsHeaders
         });
       }
 
@@ -82,24 +89,37 @@ export async function onRequest(context) {
       console.error('❌ Server error:', error);
       return new Response(JSON.stringify({
         success: false,
-        error: 'Server error: ' + error.message
+        error: 'Server error: ' + error.message,
+        debug: error.stack
       }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        headers: corsHeaders
       });
     }
   }
 
-  // ✅ Handle Other Methods
-  console.log('❌ Method not allowed:', request.method);
+  // ✅ Handle GET Request (Health Check)
+  if (request.method === 'GET') {
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Auth service is running',
+      timestamp: Date.now()
+    }), {
+      status: 200,
+      headers: corsHeaders
+    });
+  }
+
+  // ✅ Method Not Allowed
+  console.log('❌ Method not supported:', request.method);
   return new Response(JSON.stringify({
     success: false,
-    error: `Method ${request.method} not allowed`
+    error: `Method ${request.method} not allowed`,
+    allowed_methods: ['GET', 'POST', 'OPTIONS']
   }), {
     status: 405,
     headers: { 
-      'Content-Type': 'application/json',
-      'Allow': 'POST, OPTIONS',
+      'Allow': 'GET, POST, OPTIONS',
       ...corsHeaders 
     }
   });
