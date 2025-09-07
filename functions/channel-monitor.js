@@ -1,57 +1,48 @@
 export async function onRequest(context) {
   const { request, env } = context;
   
-  // ✅ Handle all requests properly
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  };
-
-  console.log('=== WEBHOOK REQUEST ===');
+  console.log('=== TELEGRAM WEBHOOK ===');
   console.log('Method:', request.method);
-  console.log('URL:', request.url);
 
-  // Handle OPTIONS preflight
-  if (request.method === 'OPTIONS') {
-    return new Response('OK', { 
-      status: 200, 
-      headers: corsHeaders 
-    });
+  if (request.method !== 'POST') {
+    return new Response('OK', { status: 200 });
   }
 
-  // Handle GET requests (for testing)
-  if (request.method === 'GET') {
-    return new Response('Webhook is working! 🚀', { 
-      status: 200, 
-      headers: corsHeaders 
-    });
-  }
+  try {
+    const update = await request.json();
+    console.log('Update received:', JSON.stringify(update, null, 2));
 
-  // Handle POST requests (Telegram webhooks)
-  if (request.method === 'POST') {
-    try {
-      const update = await request.json();
-      console.log('Telegram update:', JSON.stringify(update));
+    const BOT_TOKEN = env.BOT_TOKEN;
+    const CHANNEL_ID = env.MONITOR_CHANNEL_ID;
 
-      // Simple response to avoid 405
-      return new Response('OK', { 
-        status: 200, 
-        headers: corsHeaders 
-      });
-
-    } catch (error) {
-      console.error('Webhook error:', error);
-      return new Response('Error processed', { 
-        status: 200, 
-        headers: corsHeaders 
-      });
+    // Check for channel post
+    if (update.channel_post) {
+      const message = update.channel_post;
+      const chatId = message.chat.id;
+      
+      console.log('Channel post detected in chat:', chatId);
+      console.log('Monitor channel ID:', CHANNEL_ID);
+      
+      if (chatId.toString() === CHANNEL_ID.toString()) {
+        console.log('✅ Message from monitored channel');
+        
+        // Send simple reply
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: `✅ Bot is working! Message detected: ${message.text || 'File received'}`,
+            reply_to_message_id: message.message_id
+          })
+        });
+      }
     }
-  }
 
-  // Fallback for other methods
-  return new Response('Method handled', { 
-    status: 200, 
-    headers: corsHeaders 
-  });
+    return new Response('OK', { status: 200 });
+
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response('OK', { status: 200 });
+  }
 }
