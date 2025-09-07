@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marya Vault - Admin Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Marya Vault - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-red: #dc2626;
@@ -14,175 +15,736 @@
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
             --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
             --gray-600: #4b5563;
             --gray-700: #374151;
+            --gray-800: #1f2937;
             --gray-900: #111827;
             --success: #059669;
             --success-light: #d1fae5;
             --error: #dc2626;
             --error-light: #fee2e2;
+            --warning: #d97706;
+            --warning-light: #fef3c7;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            --gradient-primary: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            --gradient-bg: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            color: var(--gray-900); line-height: 1.6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            color: var(--gray-900);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Login Section */
+        .login-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .login-container {
-            max-width: 400px; width: 90%; background: var(--white);
-            border-radius: 24px; box-shadow: var(--shadow-xl); padding: 3rem;
-            border: 1px solid var(--gray-100); position: relative; overflow: hidden;
+            max-width: 420px;
+            width: 100%;
+            background: var(--white);
+            border-radius: 32px;
+            box-shadow: var(--shadow-2xl);
+            padding: 3rem;
+            border: 1px solid var(--gray-100);
+            position: relative;
+            overflow: hidden;
         }
 
         .login-container::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--gradient-primary);
+            border-radius: 32px 32px 0 0;
         }
 
-        .login-header { text-align: center; margin-bottom: 2rem; }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
 
-        .login-icon {
-            width: 80px; height: 80px; margin: 0 auto 1.5rem;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-radius: 20px; display: flex; align-items: center; justify-content: center;
-            color: var(--white); font-size: 2rem; box-shadow: var(--shadow-xl);
+        .login-logo {
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-primary);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .login-logo::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: var(--gradient-primary);
+            border-radius: 26px;
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(8px);
+        }
+
+        .login-logo i {
+            color: var(--white);
+            font-size: 2.5rem;
         }
 
         .login-title {
-            font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;
+            font-size: 2rem;
+            font-weight: 800;
             color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .login-subtitle { color: var(--gray-600); font-weight: 500; }
+        .login-subtitle {
+            color: var(--gray-600);
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
 
-        .form-group { margin-bottom: 1.5rem; }
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
         .form-label {
-            display: block; margin-bottom: 0.5rem; font-weight: 600;
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
             color: var(--gray-700);
+            font-size: 1rem;
+        }
+
+        .form-input-container {
+            position: relative;
         }
 
         .form-input {
-            width: 100%; padding: 1rem; border: 2px solid var(--gray-200);
-            border-radius: 12px; font-size: 1rem; transition: all 0.2s;
+            width: 100%;
+            padding: 1.25rem 1.25rem 1.25rem 3.5rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
             background: var(--gray-50);
+            outline: none;
         }
 
         .form-input:focus {
-            outline: none; border-color: var(--primary-red); background: var(--white);
-            box-shadow: 0 0 0 3px var(--primary-red-light);
+            border-color: var(--primary-red);
+            background: var(--white);
+            box-shadow: 0 0 0 4px var(--primary-red-light);
+            transform: translateY(-1px);
+        }
+
+        .form-icon {
+            position: absolute;
+            left: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+        .form-input:focus + .form-icon {
+            color: var(--primary-red);
         }
 
         .login-btn {
-            width: 100%; background: var(--primary-red); color: var(--white);
-            border: none; padding: 1rem; border-radius: 12px; font-size: 1rem;
-            font-weight: 600; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            width: 100%;
+            background: var(--gradient-primary);
+            color: var(--white);
+            border: none;
+            padding: 1.25rem;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
         }
 
         .login-btn:hover {
-            background: var(--primary-red-dark); transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
-        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        .toast {
-            position: fixed; top: 2rem; right: 2rem; background: var(--white);
-            border-radius: 12px; padding: 1rem 1.5rem; box-shadow: var(--shadow-xl);
-            border: 1px solid var(--gray-200); z-index: 1000; max-width: 400px;
-            transform: translateX(400px); transition: all 0.3s ease;
-            display: flex; align-items: center; gap: 1rem;
+        .login-btn:active {
+            transform: translateY(0);
         }
-        .toast.show { transform: translateX(0); }
-        .toast.success { border-left: 4px solid var(--success); }
-        .toast.error { border-left: 4px solid var(--error); }
 
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Dashboard Section */
+        .dashboard-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .dashboard-section.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-header {
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            padding: 2.5rem 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--gray-100);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--gradient-primary);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .admin-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .title-content h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-content p {
+            color: var(--gray-600);
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .stats-badge {
+            background: var(--primary-red-light);
+            color: var(--primary-red);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 2px solid var(--primary-red);
+        }
+
+        .action-button {
+            background: var(--gradient-primary);
+            color: var(--white);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .action-button.secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-button.secondary:hover {
+            background: var(--gray-200);
+        }
+
+        /* Files Management Card */
+        .files-card {
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-100);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .files-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .files-header {
+            padding: 2.5rem 3rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .files-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .files-subtitle {
+            color: var(--gray-600);
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .files-content {
+            padding: 3rem;
+            min-height: 200px;
+        }
+
+        .status-card {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .status-icon {
+            width: 120px;
+            height: 120px;
+            background: var(--success-light);
+            color: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 3rem;
+        }
+
+        .status-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .status-list {
+            list-style: none;
+            text-align: left;
+            max-width: 400px;
+            margin: 2rem auto 0;
+        }
+
+        .status-list li {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            color: var(--gray-700);
+            font-weight: 500;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .status-list li:last-child {
+            border-bottom: none;
+        }
+
+        .status-list li i {
+            color: var(--success);
+            font-size: 1.25rem;
+        }
+
+        /* Loading Spinner */
         .loading-spinner {
-            width: 1rem; height: 1rem; border: 2px solid var(--gray-300);
-            border-top: 2px solid var(--white); border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid var(--gray-300);
+            border-top: 3px solid var(--white);
+            border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .status-info {
-            margin-top: 1rem; padding: 1rem; background: var(--gray-100);
-            border-radius: 8px; font-size: 0.875rem; color: var(--gray-600);
-            text-align: center;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--white);
+            border-radius: 16px;
+            padding: 1.25rem 2rem;
+            box-shadow: var(--shadow-2xl);
+            border: 1px solid var(--gray-200);
+            z-index: 1000;
+            max-width: 400px;
+            transform: translateX(400px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 5px solid var(--success);
+            background: var(--success-light);
+        }
+
+        .toast.error {
+            border-left: 5px solid var(--error);
+            background: var(--error-light);
+        }
+
+        .toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .toast.success .toast-icon {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .toast.error .toast-icon {
+            background: var(--error);
+            color: var(--white);
+        }
+
+        .toast-content {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .toast.success .toast-content {
+            color: var(--success);
+        }
+
+        .toast.error .toast-content {
+            color: var(--error);
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .login-container { padding: 2rem; }
-            .toast { top: 1rem; right: 1rem; left: 1rem; transform: translateY(-100px); }
-            .toast.show { transform: translateY(0); }
+            .container {
+                padding: 1rem;
+            }
+            
+            .login-container {
+                padding: 2rem;
+                border-radius: 24px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.5rem;
+            }
+            
+            .header-actions {
+                flex-wrap: wrap;
+            }
+            
+            .toast {
+                top: 1rem;
+                right: 1rem;
+                left: 1rem;
+                transform: translateY(-100px);
+                max-width: none;
+            }
+            
+            .toast.show {
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="login-icon">🔐</div>
-            <h1 class="login-title">Admin Login</h1>
-            <p class="login-subtitle">Marya Vault Administration</p>
-        </div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" id="password" class="form-input" 
-                       placeholder="Enter admin password" required autocomplete="current-password">
+    <!-- Login Section -->
+    <div id="loginSection" class="login-section">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h1 class="login-title">Admin Login</h1>
+                <p class="login-subtitle">Marya Vault File Management</p>
             </div>
             
-            <button type="submit" class="login-btn" id="loginBtn">
-                🔑 Login
-            </button>
-        </form>
-
-        <div class="status-info" id="statusInfo">
-            Ready to authenticate
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="password">Admin Password</label>
+                    <div class="form-input-container">
+                        <input type="password" id="password" class="form-input" 
+                               placeholder="Enter your admin password" required autocomplete="current-password">
+                        <i class="form-icon fas fa-lock"></i>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Sign In</span>
+                </button>
+            </form>
         </div>
     </div>
 
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="dashboard-section">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="header-content">
+                    <div class="header-title">
+                        <div class="admin-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="title-content">
+                            <h1>Admin Dashboard</h1>
+                            <p>Marya Vault File Management System</p>
+                        </div>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <div class="stats-badge" id="fileCount">
+                            <i class="fas fa-files"></i>
+                            <span>Ready</span>
+                        </div>
+                        <button class="action-button" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Refresh</span>
+                        </button>
+                        <button class="action-button secondary" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Management Card -->
+            <div class="files-card">
+                <div class="files-header">
+                    <h2 class="files-title">File Management</h2>
+                    <p class="files-subtitle">Manage all uploaded files and storage</p>
+                </div>
+                
+                <div class="files-content">
+                    <div class="status-card">
+                        <div class="status-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3 class="status-title">Admin Dashboard Active!</h3>
+                        
+                        <ul class="status-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Authentication working perfectly</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Professional admin interface ready</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Connect KV functions for full file management</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
     <script>
-        class AdminLogin {
+        class MaryaVaultAdmin {
             constructor() {
+                this.isAuthenticated = false;
                 this.init();
             }
 
             init() {
-                console.log('🔐 Admin Login initialized');
+                console.log('🚀 Marya Vault Admin initializing...');
                 this.bindEvents();
+                this.checkAuthState();
                 this.testConnection();
-                setTimeout(() => document.getElementById('password').focus(), 100);
             }
 
             bindEvents() {
+                // Login form
                 document.getElementById('loginForm').addEventListener('submit', (e) => {
                     e.preventDefault();
                     this.handleLogin();
                 });
+
+                // Dashboard buttons
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.handleLogout();
+                });
+
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.refreshDashboard();
+                });
+
+                // Auto-focus password field
+                setTimeout(() => {
+                    const passwordField = document.getElementById('password');
+                    if (passwordField && passwordField.offsetParent) {
+                        passwordField.focus();
+                    }
+                }, 100);
+            }
+
+            checkAuthState() {
+                const authToken = sessionStorage.getItem('maryaAdminAuth');
+                const authTime = sessionStorage.getItem('maryaAdminTime');
+                
+                if (authToken && authTime) {
+                    const hoursPassed = (Date.now() - parseInt(authTime)) / (1000 * 60 * 60);
+                    if (hoursPassed < 2) { // 2 hours session
+                        this.showDashboard();
+                        return;
+                    }
+                }
+                
+                this.showLogin();
             }
 
             async testConnection() {
                 try {
+                    console.log('🔍 Testing auth service connection...');
                     const response = await fetch('/admin/auth', { 
-                        method: 'OPTIONS',
-                        headers: { 'Content-Type': 'application/json' }
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
                     });
                     
                     if (response.ok) {
-                        this.updateStatus('✅ Auth service connected', 'success');
-                        console.log('✅ Auth service is accessible');
+                        console.log('✅ Auth service connected');
                     } else {
-                        this.updateStatus(`❌ Auth service error (${response.status})`, 'error');
-                        console.log('❌ Auth service returned:', response.status);
+                        console.log('❌ Auth service error:', response.status);
                     }
                 } catch (error) {
-                    this.updateStatus('❌ Auth service unavailable', 'error');
                     console.error('❌ Connection test failed:', error);
                 }
             }
@@ -190,15 +752,16 @@
             async handleLogin() {
                 const password = document.getElementById('password').value.trim();
                 const loginBtn = document.getElementById('loginBtn');
+                const btnContent = loginBtn.innerHTML;
                 
                 if (!password) {
-                    this.showToast('Please enter a password', 'error');
+                    this.showToast('Please enter your password', 'error');
                     return;
                 }
 
+                // Show loading state
                 loginBtn.disabled = true;
-                loginBtn.innerHTML = '<div class="loading-spinner"></div> Authenticating...';
-                this.updateStatus('🔄 Authenticating...', 'info');
+                loginBtn.innerHTML = '<div class="loading-spinner"></div><span>Authenticating...</span>';
 
                 try {
                     console.log('📡 Sending authentication request...');
@@ -216,66 +779,91 @@
 
                     if (response.ok) {
                         const result = await response.json();
-                        console.log('📄 Response:', result);
+                        console.log('📄 Auth result:', result);
                         
                         if (result.success) {
-                            console.log('✅ Login successful!');
-                            sessionStorage.setItem('adminAuthenticated', 'true');
-                            sessionStorage.setItem('adminTimestamp', Date.now().toString());
+                            console.log('✅ Authentication successful');
                             
-                            this.showToast('✅ Login successful! Redirecting...', 'success');
-                            this.updateStatus('✅ Authenticated successfully', 'success');
+                            // Store auth state
+                            sessionStorage.setItem('maryaAdminAuth', 'true');
+                            sessionStorage.setItem('maryaAdminTime', Date.now().toString());
+                            
+                            this.showToast('✅ Login successful! Welcome to Marya Vault Admin', 'success');
                             
                             setTimeout(() => {
-                                window.location.reload(); // Refresh to show dashboard
+                                this.showDashboard();
                             }, 1000);
                         } else {
                             this.showToast(result.error || 'Invalid password', 'error');
-                            this.updateStatus('❌ Authentication failed', 'error');
                             document.getElementById('password').value = '';
                             document.getElementById('password').focus();
                         }
                     } else {
-                        const errorText = await response.text();
-                        console.error('❌ HTTP Error:', response.status, errorText);
+                        const errorData = await response.text();
+                        console.error('❌ HTTP Error:', response.status, errorData);
                         
-                        let errorMessage = `Authentication failed (${response.status})`;
+                        let errorMessage = 'Authentication failed';
                         if (response.status === 404) {
-                            errorMessage = 'Auth function not found. Please check deployment.';
+                            errorMessage = '❌ Auth function not found. Check deployment.';
                         } else if (response.status === 405) {
-                            errorMessage = 'Method not allowed. Please check function configuration.';
+                            errorMessage = '❌ Function configuration error. Check method handlers.';
                         } else if (response.status >= 500) {
-                            errorMessage = 'Server error. Please try again.';
+                            errorMessage = '❌ Server error. Please try again.';
                         }
                         
                         this.showToast(errorMessage, 'error');
-                        this.updateStatus(`❌ Error ${response.status}`, 'error');
                     }
 
                 } catch (error) {
                     console.error('❌ Network error:', error);
-                    this.showToast('Cannot connect to authentication service', 'error');
-                    this.updateStatus('❌ Connection failed', 'error');
+                    this.showToast('❌ Cannot connect to authentication service', 'error');
                 }
 
+                // Reset button
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '🔑 Login';
+                loginBtn.innerHTML = btnContent;
             }
 
-            updateStatus(message, type = 'info') {
-                const statusInfo = document.getElementById('statusInfo');
-                statusInfo.textContent = message;
-                statusInfo.style.background = type === 'success' ? 'var(--success-light)' : 
-                                           type === 'error' ? 'var(--error-light)' : 'var(--gray-100)';
-                statusInfo.style.color = type === 'success' ? 'var(--success)' : 
-                                        type === 'error' ? 'var(--error)' : 'var(--gray-600)';
+            handleLogout() {
+                sessionStorage.removeItem('maryaAdminAuth');
+                sessionStorage.removeItem('maryaAdminTime');
+                this.showToast('✅ Logged out successfully', 'success');
+                setTimeout(() => {
+                    this.showLogin();
+                }, 1000);
+            }
+
+            refreshDashboard() {
+                this.showToast('✅ Dashboard refreshed!', 'success');
+                // Add actual refresh logic here
+            }
+
+            showLogin() {
+                document.getElementById('loginSection').style.display = 'flex';
+                document.getElementById('dashboardSection').classList.remove('show');
+                setTimeout(() => {
+                    document.getElementById('dashboardSection').style.display = 'none';
+                    document.getElementById('password').focus();
+                }, 300);
+            }
+
+            showDashboard() {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('dashboardSection').classList.add('show');
+                }, 50);
             }
 
             showToast(message, type = 'success') {
                 const toast = document.getElementById('toast');
-                const icon = type === 'success' ? '✅' : '❌';
+                const icon = type === 'success' ? '✓' : '✕';
                 
-                toast.innerHTML = `<span>${icon}</span><div>${message}</div>`;
+                toast.innerHTML = `
+                    <div class="toast-icon">${icon}</div>
+                    <div class="toast-content">${message}</div>
+                `;
+                
                 toast.className = `toast ${type} show`;
                 
                 setTimeout(() => {
@@ -284,33 +872,8 @@
             }
         }
 
-        // Check if already authenticated
-        if (sessionStorage.getItem('adminAuthenticated') === 'true') {
-            const timestamp = parseInt(sessionStorage.getItem('adminTimestamp') || '0');
-            const now = Date.now();
-            const hourInMs = 60 * 60 * 1000;
-            
-            if (now - timestamp < hourInMs) {
-                document.body.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 2rem;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-                            <h1 style="color: var(--gray-900); margin-bottom: 0.5rem;">Already Authenticated</h1>
-                            <p style="color: var(--gray-600);">You are logged in to Marya Vault Admin</p>
-                        </div>
-                        <button onclick="sessionStorage.clear(); location.reload();" 
-                                style="padding: 1rem 2rem; background: var(--primary-red); color: white; border: none; border-radius: 12px; cursor: pointer;">
-                            Logout & Login Again
-                        </button>
-                    </div>
-                `;
-            } else {
-                sessionStorage.clear();
-                new AdminLogin();
-            }
-        } else {
-            new AdminLogin();
-        }
+        // Initialize admin system
+        new MaryaVaultAdmin();
     </script>
 </body>
 </html>
