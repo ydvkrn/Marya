@@ -1,12 +1,11 @@
-// Ultra-fast file serving with aggressive caching
+// Ultra-optimized for instant video/image display
 const MIME_TYPES = {
   'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 
   'gif': 'image/gif', 'webp': 'image/webp', 'svg': 'image/svg+xml',
   'mp4': 'video/mp4', 'webm': 'video/webm', 'mkv': 'video/x-matroska',
   'mov': 'video/quicktime', 'avi': 'video/x-msvideo', 'm4v': 'video/x-m4v',
   'mp3': 'audio/mpeg', 'wav': 'audio/wav', 'flac': 'audio/flac',
-  'pdf': 'application/pdf', 'txt': 'text/plain', 'json': 'application/json',
-  'zip': 'application/zip', 'rar': 'application/vnd.rar'
+  'pdf': 'application/pdf', 'txt': 'text/plain'
 };
 
 function getMimeType(extension) {
@@ -18,29 +17,23 @@ export async function onRequest(context) {
   const { request, env, params, waitUntil } = context;
   const fileId = params.id;
 
-  console.log('=== LIGHTNING-FAST FILE SERVE ===');
-  console.log('File ID:', fileId);
+  console.log('=== INSTANT MEDIA SERVING ===');
 
   try {
     const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
     const extension = fileId.includes('.') ? fileId.substring(fileId.lastIndexOf('.')) : '';
     
-    // ✅ STEP 1: Check Cloudflare Cache First (FASTEST PATH)
-    const cacheKey = new Request(`https://cache.marya-vault.com/file/${fileId}`, {
-      method: 'GET',
-      headers: request.headers
-    });
-
+    // ✅ STEP 1: Lightning-fast cache check
+    const cacheKey = new Request(`https://instant-cache.marya.vault/${fileId}`, request);
     const cache = caches.default;
+    
     let cachedResponse = await cache.match(cacheKey);
-
     if (cachedResponse) {
-      console.log('🚀 CACHE HIT - Serving from edge (Ultra Fast!)');
+      console.log('🚀 INSTANT CACHE HIT - Serving immediately!');
       
-      // ✅ Add performance headers
       const headers = new Headers(cachedResponse.headers);
-      headers.set('X-Cache', 'HIT');
-      headers.set('X-Served-By', 'Cloudflare-Edge');
+      headers.set('X-Cache', 'INSTANT-HIT');
+      headers.set('X-Speed', 'LIGHTNING');
       
       return new Response(cachedResponse.body, {
         status: cachedResponse.status,
@@ -48,142 +41,146 @@ export async function onRequest(context) {
       });
     }
 
-    console.log('💾 Cache miss - Fetching and caching...');
-
-    // ✅ STEP 2: Get KV namespaces
+    // ✅ STEP 2: Get metadata and start streaming immediately
     const kvNamespaces = {
-      FILES_KV: env.FILES_KV,
-      FILES_KV2: env.FILES_KV2,
-      FILES_KV3: env.FILES_KV3,
-      FILES_KV4: env.FILES_KV4,
-      FILES_KV5: env.FILES_KV5,
-      FILES_KV6: env.FILES_KV6,
-      FILES_KV7: env.FILES_KV7
+      FILES_KV: env.FILES_KV, FILES_KV2: env.FILES_KV2, FILES_KV3: env.FILES_KV3,
+      FILES_KV4: env.FILES_KV4, FILES_KV5: env.FILES_KV5, FILES_KV6: env.FILES_KV6, FILES_KV7: env.FILES_KV7
     };
 
-    // Get master metadata
     const masterMetadataString = await kvNamespaces.FILES_KV.get(actualId);
     if (!masterMetadataString) {
       return new Response('File not found', { status: 404 });
     }
 
     const masterMetadata = JSON.parse(masterMetadataString);
-    console.log(`📁 File: ${masterMetadata.filename}`);
+    const mimeType = getMimeType(extension);
+    
+    console.log(`⚡ Starting instant streaming: ${masterMetadata.filename}`);
 
-    // ✅ STEP 3: Handle different file types with optimal streaming
+    // ✅ STEP 3: Choose optimal streaming strategy
     let response;
     
     if (masterMetadata.type === 'multi_kv_chunked') {
-      response = await handleChunkedFileUltraFast(request, kvNamespaces, masterMetadata, extension, env, waitUntil);
+      response = await instantChunkedStreaming(request, kvNamespaces, masterMetadata, extension, env, waitUntil);
     } else {
-      response = await handleSingleFileUltraFast(request, kvNamespaces.FILES_KV, actualId, extension, masterMetadata, env, waitUntil);
+      response = await instantSingleFileStreaming(request, kvNamespaces.FILES_KV, actualId, extension, masterMetadata, env);
     }
 
-    // ✅ STEP 4: Cache the response aggressively (1 year TTL)
-    const responseToCache = response.clone();
-    const cacheHeaders = new Headers(responseToCache.headers);
-    
-    // ✅ Ultra-aggressive caching headers
-    cacheHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
-    cacheHeaders.set('CDN-Cache-Control', 'public, max-age=31536000');
-    cacheHeaders.set('Cloudflare-CDN-Cache-Control', 'public, max-age=31536000');
-    cacheHeaders.set('X-Cache', 'MISS');
-    cacheHeaders.set('X-Served-By', 'Origin-Cached');
+    // ✅ STEP 4: Cache for instant future access
+    if (response.ok) {
+      const responseToCache = response.clone();
+      const cacheHeaders = new Headers(responseToCache.headers);
+      
+      // Ultra-aggressive caching for instant access
+      cacheHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+      cacheHeaders.set('CDN-Cache-Control', 'public, max-age=31536000, immutable');
+      cacheHeaders.set('X-Cache', 'STORED');
+      
+      const cachedResponseFinal = new Response(responseToCache.body, {
+        status: responseToCache.status,
+        headers: cacheHeaders
+      });
+      
+      // Background cache - no blocking
+      waitUntil(cache.put(cacheKey, cachedResponseFinal.clone()));
+    }
 
-    const cachedResponseFinal = new Response(responseToCache.body, {
-      status: responseToCache.status,
-      headers: cacheHeaders
-    });
-
-    // ✅ Background cache without blocking user
-    waitUntil(cache.put(cacheKey, cachedResponseFinal.clone()));
-    
-    console.log('✅ Response cached for lightning-fast future requests');
-    
-    return new Response(response.body, {
-      status: response.status,
-      headers: cacheHeaders
-    });
+    return response;
 
   } catch (error) {
-    console.error('❌ Serve error:', error);
-    return new Response(`Server error: ${error.message}`, { 
-      status: 500,
-      headers: { 'Content-Type': 'text/plain' }
-    });
+    console.error('❌ Instant serving error:', error);
+    return new Response(`Error: ${error.message}`, { status: 500 });
   }
 }
 
-// ✅ Ultra-fast chunked file handling with streaming
-async function handleChunkedFileUltraFast(request, kvNamespaces, masterMetadata, extension, env, waitUntil) {
-  const { totalChunks, chunks, filename, size } = masterMetadata;
+// ✅ INSTANT chunked file streaming with progressive loading
+async function instantChunkedStreaming(request, kvNamespaces, masterMetadata, extension, env, waitUntil) {
+  const { filename, size } = masterMetadata;
+  const mimeType = getMimeType(extension);
   
-  console.log(`🔄 Streaming chunked file: ${filename} (${totalChunks} chunks)`);
+  console.log(`🎬 INSTANT chunked streaming: ${filename}`);
 
-  // ✅ Handle Range requests for video streaming (CRITICAL FOR SPEED)
+  // ✅ Handle Range requests for instant video seeking
   const range = request.headers.get('Range');
   if (range) {
-    return await handleRangeRequestOptimized(request, kvNamespaces, masterMetadata, extension, range, env, waitUntil);
+    return await instantRangeRequest(request, kvNamespaces, masterMetadata, extension, range, env);
   }
 
-  // ✅ Stream all chunks with parallel fetching and background refresh
-  const chunkPromises = chunks.map(async (chunkInfo, index) => {
-    const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
-    const chunkKey = chunkInfo.chunkKey || `${actualId}_chunk_${index}`;
-    
-    return await getChunkUltraFastWithBackgroundRefresh(kvNamespace, chunkKey, chunkInfo, env, waitUntil);
-  });
-
-  // ✅ Create streaming response while chunks are still loading
+  // ✅ Create instant streaming response
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        const chunkResults = await Promise.all(chunkPromises);
+        console.log('🚀 Starting progressive chunk streaming...');
         
-        // Sort chunks by index
-        chunkResults.sort((a, b) => a.index - b.index);
+        // ✅ Load chunks progressively - start streaming immediately
+        const chunks = masterMetadata.chunks;
         
-        // Stream each chunk immediately
-        for (const chunk of chunkResults) {
-          controller.enqueue(new Uint8Array(chunk.data));
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkInfo = chunks[i];
+          const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
+          const chunkKey = chunkInfo.chunkKey || `${actualId}_chunk_${i}`;
+          
+          console.log(`📦 Streaming chunk ${i}/${chunks.length}`);
+          
+          try {
+            // ✅ Get chunk with instant fallback
+            const chunkData = await instantGetChunk(kvNamespace, chunkKey, chunkInfo, env, waitUntil);
+            
+            // ✅ Stream chunk immediately - no buffering
+            controller.enqueue(new Uint8Array(chunkData));
+            
+            // Small delay to prevent overwhelming the stream
+            if (i < chunks.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            
+          } catch (chunkError) {
+            console.error(`❌ Chunk ${i} error:`, chunkError);
+            // Continue with other chunks instead of failing completely
+            continue;
+          }
         }
         
         controller.close();
+        console.log('✅ Progressive streaming completed');
+        
       } catch (error) {
-        console.error('Streaming error:', error);
+        console.error('❌ Streaming error:', error);
         controller.error(error);
       }
     }
   });
 
-  // ✅ Ultra-fast response headers
+  // ✅ Instant response headers - optimized for immediate playback
   const headers = new Headers();
-  const mimeType = getMimeType(extension);
   headers.set('Content-Type', mimeType);
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Accept-Ranges', 'bytes');
-  headers.set('Transfer-Encoding', 'chunked');
   headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  
+  // ✅ Critical for video streaming performance
+  if (mimeType.startsWith('video/')) {
+    headers.set('X-Media-Type', 'video');
+    headers.set('Content-Disposition', 'inline');
+    // Enable partial content support
+    headers.set('Accept-Ranges', 'bytes');
+  } else if (mimeType.startsWith('image/')) {
+    headers.set('X-Media-Type', 'image');
+    headers.set('Content-Disposition', 'inline');
+  }
   
   if (size) {
     headers.set('Content-Length', size.toString());
   }
 
-  // ✅ Optimal content disposition
+  // ✅ Download vs inline display
   const url = new URL(request.url);
-  const isDownload = url.searchParams.has('dl');
-  
-  if (isDownload) {
+  if (url.searchParams.has('dl')) {
     headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-  } else {
-    if (mimeType.startsWith('video/') || mimeType.startsWith('audio/') || mimeType.startsWith('image/')) {
-      headers.set('Content-Disposition', 'inline');
-    } else {
-      headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-    }
   }
 
-  console.log('🚀 Ultra-fast streaming response ready');
+  console.log('🚀 INSTANT streaming response ready!');
   
   return new Response(readable, {
     status: 200,
@@ -191,9 +188,9 @@ async function handleChunkedFileUltraFast(request, kvNamespaces, masterMetadata,
   });
 }
 
-// ✅ Get chunk with background URL refresh (NEVER shows errors to user)
-async function getChunkUltraFastWithBackgroundRefresh(kvNamespace, chunkKey, chunkInfo, env, waitUntil) {
-  console.log(`⚡ Getting chunk: ${chunkKey}`);
+// ✅ Get chunk with multiple fallback strategies for instant access
+async function instantGetChunk(kvNamespace, chunkKey, chunkInfo, env, waitUntil) {
+  console.log(`⚡ Getting chunk instantly: ${chunkKey}`);
   
   const chunkMetadataString = await kvNamespace.get(chunkKey);
   if (!chunkMetadataString) {
@@ -203,35 +200,38 @@ async function getChunkUltraFastWithBackgroundRefresh(kvNamespace, chunkKey, chu
   const chunkMetadata = JSON.parse(chunkMetadataString);
   let directUrl = chunkMetadata.directUrl;
   
-  // ✅ Try primary URL first
+  // ✅ Strategy 1: Try cached version first (fastest)
+  const cachedChunk = await caches.default.match(directUrl);
+  if (cachedChunk && cachedChunk.ok) {
+    console.log(`📦 Serving cached chunk: ${chunkKey}`);
+    return await cachedChunk.arrayBuffer();
+  }
+  
+  // ✅ Strategy 2: Fetch with optimized settings
   let response = await fetch(directUrl, {
     cf: {
       cacheEverything: true,
-      cacheTtl: 86400 // Cache for 1 day
+      cacheTtl: 86400, // 1 day cache
+      minify: false // Don't minify media files
+    },
+    headers: {
+      'User-Agent': 'Marya-Vault-Instant/1.0'
     }
   });
   
-  // ✅ If URL expired, refresh in background but serve stale if possible
+  // ✅ Strategy 3: Background URL refresh if expired
   if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log(`🔄 URL expired for ${chunkKey}, refreshing in background...`);
+    console.log(`🔄 URL expired for ${chunkKey}, refreshing...`);
     
-    // ✅ Background refresh (non-blocking)
-    waitUntil(refreshChunkUrlInBackground(kvNamespace, chunkKey, chunkMetadata, env));
+    // Background refresh - non-blocking
+    waitUntil(instantRefreshChunkUrl(kvNamespace, chunkKey, chunkMetadata, env));
     
-    // ✅ Try to serve stale version from cache
-    const staleResponse = await caches.default.match(directUrl);
-    if (staleResponse) {
-      console.log(`📦 Serving stale version while refreshing ${chunkKey}`);
-      return {
-        index: chunkInfo.index,
-        data: await staleResponse.arrayBuffer()
-      };
-    }
-    
-    // ✅ If no stale version, force refresh (blocking)
-    const refreshedUrl = await forceRefreshChunkUrl(kvNamespace, chunkKey, chunkMetadata, env);
-    if (refreshedUrl) {
-      response = await fetch(refreshedUrl);
+    // Try to get fresh URL immediately
+    const freshUrl = await getFreshTelegramUrl(chunkMetadata.telegramFileId, env.BOT_TOKEN);
+    if (freshUrl) {
+      response = await fetch(freshUrl, {
+        cf: { cacheEverything: true, cacheTtl: 86400 }
+      });
     }
   }
   
@@ -239,102 +239,17 @@ async function getChunkUltraFastWithBackgroundRefresh(kvNamespace, chunkKey, chu
     throw new Error(`Failed to fetch chunk ${chunkKey}: ${response.status}`);
   }
   
-  return {
-    index: chunkInfo.index,
-    data: await response.arrayBuffer()
-  };
+  const chunkData = await response.arrayBuffer();
+  
+  // ✅ Background cache for future instant access
+  waitUntil(caches.default.put(directUrl, new Response(chunkData)));
+  
+  return chunkData;
 }
 
-// ✅ Background URL refresh (non-blocking)
-async function refreshChunkUrlInBackground(kvNamespace, chunkKey, chunkMetadata, env) {
-  try {
-    const BOT_TOKEN = env.BOT_TOKEN;
-    if (!BOT_TOKEN) return;
-    
-    console.log(`🔄 Background refresh for ${chunkKey}`);
-    
-    const getFileResponse = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`
-    );
-    
-    if (!getFileResponse.ok) return;
-    
-    const getFileData = await getFileResponse.json();
-    if (!getFileData.ok || !getFileData.result?.file_path) return;
-    
-    const freshUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
-    
-    // ✅ Update KV with fresh URL
-    const updatedMetadata = {
-      ...chunkMetadata,
-      directUrl: freshUrl,
-      lastRefreshed: Date.now(),
-      refreshCount: (chunkMetadata.refreshCount || 0) + 1
-    };
-    
-    await kvNamespace.put(chunkKey, JSON.stringify(updatedMetadata));
-    
-    // ✅ Pre-cache the fresh URL
-    await fetch(freshUrl, {
-      cf: { 
-        cacheEverything: true,
-        cacheTtl: 86400 
-      }
-    });
-    
-    console.log(`✅ Background refresh completed for ${chunkKey}`);
-    
-  } catch (error) {
-    console.error(`❌ Background refresh failed for ${chunkKey}:`, error);
-  }
-}
-
-// ✅ Force refresh (blocking) - only when absolutely necessary
-async function forceRefreshChunkUrl(kvNamespace, chunkKey, chunkMetadata, env) {
-  try {
-    const BOT_TOKEN = env.BOT_TOKEN;
-    if (!BOT_TOKEN) throw new Error('BOT_TOKEN not available');
-    
-    console.log(`🚨 Force refresh for ${chunkKey}`);
-    
-    const getFileResponse = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`
-    );
-    
-    if (!getFileResponse.ok) {
-      throw new Error(`Telegram API failed: ${getFileResponse.status}`);
-    }
-    
-    const getFileData = await getFileResponse.json();
-    if (!getFileData.ok || !getFileData.result?.file_path) {
-      throw new Error('Invalid Telegram response');
-    }
-    
-    const freshUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
-    
-    // ✅ Update KV immediately
-    const updatedMetadata = {
-      ...chunkMetadata,
-      directUrl: freshUrl,
-      lastRefreshed: Date.now(),
-      refreshCount: (chunkMetadata.refreshCount || 0) + 1
-    };
-    
-    await kvNamespace.put(chunkKey, JSON.stringify(updatedMetadata));
-    
-    console.log(`✅ Force refresh completed for ${chunkKey}`);
-    
-    return freshUrl;
-    
-  } catch (error) {
-    console.error(`❌ Force refresh failed for ${chunkKey}:`, error);
-    return null;
-  }
-}
-
-// ✅ Optimized Range request handling for video streaming
-async function handleRangeRequestOptimized(request, kvNamespaces, masterMetadata, extension, range, env, waitUntil) {
-  console.log('🎬 Optimized Range request:', range);
+// ✅ INSTANT Range request handling - critical for video seeking
+async function instantRangeRequest(request, kvNamespaces, masterMetadata, extension, range, env) {
+  console.log('🎯 INSTANT Range request for video seeking:', range);
   
   const { size } = masterMetadata;
   const ranges = parseRange(range, size);
@@ -342,35 +257,36 @@ async function handleRangeRequestOptimized(request, kvNamespaces, masterMetadata
   if (!ranges || ranges.length !== 1) {
     return new Response('Range Not Satisfiable', { 
       status: 416,
-      headers: {
-        'Content-Range': `bytes */${size}`
-      }
+      headers: { 'Content-Range': `bytes */${size}` }
     });
   }
   
   const { start, end } = ranges[0];
   const chunkSize = end - start + 1;
   
-  // ✅ Calculate which chunks we need
+  // ✅ Smart chunk calculation for instant seeking
   const CHUNK_SIZE = 20 * 1024 * 1024;
   const startChunk = Math.floor(start / CHUNK_SIZE);
   const endChunk = Math.floor(end / CHUNK_SIZE);
   
   const neededChunks = masterMetadata.chunks.slice(startChunk, endChunk + 1);
   
-  console.log(`🎯 Range needs chunks ${startChunk}-${endChunk}`);
+  console.log(`🎬 Video seek needs chunks ${startChunk}-${endChunk}`);
   
-  // ✅ Fetch needed chunks in parallel
-  const chunkPromises = neededChunks.map(async (chunkInfo) => {
+  // ✅ Parallel chunk fetching for instant seeking
+  const chunkPromises = neededChunks.map(async (chunkInfo, index) => {
     const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
     const chunkKey = chunkInfo.chunkKey;
-    return await getChunkUltraFastWithBackgroundRefresh(kvNamespace, chunkKey, chunkInfo, env, waitUntil);
+    const chunkData = await instantGetChunk(kvNamespace, chunkKey, chunkInfo, env, () => {});
+    return {
+      index: startChunk + index,
+      data: chunkData
+    };
   });
   
   const chunkResults = await Promise.all(chunkPromises);
-  chunkResults.sort((a, b) => a.index - b.index);
   
-  // ✅ Combine needed chunks
+  // ✅ Combine and extract exact range
   const totalChunkSize = chunkResults.reduce((sum, chunk) => sum + chunk.data.byteLength, 0);
   const combinedBuffer = new Uint8Array(totalChunkSize);
   
@@ -380,11 +296,10 @@ async function handleRangeRequestOptimized(request, kvNamespaces, masterMetadata
     offset += chunk.data.byteLength;
   }
   
-  // ✅ Extract exact range
   const rangeStart = start - (startChunk * CHUNK_SIZE);
   const rangeBuffer = combinedBuffer.slice(rangeStart, rangeStart + chunkSize);
   
-  // ✅ Range response headers
+  // ✅ Instant range response headers
   const headers = new Headers();
   headers.set('Content-Type', getMimeType(extension));
   headers.set('Content-Length', chunkSize.toString());
@@ -392,8 +307,9 @@ async function handleRangeRequestOptimized(request, kvNamespaces, masterMetadata
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  headers.set('X-Range-Type', 'instant');
   
-  console.log('✅ Range response ready');
+  console.log('⚡ INSTANT Range response ready for video seeking!');
   
   return new Response(rangeBuffer, {
     status: 206, // Partial Content
@@ -401,136 +317,130 @@ async function handleRangeRequestOptimized(request, kvNamespaces, masterMetadata
   });
 }
 
-// ✅ Single file ultra-fast handling
-async function handleSingleFileUltraFast(request, kvNamespace, actualId, extension, metadata, env, waitUntil) {
-  console.log('⚡ Single file ultra-fast serving');
+// ✅ Single file instant streaming
+async function instantSingleFileStreaming(request, kvNamespace, actualId, extension, metadata, env) {
+  console.log('⚡ Single file instant streaming');
   
   const directUrl = await kvNamespace.get(actualId);
   if (!directUrl) {
     return new Response('File not found', { status: 404 });
   }
   
-  // ✅ Try cached version first
-  let response = await fetch(directUrl, {
+  // ✅ Try cached version first for instant access
+  const cachedResponse = await caches.default.match(directUrl);
+  if (cachedResponse && cachedResponse.ok) {
+    console.log('📦 Serving cached single file instantly');
+    return cachedResponse;
+  }
+  
+  // ✅ Fetch with streaming optimization
+  const response = await fetch(directUrl, {
     cf: {
       cacheEverything: true,
       cacheTtl: 86400
     }
   });
   
-  // ✅ Background refresh if expired
-  if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log('🔄 Single file URL expired, refreshing...');
-    
-    // Background refresh
-    waitUntil(refreshSingleFileInBackground(kvNamespace, actualId, metadata, env));
-    
-    // Try stale version
-    const staleResponse = await caches.default.match(directUrl);
-    if (staleResponse) {
-      console.log('📦 Serving stale single file');
-      return staleResponse;
-    }
-    
-    // Force refresh if no stale version
-    const refreshedUrl = await forceRefreshSingleFile(kvNamespace, actualId, metadata, env);
-    if (refreshedUrl) {
-      response = await fetch(refreshedUrl);
-    }
-  }
-  
   if (!response.ok) {
-    return new Response(`File not accessible: ${response.status}`, { 
-      status: response.status 
-    });
+    // Try refresh if expired
+    const freshUrl = await getFreshTelegramUrl(metadata?.telegramFileId, env.BOT_TOKEN);
+    if (freshUrl) {
+      const freshResponse = await fetch(freshUrl);
+      if (freshResponse.ok) {
+        // Update KV with fresh URL
+        await kvNamespace.put(actualId, freshUrl, { metadata });
+        return createInstantMediaResponse(freshResponse, extension, metadata, request);
+      }
+    }
+    return new Response(`File not accessible: ${response.status}`, { status: response.status });
   }
   
-  // ✅ Optimized headers
+  return createInstantMediaResponse(response, extension, metadata, request);
+}
+
+// ✅ Create optimized media response for instant display
+function createInstantMediaResponse(response, extension, metadata, request) {
   const headers = new Headers();
   const mimeType = getMimeType(extension);
+  
+  // Copy essential headers
+  if (response.headers.get('content-length')) {
+    headers.set('Content-Length', response.headers.get('content-length'));
+  }
+  
   headers.set('Content-Type', mimeType);
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  headers.set('X-Served-By', 'Instant-Media');
   
-  const url = new URL(request.url);
-  const isDownload = url.searchParams.has('dl');
-  const filename = metadata?.filename || 'download';
-  
-  if (isDownload) {
-    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-  } else {
+  // ✅ Optimize for media type
+  if (mimeType.startsWith('video/')) {
     headers.set('Content-Disposition', 'inline');
+    headers.set('X-Media-Type', 'video');
+  } else if (mimeType.startsWith('image/')) {
+    headers.set('Content-Disposition', 'inline');
+    headers.set('X-Media-Type', 'image');
+  } else if (mimeType.startsWith('audio/')) {
+    headers.set('Content-Disposition', 'inline');
+    headers.set('X-Media-Type', 'audio');
   }
   
-  return new Response(response.body, { 
-    status: response.status, 
-    headers 
+  // Handle download parameter
+  const url = new URL(request.url);
+  if (url.searchParams.has('dl')) {
+    const filename = metadata?.filename || 'download';
+    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+  }
+  
+  return new Response(response.body, {
+    status: response.status,
+    headers: headers
   });
 }
 
-// ✅ Background single file refresh
-async function refreshSingleFileInBackground(kvNamespace, actualId, metadata, env) {
+// ✅ Get fresh Telegram URL instantly
+async function getFreshTelegramUrl(telegramFileId, botToken) {
+  if (!botToken || !telegramFileId) return null;
+  
   try {
-    const BOT_TOKEN = env.BOT_TOKEN;
-    const telegramFileId = metadata?.telegramFileId;
+    const response = await fetch(
+      `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`,
+      {
+        cf: { cacheEverything: false } // Don't cache API calls
+      }
+    );
     
-    if (!BOT_TOKEN || !telegramFileId) return;
-    
-    const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
-    
-    if (getFileResponse.ok) {
-      const getFileData = await getFileResponse.json();
-      if (getFileData.ok && getFileData.result?.file_path) {
-        const freshUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
-        
-        await kvNamespace.put(actualId, freshUrl, {
-          metadata: { 
-            ...metadata, 
-            lastRefreshed: Date.now() 
-          }
-        });
-        
-        // Pre-cache fresh URL
-        await fetch(freshUrl, {
-          cf: { cacheEverything: true, cacheTtl: 86400 }
-        });
-        
-        console.log('✅ Single file background refresh completed');
+    if (response.ok) {
+      const data = await response.json();
+      if (data.ok && data.result?.file_path) {
+        return `https://api.telegram.org/file/bot${botToken}/${data.result.file_path}`;
       }
     }
   } catch (error) {
-    console.error('❌ Single file background refresh failed:', error);
+    console.error('❌ Failed to get fresh URL:', error);
   }
+  
+  return null;
 }
 
-// ✅ Force refresh single file
-async function forceRefreshSingleFile(kvNamespace, actualId, metadata, env) {
+// ✅ Background chunk URL refresh
+async function instantRefreshChunkUrl(kvNamespace, chunkKey, chunkMetadata, env) {
   try {
-    const BOT_TOKEN = env.BOT_TOKEN;
-    const telegramFileId = metadata?.telegramFileId;
-    
-    if (!BOT_TOKEN || !telegramFileId) return null;
-    
-    const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
-    
-    if (getFileResponse.ok) {
-      const getFileData = await getFileResponse.json();
-      if (getFileData.ok && getFileData.result?.file_path) {
-        const freshUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
-        
-        await kvNamespace.put(actualId, freshUrl, {
-          metadata: { ...metadata, lastRefreshed: Date.now() }
-        });
-        
-        console.log('✅ Single file force refresh completed');
-        return freshUrl;
-      }
+    const freshUrl = await getFreshTelegramUrl(chunkMetadata.telegramFileId, env.BOT_TOKEN);
+    if (freshUrl) {
+      const updatedMetadata = {
+        ...chunkMetadata,
+        directUrl: freshUrl,
+        lastRefreshed: Date.now()
+      };
+      
+      await kvNamespace.put(chunkKey, JSON.stringify(updatedMetadata));
+      console.log(`✅ Background refresh completed for ${chunkKey}`);
     }
   } catch (error) {
-    console.error('❌ Single file force refresh failed:', error);
+    console.error(`❌ Background refresh failed for ${chunkKey}:`, error);
   }
-  return null;
 }
 
 // ✅ Parse Range header
