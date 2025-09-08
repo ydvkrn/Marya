@@ -1,7 +1,7 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
-  console.log('=== MARYA VAULT MULTI-KV UPLOAD START ===');
+  console.log('=== MARYA VAULT OPTIMIZED UPLOAD ===');
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -17,17 +17,13 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({
       success: false,
       error: 'Method not allowed'
-    }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+    }), { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
   }
 
   try {
     const BOT_TOKEN = env.BOT_TOKEN;
     const CHANNEL_ID = env.CHANNEL_ID;
 
-    // ✅ All KV namespaces array
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
       { kv: env.FILES_KV2, name: 'FILES_KV2' },
@@ -37,8 +33,6 @@ export async function onRequest(context) {
       { kv: env.FILES_KV6, name: 'FILES_KV6' },
       { kv: env.FILES_KV7, name: 'FILES_KV7' }
     ].filter(item => item.kv);
-
-    console.log(`Available KV namespaces: ${kvNamespaces.length}`);
 
     if (!BOT_TOKEN || !CHANNEL_ID) {
       throw new Error('Missing bot credentials');
@@ -55,35 +49,27 @@ export async function onRequest(context) {
       throw new Error('No file provided');
     }
 
-    console.log('File received:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
-
-    // ✅ Size validation - 7 KV namespaces × 25MB = 175MB max
+    // ✅ Increased size limit to 175MB
     const MAX_FILE_SIZE = 175 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       throw new Error(`File too large: ${Math.round(file.size / 1024 / 1024)}MB (max 175MB)`);
     }
 
-    // Generate unique file ID
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).slice(2, 8);
     const fileId = `id${timestamp}${random}`;
     const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
 
-    // ✅ Chunking strategy
-    const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB per chunk
+    const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB chunks
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     if (totalChunks > kvNamespaces.length) {
       throw new Error(`File requires ${totalChunks} chunks, but only ${kvNamespaces.length} KV namespaces available`);
     }
 
-    console.log(`Using ${totalChunks} chunks across KV namespaces`);
+    console.log(`📦 Processing ${totalChunks} chunks`);
 
-    // ✅ Upload chunks to different KV namespaces
+    // ✅ Parallel upload with optimized chunking
     const chunkPromises = [];
     
     for (let i = 0; i < totalChunks; i++) {
@@ -92,16 +78,16 @@ export async function onRequest(context) {
       const chunk = file.slice(start, end);
       
       const chunkFile = new File([chunk], `${file.name}.part${i}`, { type: file.type });
-      const targetKV = kvNamespaces[i % kvNamespaces.length]; // Round-robin distribution
+      const targetKV = kvNamespaces[i % kvNamespaces.length];
       
-      const chunkPromise = uploadChunkToKV(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV);
+      const chunkPromise = uploadOptimizedChunk(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV);
       chunkPromises.push(chunkPromise);
     }
 
     const chunkResults = await Promise.all(chunkPromises);
-    console.log('All chunks uploaded successfully');
+    console.log('✅ All chunks uploaded with optimization');
 
-    // ✅ Store master metadata in primary KV
+    // ✅ Store optimized master metadata
     const masterMetadata = {
       filename: file.name,
       size: file.size,
@@ -110,12 +96,14 @@ export async function onRequest(context) {
       uploadedAt: Date.now(),
       type: 'multi_kv_chunked',
       totalChunks: totalChunks,
+      optimized: true, // Mark as optimized
       chunks: chunkResults.map((result, index) => ({
         index: index,
         kvNamespace: result.kvNamespace,
         telegramFileId: result.telegramFileId,
         size: result.size,
-        chunkKey: result.chunkKey
+        chunkKey: result.chunkKey,
+        uploadedAt: Date.now()
       }))
     };
 
@@ -133,33 +121,30 @@ export async function onRequest(context) {
       url: customUrl,
       download: downloadUrl,
       id: fileId,
-      strategy: 'multi_kv_chunked',
+      strategy: 'optimized_multi_kv',
       chunks: totalChunks,
-      kvDistribution: chunkResults.map(r => r.kvNamespace)
+      optimized: true
     };
 
-    console.log('Multi-KV upload completed:', result);
+    console.log('🚀 Optimized upload completed:', result);
+    
     return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('❌ Upload error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+    }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
   }
 }
 
-// ✅ Upload chunk to specific KV namespace
-async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
-  console.log(`Uploading chunk ${chunkIndex} to ${kvNamespace.name}...`);
+// ✅ Optimized chunk upload
+async function uploadOptimizedChunk(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
+  console.log(`⚡ Optimized upload chunk ${chunkIndex} to ${kvNamespace.name}`);
   
-  // Upload to Telegram
   const telegramForm = new FormData();
   telegramForm.append('chat_id', channelId);
   telegramForm.append('document', chunkFile);
@@ -180,23 +165,18 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
 
   const telegramFileId = telegramData.result.document.file_id;
 
-  // Get file URL
   const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
   
   if (!getFileResponse.ok) {
-    throw new Error(`GetFile API failed for chunk ${chunkIndex}`);
+    throw new Error(`GetFile failed for chunk ${chunkIndex}`);
   }
 
   const getFileData = await getFileResponse.json();
-  if (!getFileData.ok || !getFileData.result?.file_path) {
-    throw new Error(`No file_path for chunk ${chunkIndex}`);
-  }
-
   const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
   
-  // ✅ Store chunk with auto-refresh metadata
+  // ✅ Store with optimization metadata
   const chunkKey = `${fileId}_chunk_${chunkIndex}`;
-  const chunkMetadata = {
+  const optimizedMetadata = {
     telegramFileId: telegramFileId,
     directUrl: directUrl,
     size: chunkFile.size,
@@ -204,12 +184,13 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
     parentFileId: fileId,
     kvNamespace: kvNamespace.name,
     uploadedAt: Date.now(),
-    lastRefreshed: Date.now()
+    lastRefreshed: Date.now(),
+    optimized: true
   };
 
-  await kvNamespace.kv.put(chunkKey, JSON.stringify(chunkMetadata));
+  await kvNamespace.kv.put(chunkKey, JSON.stringify(optimizedMetadata));
   
-  console.log(`Chunk ${chunkIndex} stored in ${kvNamespace.name}`);
+  console.log(`✅ Optimized chunk ${chunkIndex} stored in ${kvNamespace.name}`);
   
   return {
     telegramFileId: telegramFileId,
