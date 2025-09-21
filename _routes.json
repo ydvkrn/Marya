@@ -1,6 +1,14 @@
 {
   "version": 1,
   "include": [
+    "/upload",
     "/btfstorage/file/*"
+  ],
+  "exclude": [
+    "/assets/*",
+    "/static/*",
+    "/favicon.ico",
+    "/robots.txt",
+    "/sitemap.xml"
   ]
 }
