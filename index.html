@@ -3,615 +3,1125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marya Vault - Professional File Storage</title>
+<title>Marya Vault - Ultimate File Storage</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 :root {
-    --primary-red: #dc2626;
-    --primary-red-dark: #b91c1c;
-    --primary-red-light: #fef2f2;
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --primary-light: #dbeafe;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
     --white: #ffffff;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
     --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
     --gray-900: #111827;
-    --success: #059669;
-    --success-light: #d1fae5;
-    --error: #dc2626;
-    --error-light: #fee2e2;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    --shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    --gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     color: var(--gray-900);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
 }
 
-.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-
-.header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
-
-.logo {
-    width: 100px; height: 100px;
-    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-    border-radius: 24px; margin: 0 auto 2rem;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: var(--shadow-xl); position: relative; overflow: hidden;
+.container { 
+    max-width: 1000px; 
+    margin: 0 auto; 
+    padding: 2rem; 
+    position: relative;
 }
 
-.title {
-    font-size: 3.5rem; font-weight: 900;
-    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; margin-bottom: 1rem; letter-spacing: -0.02em;
+/* Floating Particles Background */
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
 }
 
-.subtitle {
-    font-size: 1.25rem; color: var(--gray-600); font-weight: 500;
-    max-width: 600px; margin: 0 auto;
-}
-
-.upload-section {
-    background: var(--white); border-radius: 24px; box-shadow: var(--shadow-xl);
-    padding: 3rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
-    position: relative; overflow: hidden;
-}
-
-.upload-section::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
-}
-
-.dropzone {
-    border: 2px dashed var(--gray-200); border-radius: 16px; padding: 4rem 2rem;
-    text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: var(--gray-50); position: relative; min-height: 300px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-
-.dropzone:hover, .dropzone.dragover {
-    border-color: var(--primary-red); background: var(--primary-red-light);
-    transform: translateY(-2px); box-shadow: var(--shadow-lg);
-}
-
-.upload-icon {
-    font-size: 4rem; margin-bottom: 1.5rem; color: var(--primary-red);
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
     animation: float 6s ease-in-out infinite;
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0px); }
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 1; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+.logo {
+    width: 120px;
+    height: 120px;
+    background: var(--gradient);
+    border-radius: 30px;
+    margin: 0 auto 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.logo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(200%) rotate(45deg); }
+}
+
+.title {
+    font-size: 4rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff, #f0f8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Main Upload Card */
+.upload-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 3rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.upload-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient);
+}
+
+/* Drag & Drop Zone */
+.dropzone {
+    border: 3px dashed var(--gray-200);
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(59, 130, 246, 0.02);
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropzone:hover, .dropzone.dragover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+}
+
+.upload-icon {
+    font-size: 5rem;
+    margin-bottom: 2rem;
+    color: var(--primary);
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
 }
 
 .upload-title {
-    font-size: 1.875rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--gray-900);
 }
 
 .upload-description {
-    font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem;
+    font-size: 1.1rem;
+    color: var(--gray-600);
+    margin-bottom: 2rem;
 }
 
 .file-types {
-    display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
 }
 
-.file-type-badge {
-    background: var(--primary-red); color: var(--white); padding: 0.75rem 1.5rem;
-    border-radius: 50px; font-size: 0.875rem; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.025em; box-shadow: var(--shadow-sm);
-    transition: all 0.2s;
+.file-type {
+    background: var(--gradient);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s;
 }
 
-.file-type-badge:hover {
-    transform: translateY(-1px); box-shadow: var(--shadow-md);
+.file-type:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
 }
-
-.file-type-badge i { margin-right: 0.5rem; }
 
 .file-input { display: none; }
 
-.results { display: none; }
-.results.show { display: block; animation: fadeIn 0.5s ease; }
+/* URL Upload Section */
+.url-section {
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 2rem;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.url-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.url-input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.url-input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.3s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.url-input:focus {
+    outline: none;
+    border-color: var(--success);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.url-btn {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.url-btn:hover {
+    background: #0f766e;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.url-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Upload Progress */
+.upload-progress {
+    display: none;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.upload-progress.show { 
+    display: block; 
+    animation: slideUp 0.5s ease; 
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.progress-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.progress-stats {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.9rem;
+    color: var(--gray-600);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Glass Progress Bar */
+.progress-container {
+    position: relative;
+    height: 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 50px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--gradient);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 50px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+}
+
+.progress-text {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--primary);
+}
+
+/* File Results */
+.results {
+    display: none;
+}
+
+.results.show {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-.results-header {
-    display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
-}
-
-.results-title {
-    font-size: 1.875rem; font-weight: 700; color: var(--gray-900);
-}
-
-.results-count {
-    background: var(--primary-red-light); color: var(--primary-red);
-    padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem; font-weight: 600;
-}
-
 .file-item {
-    background: var(--white); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-md); border: 1px solid var(--gray-100);
-    transition: all 0.3s ease; position: relative; overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .file-item::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-    width: 4px; background: var(--primary-red);
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--gradient);
 }
 
 .file-item:hover {
-    transform: translateY(-2px); box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 }
 
 .file-header {
-    display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .file-icon {
-    width: 64px; height: 64px;
-    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-    border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; color: var(--white); flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    background: var(--gradient);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
-.file-icon i { font-size: 2rem; }
-
-.file-details { flex: 1; min-width: 0; }
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
 
 .file-name {
-    font-size: 1.25rem; font-weight: 600; color: var(--gray-900);
-    margin-bottom: 0.5rem; word-break: break-all;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+    word-break: break-all;
 }
 
 .file-meta {
-    color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem;
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 .file-status {
-    display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
 }
 
-.file-status.uploading { color: var(--primary-red); }
-.file-status.completed { color: var(--success); }
-.file-status.failed { color: var(--error); }
-
-.progress-container { margin: 1.5rem 0; }
-
-.progress-bar {
-    width: 100%; height: 8px; background: var(--gray-200);
-    border-radius: 50px; overflow: hidden; position: relative;
+.file-status.uploading {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary);
 }
 
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
-    width: 0%; transition: width 0.3s ease; border-radius: 50px; position: relative;
+.file-status.completed {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
 }
 
-.progress-text {
-    text-align: center; margin-top: 0.5rem; font-size: 0.875rem;
-    font-weight: 600; color: var(--primary-red);
+.file-status.failed {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
 }
 
-.file-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+.file-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
 
 .btn {
-    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem;
-    border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
-    text-decoration: none; cursor: pointer; transition: all 0.2s;
-    min-width: 120px; justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
 }
 
-.btn i { font-size: 1rem; }
-
 .btn-primary {
-    background: var(--primary-red); color: var(--white); box-shadow: var(--shadow-sm);
+    background: var(--gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover {
-    background: var(--primary-red-dark); transform: translateY(-1px); box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
 }
 
 .btn-success {
-    background: var(--success); color: var(--white); box-shadow: var(--shadow-sm);
+    background: linear-gradient(135deg, var(--success), #0f766e);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
 
 .btn-success:hover {
-    background: #047857; transform: translateY(-1px); box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
 }
 
 .btn-outline {
-    background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-300);
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--gray-900);
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 .btn-outline:hover {
-    background: var(--gray-50); transform: translateY(-1px); box-shadow: var(--shadow-md);
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
+/* Toast */
 .toast {
-    position: fixed; top: 2rem; right: 2rem; background: var(--white);
-    border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-xl);
-    border: 1px solid var(--gray-200); z-index: 1000; transform: translateX(400px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-width: 400px;
-    display: flex; align-items: center; gap: 1rem;
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    z-index: 1000;
+    transform: translateX(400px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .toast.show { transform: translateX(0); }
+
 .toast.success { border-left: 4px solid var(--success); }
 .toast.error { border-left: 4px solid var(--error); }
 
 .toast-icon {
-    width: 24px; height: 24px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.875rem; font-weight: 600; flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .toast.success .toast-icon {
-    background: var(--success-light); color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
 }
 
 .toast.error .toast-icon {
-    background: var(--error-light); color: var(--error);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
 }
 
 .toast-content { flex: 1; }
 .toast-title { font-weight: 600; margin-bottom: 0.25rem; }
-.toast-message { font-size: 0.875rem; color: var(--gray-600); }
+.toast-message { font-size: 0.9rem; color: var(--gray-600); }
 
-.loading-spinner {
-    display: inline-block; width: 1rem; height: 1rem; border: 2px solid var(--gray-300);
-    border-radius: 50%; border-top-color: var(--primary-red); animation: spin 1s linear infinite;
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Mobile Responsive */
 @media (max-width: 768px) {
     .container { padding: 1rem; }
     .title { font-size: 2.5rem; }
-    .upload-section { padding: 2rem 1.5rem; }
+    .upload-card { padding: 2rem 1.5rem; }
     .dropzone { padding: 3rem 1.5rem; min-height: 250px; }
-    .upload-title { font-size: 1.5rem; }
-    .file-types { gap: 0.5rem; }
-    .file-type-badge { padding: 0.5rem 1rem; font-size: 0.75rem; }
-    .file-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .url-input-group { flex-direction: column; }
+    .progress-stats { flex-direction: column; gap: 1rem; }
+    .file-header { flex-direction: column; gap: 1rem; }
     .file-actions { flex-direction: column; }
-    .btn { width: 100%; }
+    .btn { width: 100%; justify-content: center; }
     .toast { top: 1rem; right: 1rem; left: 1rem; max-width: none; transform: translateY(-100px); }
     .toast.show { transform: translateY(0); }
 }
 </style>
 </head>
 <body>
+    <!-- Animated Background -->
+    <div class="particles" id="particles"></div>
+
     <div class="container">
         <!-- Header -->
         <header class="header">
             <div class="logo">
-                <i class="fas fa-cloud" style="font-size: 3rem; color: var(--white);"></i>
+                <i class="fas fa-cloud" style="font-size: 3rem; color: white;"></i>
             </div>
             <h1 class="title">Marya Vault</h1>
-            <p class="subtitle">Professional file storage with client-side chunking for unlimited file sizes!</p>
+            <p class="subtitle">Ultimate file storage with lightning-fast chunked uploads, URL importing, and 20+ year lifetime guarantee!</p>
         </header>
 
-        <!-- Upload Section -->
-        <section class="upload-section">
+        <!-- Upload Card -->
+        <div class="upload-card">
             <label class="dropzone" id="dropzone" for="fileInput">
-                <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
-                <h2 class="upload-title">Drop your files here</h2>
-                <p class="upload-description">Files automatically chunked for fast upload</p>
-
+                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <h2 class="upload-title">Drop files here</h2>
+                <p class="upload-description">Files are automatically chunked for ultra-fast upload</p>
+                
                 <div class="file-types">
-                    <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
-                    <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
-                    <span class="file-type-badge"><i class="fas fa-file"></i> Documents</span>
-                    <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
-                    <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
+                    <span class="file-type"><i class="fas fa-image"></i> Images</span>
+                    <span class="file-type"><i class="fas fa-video"></i> Videos</span>
+                    <span class="file-type"><i class="fas fa-file"></i> Documents</span>
+                    <span class="file-type"><i class="fas fa-music"></i> Audio</span>
+                    <span class="file-type"><i class="fas fa-archive"></i> Archives</span>
                 </div>
             </label>
-            <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
-        </section>
+            <input type="file" id="fileInput" class="file-input" multiple>
 
-        <!-- Results Section -->
-        <section class="results" id="results">
-            <div class="results-header">
-                <h2 class="results-title">Your Files</h2>
-                <div class="results-count" id="filesCount">0 files</div>
+            <!-- URL Upload -->
+            <div class="url-section">
+                <h3 class="url-title">
+                    <i class="fas fa-link"></i>
+                    Import from URL
+                </h3>
+                <div class="url-input-group">
+                    <input type="url" id="urlInput" class="url-input" placeholder="Paste any file URL (Telegram, Google Drive, direct links...)">
+                    <button class="url-btn" id="urlBtn" onclick="uploadFromUrl()">
+                        <i class="fas fa-download"></i>
+                        Import
+                    </button>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--gray-600); margin-top: 0.5rem;">
+                    Telegram files will be automatically copied to your channel and get permanent URLs
+                </p>
             </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div class="upload-progress" id="uploadProgress">
+            <div class="progress-header">
+                <div class="progress-title">Uploading...</div>
+                <div class="progress-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="uploadedMB">0 MB</div>
+                        <div class="stat-label">Uploaded</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="uploadSpeed">0 MB/s</div>
+                        <div class="stat-label">Speed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="timeRemaining">--</div>
+                        <div class="stat-label">Time Left</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-text" id="progressText">Preparing...</div>
+        </div>
+
+        <!-- Results -->
+        <section class="results" id="results">
             <div id="filesList"></div>
         </section>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- Toast -->
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 Marya Vault CLIENT-SIDE CHUNKING - Loading...');
-
-        let fileCounter = 0;
+        console.log('🚀 Marya Vault Ultimate - Loading...');
+        
+        // Global variables
+        let currentUploads = new Map();
+        let uploadStartTime = 0;
+        let totalBytesUploaded = 0;
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Client-Side Chunking System');
+            initializeApp();
+            createParticles();
+        });
 
+        function initializeApp() {
             const dropzone = document.getElementById('dropzone');
             const fileInput = document.getElementById('fileInput');
-            const results = document.getElementById('results');
-            const filesList = document.getElementById('filesList');
-            const filesCount = document.getElementById('filesCount');
 
-            // File selection handler
-            fileInput.addEventListener('change', function(e) {
+            // File handlers
+            fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
                     handleFiles(Array.from(e.target.files));
                     fileInput.value = '';
                 }
             });
 
-            // Drag and drop handlers
+            // Drag & drop
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropzone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
             });
 
             ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, highlight, false);
+                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
             });
 
             ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, unhighlight, false);
+                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
             });
 
-            dropzone.addEventListener('drop', handleDrop, false);
+            dropzone.addEventListener('drop', (e) => {
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(Array.from(e.dataTransfer.files));
+                }
+            });
 
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
+        }
 
-            function highlight() { dropzone.classList.add('dragover'); }
-            function unhighlight() { dropzone.classList.remove('dragover'); }
-
-            function handleDrop(e) {
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleFiles(Array.from(files));
-                }
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particles.appendChild(particle);
             }
+        }
 
-            function handleFiles(files) {
-                if (files.length === 0) {
-                    showToast('No files selected', 'error');
-                    return;
-                }
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            document.getElementById('results').classList.add('show');
+            files.forEach(file => uploadFileWithChunking(file));
+        }
 
-                results.classList.add('show');
-                fileCounter += files.length;
-                updateFilesCount();
+        async function uploadFileWithChunking(file) {
+            console.log('🚀 Starting ultra-fast chunked upload:', file.name);
 
-                files.forEach(file => uploadFileWithChunking(file));
-            }
+            const fileId = generateUniqueId();
+            const fileItem = createFileItem(file, fileId);
+            document.getElementById('filesList').appendChild(fileItem);
 
-            // CLIENT-SIDE CHUNKED UPLOAD
-            async function uploadFileWithChunking(file) {
-                console.log('⬆️ Starting chunked upload:', file.name, formatBytes(file.size));
+            const progressElement = document.getElementById('uploadProgress');
+            progressElement.classList.add('show');
 
-                const fileItem = createFileItem(file);
-                filesList.appendChild(fileItem);
+            try {
+                const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB chunks for speed
+                const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+                
+                uploadStartTime = Date.now();
+                totalBytesUploaded = 0;
 
-                const progressFill = fileItem.querySelector('.progress-fill');
-                const progressText = fileItem.querySelector('.progress-text');
-                const statusElement = fileItem.querySelector('.file-status');
-                const actionsContainer = fileItem.querySelector('.file-actions');
+                console.log(`File will be uploaded in ${totalChunks} ultra-fast chunks`);
 
-                try {
-                    // Chunking parameters
-                    const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks (safe for Workers)
-                    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+                updateFileStatus(fileId, 'uploading', `Uploading ${totalChunks} chunks...`);
+                
+                const uploadPromises = [];
+                const maxConcurrent = 3; // Upload 3 chunks simultaneously for speed
 
-                    console.log(`File will be uploaded in ${totalChunks} chunks of ${Math.round(CHUNK_SIZE/1024/1024)}MB each`);
-
-                    statusElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${totalChunks} chunks...`;
-
-                    let uploadedChunks = 0;
-
-                    // Upload chunks one by one
-                    for (let i = 0; i < totalChunks; i++) {
-                        const start = i * CHUNK_SIZE;
+                for (let i = 0; i < totalChunks; i += maxConcurrent) {
+                    const batchPromises = [];
+                    
+                    for (let j = 0; j < maxConcurrent && (i + j) < totalChunks; j++) {
+                        const chunkIndex = i + j;
+                        const start = chunkIndex * CHUNK_SIZE;
                         const end = Math.min(start + CHUNK_SIZE, file.size);
                         const chunk = file.slice(start, end);
 
-                        console.log(`Uploading chunk ${i + 1}/${totalChunks} (${formatBytes(chunk.size)})`);
-
-                        // Create form data for this chunk
-                        const chunkFormData = new FormData();
-                        
-                        // Create a File object for the chunk
-                        const chunkFile = new File([chunk], file.name, { type: file.type });
-                        chunkFormData.append('file', chunkFile);
-                        
-                        // Add chunk metadata
-                        chunkFormData.append('isChunk', 'true');
-                        chunkFormData.append('chunkIndex', i.toString());
-                        chunkFormData.append('totalChunks', totalChunks.toString());
-                        chunkFormData.append('originalFilename', file.name);
-                        chunkFormData.append('originalSize', file.size.toString());
-
-                        // Upload this chunk
-                        const response = await fetch('/upload', {
-                            method: 'POST',
-                            body: chunkFormData
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`Chunk ${i + 1} upload failed: HTTP ${response.status}`);
-                        }
-
-                        const result = await response.json();
-                        
-                        if (!result.success) {
-                            throw new Error(`Chunk ${i + 1} failed: ${result.error}`);
-                        }
-
-                        uploadedChunks++;
-                        const progress = Math.round((uploadedChunks / totalChunks) * 100);
-                        progressFill.style.width = progress + '%';
-                        progressText.textContent = `${progress}% (${uploadedChunks}/${totalChunks} chunks)`;
-
-                        // If this is the last chunk, we get the final result
-                        if (i === totalChunks - 1 && result.url) {
-                            // Upload completed
-                            statusElement.innerHTML = '<i class="fas fa-check"></i> Upload Complete';
-                            statusElement.className = 'file-status completed';
-
-                            progressFill.style.width = '100%';
-                            progressText.textContent = '100% complete';
-
-                            // Add action buttons
-                            actionsContainer.innerHTML = `
-                                <a href="${result.url}" target="_blank" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i> View File
-                                </a>
-                                <a href="${result.download || result.url}" class="btn btn-success">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                                <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
-                                    <i class="fas fa-copy"></i> Copy Link
-                                </button>
-                            `;
-
-                            showToast(`${file.name} uploaded successfully!`, 'success');
-                        }
-
-                        // Small delay between chunks to avoid overwhelming the server
-                        await new Promise(resolve => setTimeout(resolve, 100));
+                        batchPromises.push(uploadChunk(file, chunk, chunkIndex, totalChunks, fileId));
                     }
 
-                } catch (error) {
-                    console.error('Chunked upload error:', error);
-                    
-                    statusElement.innerHTML = `<i class="fas fa-times"></i> Failed: ${error.message}`;
-                    statusElement.className = 'file-status failed';
-                    
-                    showToast(`Upload failed: ${file.name} - ${error.message}`, 'error');
+                    const batchResults = await Promise.all(batchPromises);
+                    uploadPromises.push(...batchResults);
+
+                    // Update progress
+                    const progress = Math.round((uploadPromises.length / totalChunks) * 100);
+                    updateProgress(progress, uploadPromises.length, totalChunks, file.size);
                 }
-            }
 
-            function createFileItem(file) {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                const icon = getFileIcon(file.name);
-
-                item.innerHTML = `
-                    <div class="file-header">
-                        <div class="file-icon">${icon}</div>
-                        <div class="file-details">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-meta">${formatBytes(file.size)} • <span class="file-status uploading"><i class="fas fa-spinner fa-spin"></i> Preparing chunked upload...</span></div>
-                        </div>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
-                        <div class="progress-text">0% uploaded</div>
-                    </div>
-                    <div class="file-actions"></div>
-                `;
-
-                return item;
-            }
-
-            function updateFilesCount() {
-                filesCount.textContent = `${fileCounter} file${fileCounter !== 1 ? 's' : ''}`;
-            }
-
-            function getFileIcon(filename) {
-                const ext = filename.split('.').pop()?.toLowerCase() || '';
-                const iconMap = {
-                    'jpg': '<i class="fas fa-image"></i>', 'jpeg': '<i class="fas fa-image"></i>', 'png': '<i class="fas fa-image"></i>', 'gif': '<i class="fas fa-image"></i>', 'webp': '<i class="fas fa-image"></i>',
-                    'mp4': '<i class="fas fa-video"></i>', 'mov': '<i class="fas fa-video"></i>', 'avi': '<i class="fas fa-video"></i>', 'mkv': '<i class="fas fa-video"></i>', 'webm': '<i class="fas fa-film"></i>',
-                    'mp3': '<i class="fas fa-music"></i>', 'wav': '<i class="fas fa-music"></i>', 'flac': '<i class="fas fa-music"></i>',
-                    'pdf': '<i class="fas fa-file-pdf"></i>', 'doc': '<i class="fas fa-file-word"></i>', 'docx': '<i class="fas fa-file-word"></i>', 'txt': '<i class="fas fa-file-alt"></i>',
-                    'zip': '<i class="fas fa-file-archive"></i>', 'rar': '<i class="fas fa-file-archive"></i>', '7z': '<i class="fas fa-file-archive"></i>'
-                };
-                return iconMap[ext] || '<i class="fas fa-file"></i>';
-            }
-
-            function formatBytes(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
-
-            window.copyToClipboard = function(text) {
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        showToast('Link copied to clipboard!', 'success');
-                    }).catch(() => {
-                        showToast('Failed to copy link', 'error');
-                    });
+                // Wait for final response
+                const finalResult = uploadPromises[uploadPromises.length - 1];
+                
+                if (finalResult && finalResult.url) {
+                    // Upload completed successfully
+                    updateFileStatus(fileId, 'completed', 'Upload Complete!');
+                    addFileActions(fileId, finalResult);
+                    showToast(`${file.name} uploaded successfully! URL ready instantly.`, 'success');
+                    
+                    // Hide progress
+                    setTimeout(() => {
+                        progressElement.classList.remove('show');
+                    }, 2000);
                 } else {
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    textArea.style.position = 'fixed';
-                    textArea.style.left = '-999999px';
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-
-                    try {
-                        document.execCommand('copy');
-                        showToast('Link copied to clipboard!', 'success');
-                    } catch (err) {
-                        showToast('Failed to copy link', 'error');
-                    }
-
-                    document.body.removeChild(textArea);
+                    throw new Error('No final URL received');
                 }
-            };
 
-            function showToast(message, type = 'success') {
-                const toast = document.getElementById('toast');
-                const icon = type === 'success' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
-                const title = type === 'success' ? 'Success' : 'Error';
+            } catch (error) {
+                console.error('Upload error:', error);
+                updateFileStatus(fileId, 'failed', `Failed: ${error.message}`);
+                showToast(`Upload failed: ${file.name}`, 'error');
+            }
+        }
 
-                toast.innerHTML = `
-                    <div class="toast-icon">${icon}</div>
-                    <div class="toast-content">
-                        <div class="toast-title">${title}</div>
-                        <div class="toast-message">${message}</div>
-                    </div>
-                `;
+        async function uploadChunk(originalFile, chunk, chunkIndex, totalChunks, fileId) {
+            const formData = new FormData();
+            const chunkFile = new File([chunk], originalFile.name, { type: originalFile.type });
+            
+            formData.append('file', chunkFile);
+            formData.append('isChunk', 'true');
+            formData.append('chunkIndex', chunkIndex.toString());
+            formData.append('totalChunks', totalChunks.toString());
+            formData.append('originalFilename', originalFile.name);
+            formData.append('originalSize', originalFile.size.toString());
+            formData.append('fileId', fileId);
 
-                toast.className = `toast ${type} show`;
+            const startTime = Date.now();
+            
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
 
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 5000);
+            if (!response.ok) {
+                throw new Error(`Chunk ${chunkIndex + 1} upload failed: HTTP ${response.status}`);
             }
 
-            console.log('✅ Marya Vault Client-Side Chunking Ready!');
-        });
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(`Chunk ${chunkIndex + 1} failed: ${result.error}`);
+            }
+
+            // Update statistics
+            const uploadTime = (Date.now() - startTime) / 1000;
+            const chunkSpeed = (chunk.size / uploadTime) / 1024 / 1024; // MB/s
+            totalBytesUploaded += chunk.size;
+            
+            console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded at ${chunkSpeed.toFixed(1)} MB/s`);
+
+            return result;
+        }
+
+        function updateProgress(percentage, uploadedChunks, totalChunks, totalSize) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const uploadedMB = document.getElementById('uploadedMB');
+            const uploadSpeed = document.getElementById('uploadSpeed');
+            const timeRemaining = document.getElementById('timeRemaining');
+
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = `${percentage}% (${uploadedChunks}/${totalChunks} chunks)`;
+
+            const uploadedMBValue = (totalBytesUploaded / 1024 / 1024).toFixed(1);
+            uploadedMB.textContent = uploadedMBValue + ' MB';
+
+            const elapsedTime = (Date.now() - uploadStartTime) / 1000;
+            const speed = (totalBytesUploaded / elapsedTime) / 1024 / 1024;
+            uploadSpeed.textContent = speed.toFixed(1) + ' MB/s';
+
+            const remainingBytes = totalSize - totalBytesUploaded;
+            const remainingTime = remainingBytes / (totalBytesUploaded / elapsedTime);
+            const remainingMinutes = Math.ceil(remainingTime / 60);
+            
+            if (remainingMinutes > 0) {
+                timeRemaining.textContent = remainingMinutes + 'm';
+            } else {
+                timeRemaining.textContent = '<1m';
+            }
+        }
+
+        // URL Upload Function
+        async function uploadFromUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const urlBtn = document.getElementById('urlBtn');
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                showToast('Please enter a URL', 'error');
+                return;
+            }
+
+            if (!url.startsWith('http')) {
+                showToast('Please enter a valid HTTP/HTTPS URL', 'error');
+                return;
+            }
+
+            urlBtn.disabled = true;
+            urlBtn.innerHTML = '<div class="spinner"></div> Importing...';
+
+            try {
+                const response = await fetch('/upload-from-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('results').classList.add('show');
+                    
+                    const fileId = generateUniqueId();
+                    const fileItem = createFileItemFromUrl(result, fileId);
+                    document.getElementById('filesList').appendChild(fileItem);
+                    
+                    addFileActions(fileId, result);
+                    showToast('File imported from URL successfully with permanent lifetime!', 'success');
+                    urlInput.value = '';
+                } else {
+                    throw new Error(result.error || 'Import failed');
+                }
+            } catch (error) {
+                showToast(`URL import failed: ${error.message}`, 'error');
+            } finally {
+                urlBtn.disabled = false;
+                urlBtn.innerHTML = '<i class="fas fa-download"></i> Import';
+            }
+        }
+
+        function createFileItem(file, fileId) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.id = `file-${fileId}`;
+
+            const icon = getFileIcon(file.name);
+
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon">${icon}</div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${formatBytes(file.size)} • <span class="file-status uploading" id="status-${fileId}"><i class="fas fa-spinner fa-spin"></i> Preparing...</span></div>
+                    </div>
+                </div>
+                <div class="file-actions" id="actions-${fileId}"></div>
+            `;
+
+            return item;
+        }
+
+        function createFileItemFromUrl(result, fileId) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.id = `file-${fileId}`;
+
+            const icon = getFileIcon(result.filename);
+
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon">${icon}</div>
+                    <div class="file-details">
+                        <div class="file-name">${result.filename}</div>
+                        <div class="file-meta">${formatBytes(result.size)} • <span class="file-status completed"><i class="fas fa-check"></i> Imported from URL</span></div>
+                    </div>
+                </div>
+                <div class="file-actions" id="actions-${fileId}"></div>
+            `;
+
+            return item;
+        }
+
+        function updateFileStatus(fileId, status, text) {
+            const statusElement = document.getElementById(`status-${fileId}`);
+            if (statusElement) {
+                statusElement.className = `file-status ${status}`;
+                
+                if (status === 'completed') {
+                    statusElement.innerHTML = `<i class="fas fa-check"></i> ${text}`;
+                } else if (status === 'failed') {
+                    statusElement.innerHTML = `<i class="fas fa-times"></i> ${text}`;
+                } else {
+                    statusElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+                }
+            }
+        }
+
+        function addFileActions(fileId, result) {
+            const actionsContainer = document.getElementById(`actions-${fileId}`);
+            if (actionsContainer) {
+                actionsContainer.innerHTML = `
+                    <a href="${result.url}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View File
+                    </a>
+                    <a href="${result.download || result.url + '?dl=1'}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                    <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                `;
+            }
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop()?.toLowerCase() || '';
+            const iconMap = {
+                'jpg': '<i class="fas fa-image"></i>', 'jpeg': '<i class="fas fa-image"></i>', 'png': '<i class="fas fa-image"></i>', 'gif': '<i class="fas fa-image"></i>', 'webp': '<i class="fas fa-image"></i>',
+                'mp4': '<i class="fas fa-video"></i>', 'mov': '<i class="fas fa-video"></i>', 'avi': '<i class="fas fa-video"></i>', 'mkv': '<i class="fas fa-video"></i>', 'webm': '<i class="fas fa-film"></i>',
+                'mp3': '<i class="fas fa-music"></i>', 'wav': '<i class="fas fa-music"></i>', 'flac': '<i class="fas fa-music"></i>',
+                'pdf': '<i class="fas fa-file-pdf"></i>', 'doc': '<i class="fas fa-file-word"></i>', 'docx': '<i class="fas fa-file-word"></i>', 'txt': '<i class="fas fa-file-alt"></i>',
+                'zip': '<i class="fas fa-file-archive"></i>', 'rar': '<i class="fas fa-file-archive"></i>', '7z': '<i class="fas fa-file-archive"></i>'
+            };
+            return iconMap[ext] || '<i class="fas fa-file"></i>';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function generateUniqueId() {
+            return 'file_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Link copied to clipboard!', 'success');
+                });
+            } else {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showToast('Link copied to clipboard!', 'success');
+                } catch (err) {
+                    showToast('Failed to copy link', 'error');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = type === 'success' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
+            const title = type === 'success' ? 'Success' : 'Error';
+
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+
+            toast.className = `toast ${type} show`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        console.log('✅ Marya Vault Ultimate - Ready!');
     </script>
 </body>
 </html>
