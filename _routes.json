@@ -3,7 +3,8 @@
   "include": [
     "/upload",
     "/upload-from-url",
-    "/telegram-import",
+    "/telegram-import", 
+    "/admin/get-key",
     "/admin/list-files",
     "/admin/delete-files",
     "/admin/update-expiry",
