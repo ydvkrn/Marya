@@ -27,7 +27,7 @@ export async function onRequest(context) {
     const BOT_TOKEN = env.BOT_TOKEN;
     const CHANNEL_ID = env.CHANNEL_ID;
 
-    // ✅ All KV namespaces array
+    // All KV namespaces array
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
       { kv: env.FILES_KV2, name: 'FILES_KV2' },
@@ -61,7 +61,7 @@ export async function onRequest(context) {
       type: file.type
     });
 
-    // ✅ Size validation - 7 KV namespaces × 25MB = 175MB max
+    // Size validation - 7 KV namespaces × 25MB = 175MB max
     const MAX_FILE_SIZE = 175 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       throw new Error(`File too large: ${Math.round(file.size / 1024 / 1024)}MB (max 175MB)`);
@@ -73,17 +73,17 @@ export async function onRequest(context) {
     const fileId = `id${timestamp}${random}`;
     const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
 
-    // ✅ Chunking strategy
+    // Chunking strategy
     const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB per chunk
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    if (totalChunks > kvNamespaces.length) {
-      throw new Error(`File requires ${totalChunks} chunks, but only ${kvNamespaces.length} KV namespaces available`);
+    if (totalChunks > kvNamespaces.length * 10) { // Allow multiple chunks per KV
+      throw new Error(`File requires ${totalChunks} chunks, exceeds capacity`);
     }
 
     console.log(`Using ${totalChunks} chunks across KV namespaces`);
 
-    // ✅ Upload chunks to different KV namespaces
+    // Upload chunks to different KV namespaces
     const chunkPromises = [];
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
@@ -98,7 +98,7 @@ export async function onRequest(context) {
     const chunkResults = await Promise.all(chunkPromises);
     console.log('All chunks uploaded successfully');
 
-    // ✅ Store master metadata in primary KV
+    // Store master metadata in primary KV
     const masterMetadata = {
       filename: file.name,
       size: file.size,
@@ -152,7 +152,7 @@ export async function onRequest(context) {
   }
 }
 
-// ✅ Upload chunk to specific KV namespace
+// Upload chunk to specific KV namespace
 async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
   console.log(`Uploading chunk ${chunkIndex} to ${kvNamespace.name}...`);
 
@@ -193,7 +193,7 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
 
   const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
 
-  // ✅ Store chunk with auto-refresh metadata
+  // Store chunk with auto-refresh metadata
   const chunkKey = `${fileId}_chunk_${chunkIndex}`;
   const chunkMetadata = {
     telegramFileId: telegramFileId,
