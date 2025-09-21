@@ -1,9 +1,10 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
+  // CORS Headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
   };
 
@@ -11,28 +12,39 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth check
-  const authHeader = request.headers.get('Authorization');
-  const adminKey = env.ADMIN_KEY || 'MARYA2025ADMIN';
-  
-  if (!authHeader || !authHeader.includes(adminKey)) {
+  if (request.method !== 'POST') {
     return new Response(JSON.stringify({
       success: false,
-      error: 'Unauthorized access'
+      error: 'Method not allowed'
     }), {
-      status: 401,
+      status: 405,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
   }
 
   try {
+    console.log('🗑️ Admin delete-files API called');
+
+    // Auth check
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.includes('MARYA2025ADMIN')) {
+      console.log('❌ Unauthorized delete attempt');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Unauthorized access'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
     const { fileIds } = await request.json();
     
     if (!Array.isArray(fileIds) || fileIds.length === 0) {
       throw new Error('No file IDs provided');
     }
 
-    console.log(`🗑️ Deleting ${fileIds.length} files...`);
+    console.log(`🗑️ Deleting ${fileIds.length} files: ${fileIds.join(', ')}`);
 
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
@@ -45,10 +57,11 @@ export async function onRequest(context) {
     ].filter(item => item.kv);
 
     let deletedCount = 0;
+    let errors = [];
 
     for (const fileId of fileIds) {
       try {
-        console.log(`🗑️ Deleting file: ${fileId}`);
+        console.log(`🗑️ Processing deletion: ${fileId}`);
 
         // Find the file metadata
         let fileMetadata = null;
@@ -60,6 +73,7 @@ export async function onRequest(context) {
             if (metadata) {
               fileMetadata = JSON.parse(metadata);
               sourceKV = kvNamespace;
+              console.log(`📁 Found ${fileId} in ${kvNamespace.name}`);
               break;
             }
           } catch (e) {
@@ -68,7 +82,8 @@ export async function onRequest(context) {
         }
 
         if (!fileMetadata) {
-          console.log(`⚠️ File ${fileId} not found, skipping...`);
+          console.log(`⚠️ File ${fileId} not found in any KV namespace`);
+          errors.push(`File ${fileId} not found`);
           continue;
         }
 
@@ -84,7 +99,8 @@ export async function onRequest(context) {
                 console.log(`✅ Deleted chunk: ${chunkInfo.keyName}`);
               }
             } catch (chunkError) {
-              console.error(`❌ Failed to delete chunk ${chunkInfo.keyName}:`, chunkError);
+              console.error(`❌ Failed to delete chunk ${chunkInfo.keyName}:`, chunkError.message);
+              errors.push(`Failed to delete chunk ${chunkInfo.keyName}`);
             }
           }
         }
@@ -92,28 +108,32 @@ export async function onRequest(context) {
         // Delete main file metadata
         await sourceKV.kv.delete(fileId);
         deletedCount++;
-        console.log(`✅ Deleted file metadata: ${fileId}`);
+        console.log(`✅ Successfully deleted file: ${fileId}`);
 
       } catch (fileError) {
-        console.error(`❌ Failed to delete file ${fileId}:`, fileError);
+        console.error(`❌ Failed to delete file ${fileId}:`, fileError.message);
+        errors.push(`Failed to delete ${fileId}: ${fileError.message}`);
       }
     }
 
-    console.log(`✅ Deletion complete: ${deletedCount}/${fileIds.length} files deleted`);
+    console.log(`✅ Deletion summary: ${deletedCount}/${fileIds.length} files deleted`);
 
     return new Response(JSON.stringify({
       success: true,
       deletedCount: deletedCount,
-      totalRequested: fileIds.length
+      totalRequested: fileIds.length,
+      errors: errors.length > 0 ? errors : undefined,
+      timestamp: Date.now()
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('💥 Delete files error:', error);
+    console.error('💥 Admin delete-files error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error.message,
+      timestamp: Date.now()
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
