@@ -1363,13 +1363,168 @@ body {
             deleteQueue = [];
         }
 
-        // FIXED: Complete deletion with proper validation
-        async function confirmDelete() {
-            if (deleteQueue.length === 0) return;
+        // FIXED: Complete deletion with detailed debugging
+async function confirmDelete() {
+    if (deleteQueue.length === 0) {
+        console.log('❌ DELETE QUEUE IS EMPTY');
+        return;
+    }
+    
+    try {
+        closeDeleteModal();
+        showToast('Starting deletion...', 'success');
+        
+        // Extract and validate file IDs with debugging
+        console.log('🗑️ DELETE QUEUE:', deleteQueue);
+        
+        const rawFileIds = deleteQueue.map(f => f.id);
+        console.log('🗑️ RAW FILE IDS:', rawFileIds);
+        
+        // Filter out null, undefined, empty strings
+        const cleanFileIds = rawFileIds.filter(id => {
+            const isValid = id && typeof id === 'string' && id.trim() !== '';
+            console.log(`ID "${id}": valid = ${isValid}`);
+            return isValid;
+        });
+        
+        console.log('🗑️ CLEAN FILE IDS:', cleanFileIds);
+        
+        // Ensure MSM format
+        const msmFileIds = cleanFileIds.filter(id => {
+            const isMSM = id.startsWith('MSM');
+            console.log(`ID "${id}": MSM format = ${isMSM}`);
+            return isMSM;
+        });
+        
+        console.log('🗑️ MSM FILE IDS:', msmFileIds);
+        
+        if (msmFileIds.length === 0) {
+            throw new Error('No valid MSM file IDs found to delete');
+        }
+        
+        // Create request payload
+        const requestPayload = {
+            fileIds: msmFileIds
+        };
+        
+        console.log('📤 REQUEST PAYLOAD:', requestPayload);
+        console.log('📤 REQUEST JSON:', JSON.stringify(requestPayload));
+        
+        const response = await fetch('/admin/delete-files', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${ADMIN_KEY}`
+            },
+            body: JSON.stringify(requestPayload)
+        });
+
+        console.log('📥 RESPONSE STATUS:', response.status);
+        console.log('📥 RESPONSE HEADERS:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.log('📥 ERROR RESPONSE:', errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('📥 SUCCESS RESPONSE:', result);
+        
+        if (result.success) {
+            showToast(`✅ Successfully deleted ${result.deletedCount} files completely!`, 'success');
             
-            try {
-                closeDeleteModal();
-                showToast('Deleting completely...', 'success');
+            // Show details if available
+            if (result.deletedDetails && result.deletedDetails.length > 0) {
+                console.log('📊 DELETION DETAILS:', result.deletedDetails);
+            }
+            
+            // Clear selections and refresh
+            selectedFiles.clear();
+            document.getElementById('selectAll').checked = false;
+            updateDeleteButton();
+            
+            setTimeout(() => refreshFilesList(), 1500);
+        } else {
+            throw new Error(result.error || 'Delete operation failed');
+        }
+        
+    } catch (error) {
+        console.error('💥 DELETE ERROR:', error);
+        showToast(`Delete failed: ${error.message}`, 'error');
+    }
+}
+
+// FIXED: Single file delete
+function deleteFile(fileId, filename) {
+    console.log('🗑️ SINGLE FILE DELETE:', { fileId, filename });
+    
+    if (!fileId || typeof fileId !== 'string' || !fileId.trim()) {
+        console.log('❌ INVALID FILE ID');
+        showToast('Invalid file ID', 'error');
+        return;
+    }
+    
+    if (!fileId.startsWith('MSM')) {
+        console.log('❌ NOT MSM FORMAT');
+        showToast('Invalid MSM file ID format', 'error');
+        return;
+    }
+    
+    deleteQueue = [{ id: fileId, filename: filename || 'Unknown File' }];
+    console.log('🗑️ DELETE QUEUE SET:', deleteQueue);
+    showDeleteModal();
+}
+
+// FIXED: Multiple files delete
+function deleteSelected() {
+    console.log('🗑️ DELETE SELECTED CALLED');
+    console.log('🗑️ SELECTED FILES:', Array.from(selectedFiles));
+    
+    if (selectedFiles.size === 0) {
+        console.log('❌ NO FILES SELECTED');
+        return;
+    }
+    
+    deleteQueue = Array.from(selectedFiles).map(fileId => {
+        const file = allFiles.find(f => f && f.id === fileId);
+        console.log(`🗑️ PROCESSING SELECTED FILE: ${fileId}`, file);
+        
+        return { 
+            id: fileId, 
+            filename: file?.filename || 'Unknown File'
+        };
+    });
+    
+    console.log('🗑️ MULTI DELETE QUEUE SET:', deleteQueue);
+    showDeleteModal();
+}
+
+// FIXED: File selection with debugging
+function toggleFileSelection(fileId) {
+    console.log('✅ TOGGLE FILE SELECTION:', fileId);
+    
+    if (!fileId) {
+        console.log('❌ NO FILE ID PROVIDED');
+        return;
+    }
+    
+    const checkbox = document.querySelector(`input[value="${fileId}"]`);
+    console.log('✅ CHECKBOX FOUND:', !!checkbox);
+    console.log('✅ CHECKBOX CHECKED:', checkbox?.checked);
+    
+    if (checkbox && checkbox.checked) {
+        selectedFiles.add(fileId);
+        console.log('✅ ADDED TO SELECTION:', fileId);
+    } else {
+        selectedFiles.delete(fileId);
+        console.log('✅ REMOVED FROM SELECTION:', fileId);
+    }
+    
+    console.log('✅ CURRENT SELECTION:', Array.from(selectedFiles));
+    updateDeleteButton();
+}
+
                 
                 // Extract and validate file IDs
                 const validFileIds = deleteQueue
