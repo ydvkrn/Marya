@@ -227,6 +227,74 @@
 
         .file-input { display: none; }
 
+        /* URL Upload Section */
+        .url-upload-section {
+            background: var(--gray-50);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .url-upload-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .url-input-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--gray-300);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--white);
+            transition: all 0.3s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px var(--primary-red-light);
+        }
+
+        .url-upload-btn {
+            padding: 1rem 2rem;
+            background: var(--primary-red);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .url-upload-btn:hover {
+            background: var(--primary-red-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .url-upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Results Section */
         .results {
             display: none;
@@ -576,6 +644,15 @@
                 width: 100%;
             }
 
+            .url-input-container {
+                flex-direction: column;
+            }
+
+            .url-upload-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
             .toast {
                 top: 1rem;
                 right: 1rem;
@@ -613,7 +690,7 @@
                 <i class="fas fa-cloud" style="font-size: 3rem; color: var(--white);"></i>
             </div>
             <h1 class="title">Marya Vault</h1>
-            <p class="subtitle">Professional file storage solution with enterprise-grade security and lightning-fast uploads up to 2GB per file.</p>
+            <p class="subtitle">Professional Multi-KV file storage solution with enterprise-grade security and lightning-fast chunked uploads up to 175MB per file.</p>
         </header>
 
         <!-- Upload Section -->
@@ -622,7 +699,7 @@
                 <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
                 <h2 class="upload-title">Drop your files here</h2>
                 <p class="upload-description">or click to browse from your device</p>
-                
+
                 <div class="file-types">
                     <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
                     <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
@@ -632,6 +709,21 @@
                 </div>
             </label>
             <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
+
+            <!-- URL Upload Section -->
+            <div class="url-upload-section">
+                <h3 class="url-upload-title">
+                    <i class="fas fa-link"></i>
+                    Upload from URL
+                </h3>
+                <div class="url-input-container">
+                    <input type="url" id="urlInput" class="url-input" placeholder="Paste direct file URL (e.g., https://example.com/file.mp4)">
+                    <button class="url-upload-btn" id="urlUploadBtn" onclick="uploadFromUrl()">
+                        <i class="fas fa-upload"></i>
+                        Upload
+                    </button>
+                </div>
+            </div>
         </section>
 
         <!-- Results Section -->
@@ -648,18 +740,20 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 Marya Vault Professional - Loading...');
+        console.log('🚀 Marya Vault Multi-KV Professional - Loading...');
 
         let fileCounter = 0;
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Initializing Professional File Uploader');
-            
+            console.log('✅ DOM Ready - Initializing Multi-KV Professional File Uploader');
+
             const dropzone = document.getElementById('dropzone');
             const fileInput = document.getElementById('fileInput');
             const results = document.getElementById('results');
             const filesList = document.getElementById('filesList');
             const filesCount = document.getElementById('filesCount');
+            const urlInput = document.getElementById('urlInput');
+            const urlUploadBtn = document.getElementById('urlUploadBtn');
 
             if (!dropzone || !fileInput) {
                 console.error('❌ Required elements not found');
@@ -714,7 +808,7 @@
 
             function handleFiles(files) {
                 console.log('🔄 Processing files:', files.length);
-                
+
                 if (files.length === 0) {
                     showToast('No files selected', 'error');
                     return;
@@ -728,10 +822,10 @@
             }
 
             function uploadFile(file) {
-                console.log('⬆️ Starting upload:', file.name, formatBytes(file.size));
+                console.log('⬆️ Starting Multi-KV upload:', file.name, formatBytes(file.size));
 
-                if (file.size > 2147483648) { // 2GB
-                    showToast(`File "${file.name}" is too large (max 2GB)`, 'error');
+                if (file.size > 175 * 1024 * 1024) { // 175MB limit for 7 KV namespaces
+                    showToast(`File "${file.name}" is too large (max 175MB for Multi-KV system)`, 'error');
                     fileCounter--;
                     updateFilesCount();
                     return;
@@ -755,26 +849,26 @@
                     if (e.lengthComputable) {
                         const percentComplete = Math.round((e.loaded / e.total) * 100);
                         progressFill.style.width = percentComplete + '%';
-                        progressText.textContent = `${percentComplete}% uploaded`;
-                        
-                        console.log('📊 Upload progress:', percentComplete + '%');
+                        progressText.textContent = `${percentComplete}% uploaded (Multi-KV Chunked)`;
+
+                        console.log('📊 Multi-KV Upload progress:', percentComplete + '%');
                     }
                 });
 
                 // Upload completion
                 xhr.addEventListener('load', function() {
-                    console.log('✅ Upload response:', xhr.status);
-                    
+                    console.log('✅ Multi-KV Upload response:', xhr.status);
+
                     if (xhr.status === 200) {
                         try {
                             const result = JSON.parse(xhr.responseText);
                             if (result.success) {
-                                statusElement.textContent = 'Upload Complete';
+                                statusElement.innerHTML = '<i class="fas fa-check"></i> Multi-KV Upload Complete';
                                 statusElement.className = 'file-status completed';
-                                
+
                                 progressFill.style.width = '100%';
-                                progressText.textContent = '100% complete';
-                                
+                                progressText.textContent = `100% complete - Distributed across ${result.chunks} chunks in ${result.kvDistribution.length} KV namespaces`;
+
                                 // Add action buttons
                                 actionsContainer.innerHTML = `
                                     <a href="${result.url}" target="_blank" class="btn btn-primary">
@@ -787,10 +881,10 @@
                                         <i class="fas fa-copy"></i> Copy Link
                                     </button>
                                 `;
-                                
-                                showToast(`${file.name} uploaded successfully!`, 'success');
+
+                                showToast(`${file.name} uploaded successfully to Multi-KV storage!`, 'success');
                             } else {
-                                throw new Error(result.error || 'Upload failed');
+                                throw new Error(result.error || 'Multi-KV Upload failed');
                             }
                         } catch (parseError) {
                             handleUploadError(statusElement, 'Invalid server response');
@@ -812,18 +906,99 @@
                 xhr.send(formData);
             }
 
+            // URL Upload Function
+            window.uploadFromUrl = async function() {
+                const url = urlInput.value.trim();
+                
+                if (!url) {
+                    showToast('Please enter a URL', 'error');
+                    return;
+                }
+
+                if (!url.startsWith('http')) {
+                    showToast('Please enter a valid HTTP/HTTPS URL', 'error');
+                    return;
+                }
+
+                urlUploadBtn.disabled = true;
+                urlUploadBtn.innerHTML = '<div class="loading-spinner"></div> Downloading...';
+
+                try {
+                    const response = await fetch('/upload-from-url', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        results.classList.add('show');
+                        fileCounter++;
+                        updateFilesCount();
+
+                        // Create file item for URL upload
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <div class="file-header">
+                                <div class="file-icon">
+                                    <i class="fas fa-link"></i>
+                                </div>
+                                <div class="file-details">
+                                    <div class="file-name">${result.filename}</div>
+                                    <div class="file-meta">${formatBytes(result.size)} • <span class="file-status completed"><i class="fas fa-check"></i> Multi-KV Upload Complete</span></div>
+                                </div>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%"></div>
+                                </div>
+                                <div class="progress-text">100% complete - Distributed across ${result.chunks} chunks in ${result.kvDistribution.length} KV namespaces</div>
+                            </div>
+                            <div class="file-actions">
+                                <a href="${result.url}" target="_blank" class="btn btn-primary">
+                                    <i class="fas fa-eye"></i> View File
+                                </a>
+                                <a href="${result.download}" class="btn btn-success">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                                <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
+                                    <i class="fas fa-copy"></i> Copy Link
+                                </button>
+                            </div>
+                        `;
+
+                        filesList.appendChild(fileItem);
+                        showToast('File uploaded from URL successfully to Multi-KV storage!', 'success');
+                        urlInput.value = '';
+                    } else {
+                        throw new Error(result.error || 'Upload failed');
+                    }
+                } catch (error) {
+                    showToast(`URL upload failed: ${error.message}`, 'error');
+                } finally {
+                    urlUploadBtn.disabled = false;
+                    urlUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+                }
+            };
+
             function createFileItem(file) {
                 const item = document.createElement('div');
                 item.className = 'file-item';
-                
+
                 const icon = getFileIcon(file.name);
-                
+
                 item.innerHTML = `
                     <div class="file-header">
                         <div class="file-icon">${icon}</div>
                         <div class="file-details">
                             <div class="file-name">${file.name}</div>
-                            <div class="file-meta">${formatBytes(file.size)} • <span class="file-status uploading">Preparing upload...</span></div>
+                            <div class="file-meta">${formatBytes(file.size)} • <span class="file-status uploading"><i class="fas fa-spinner fa-spin"></i> Preparing Multi-KV upload...</span></div>
                         </div>
                     </div>
                     <div class="progress-container">
@@ -834,12 +1009,12 @@
                     </div>
                     <div class="file-actions"></div>
                 `;
-                
+
                 return item;
             }
 
             function handleUploadError(statusElement, error) {
-                statusElement.textContent = `Failed: ${error}`;
+                statusElement.innerHTML = `<i class="fas fa-times"></i> Failed: ${error}`;
                 statusElement.className = 'file-status failed';
             }
 
@@ -849,7 +1024,7 @@
 
             function getFileIcon(filename) {
                 const ext = filename.split('.').pop()?.toLowerCase() || '';
-                
+
                 const iconMap = {
                     'jpg': '<i class="fas fa-image"></i>', 'jpeg': '<i class="fas fa-image"></i>', 'png': '<i class="fas fa-image"></i>', 'gif': '<i class="fas fa-image"></i>', 'webp': '<i class="fas fa-image"></i>', 'svg': '<i class="fas fa-palette"></i>',
                     'mp4': '<i class="fas fa-video"></i>', 'mov': '<i class="fas fa-video"></i>', 'avi': '<i class="fas fa-video"></i>', 'mkv': '<i class="fas fa-video"></i>', 'webm': '<i class="fas fa-film"></i>',
@@ -858,7 +1033,7 @@
                     'zip': '<i class="fas fa-file-archive"></i>', 'rar': '<i class="fas fa-file-archive"></i>', '7z': '<i class="fas fa-file-archive"></i>', 'tar': '<i class="fas fa-box-archive"></i>', 'gz': '<i class="fas fa-file-zipper"></i>',
                     'js': '<i class="fas fa-code"></i>', 'html': '<i class="fas fa-globe"></i>', 'css': '<i class="fas fa-palette"></i>', 'py': '<i class="fab fa-python"></i>', 'java': '<i class="fab fa-java"></i>'
                 };
-                
+
                 return iconMap[ext] || '<i class="fas fa-file"></i>';
             }
 
@@ -887,14 +1062,14 @@
                     document.body.appendChild(textArea);
                     textArea.focus();
                     textArea.select();
-                    
+
                     try {
                         document.execCommand('copy');
                         showToast('Link copied to clipboard!', 'success');
                     } catch (err) {
                         showToast('Failed to copy link', 'error');
                     }
-                    
+
                     document.body.removeChild(textArea);
                 }
             };
@@ -903,7 +1078,7 @@
                 const toast = document.getElementById('toast');
                 const icon = type === 'success' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
                 const title = type === 'success' ? 'Success' : 'Error';
-                
+
                 toast.innerHTML = `
                     <div class="toast-icon">${icon}</div>
                     <div class="toast-content">
@@ -911,15 +1086,15 @@
                         <div class="toast-message">${message}</div>
                     </div>
                 `;
-                
+
                 toast.className = `toast ${type} show`;
-                
+
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, 5000);
             }
 
-            console.log('✅ Marya Vault Professional - Ready!');
+            console.log('✅ Marya Vault Multi-KV Professional - Ready!');
         });
     </script>
 </body>
