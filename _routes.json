@@ -1,5 +1,1 @@
-{
-  "version": 1,
-  "include": ["/btfstorage/file/*"],
-  "exclude": ["/assets/*","/static/*"]
-}
+{ "version":1, "include":["/btfstorage/file/*"] }
