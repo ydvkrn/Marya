@@ -1,56 +1,55 @@
-// 🎯 SUPER SIMPLE VIDEO STREAMING - BACK TO BASICS
-// ✅ Focus on core functionality only
+// Minimal, battle-tested video/file streaming for Cloudflare Workers
+// Works for small (2MB) and large files, with proper Range (206) handling
 
 const MIME_TYPES = {
-  'mp4': 'video/mp4',
-  'webm': 'video/webm',
-  'mkv': 'video/mp4',
-  'mov': 'video/quicktime',
-  'avi': 'video/mp4',
-  'm4v': 'video/mp4',
-  'wmv': 'video/mp4',
-  'flv': 'video/mp4',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  mkv: 'video/mp4',
+  mov: 'video/quicktime',
+  avi: 'video/mp4',
+  m4v: 'video/mp4',
+  wmv: 'video/mp4',
+  flv: 'video/mp4',
   '3gp': 'video/3gpp',
-  'mp3': 'audio/mpeg',
-  'wav': 'audio/wav',
-  'flac': 'audio/flac',
-  'aac': 'audio/aac',
-  'm4a': 'audio/mp4',
-  'ogg': 'audio/ogg',
-  'jpg': 'image/jpeg',
-  'jpeg': 'image/jpeg',
-  'png': 'image/png',
-  'gif': 'image/gif',
-  'webp': 'image/webp',
-  'pdf': 'application/pdf',
-  'txt': 'text/plain',
-  'zip': 'application/zip'
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  flac: 'audio/flac',
+  aac: 'audio/aac',
+  m4a: 'audio/mp4',
+  ogg: 'audio/ogg',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  pdf: 'application/pdf',
+  txt: 'text/plain',
+  zip: 'application/zip'
 };
 
-function getMimeType(extension) {
-  const ext = extension.toLowerCase().replace('.', '');
-  return MIME_TYPES[ext] || 'application/octet-stream';
+function getMimeType(ext) {
+  const e = (ext || '').toLowerCase().replace('.', '');
+  return MIME_TYPES[e] || 'application/octet-stream';
 }
 
-function isVideoFile(mimeType) {
-  return mimeType.startsWith('video/');
+function isVideo(m) { return m.startsWith('video/'); }
+function isStreamable(m) {
+  return m.startsWith('video/') || m.startsWith('audio/') || m.startsWith('image/') || m === 'application/pdf';
 }
 
 export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
 
-  console.log('🎯 BASIC STREAMING:', fileId);
-
   try {
-    const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
-    const extension = fileId.includes('.') ? fileId.substring(fileId.lastIndexOf('.')) : '';
+    const actualId = fileId.includes('.') ? fileId.slice(0, fileId.lastIndexOf('.')) : fileId;
+    const extension = fileId.includes('.') ? fileId.slice(fileId.lastIndexOf('.') + 1) : '';
 
-    if (!actualId.startsWith('MSM')) {
-      return new Response('❌ Invalid file ID format', { status: 404 });
+    if (!actualId || !actualId.startsWith('MSM')) {
+      return new Response('Not found', { status: 404 });
     }
 
-    const kvNamespaces = {
+    const kv = {
       FILES_KV: env.FILES_KV,
       FILES_KV2: env.FILES_KV2,
       FILES_KV3: env.FILES_KV3,
@@ -60,304 +59,192 @@ export async function onRequest(context) {
       FILES_KV7: env.FILES_KV7
     };
 
-    const masterMetadataString = await kvNamespaces.FILES_KV.get(actualId);
-    if (!masterMetadataString) {
-      return new Response('🔍 File not found', { status: 404 });
-    }
+    const metaStr = await kv.FILES_KV.get(actualId);
+    if (!metaStr) return new Response('File not found', { status: 404 });
 
-    const masterMetadata = JSON.parse(masterMetadataString);
-    const { filename, size, chunks } = masterMetadata;
+    const meta = JSON.parse(metaStr);
+    const { filename, size, chunks, chunkSize: savedChunkSize } = meta;
     const mimeType = getMimeType(extension);
-    const isVideo = isVideoFile(mimeType);
+    const url = new URL(request.url);
+    const isDownload = url.searchParams.get('dl') === '1';
 
-    console.log(`📁 ${filename} (${Math.round(size/1024/1024)}MB, ${chunks.length} chunks, Video: ${isVideo})`);
+    // Support HEAD quickly (players/probes) [HEAD should not send body]
+    if (request.method === 'HEAD') {
+      const h = baseHeaders(mimeType, size, filename, isDownload, isVideo(mimeType));
+      return new Response(null, { status: 200, headers: h }); // HEAD OK [web:51]
+    }
 
-    return await handleBasicStreaming(request, kvNamespaces, masterMetadata, extension, env);
+    // CORS preflight (just in case) [OPTIONS OK]
+    if (request.method === 'OPTIONS') {
+      const h = new Headers();
+      h.set('Access-Control-Allow-Origin', '*');
+      h.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      h.set('Access-Control-Allow-Headers', 'Range, Content-Type, Authorization');
+      h.set('Access-Control-Max-Age', '86400');
+      return new Response(null, { status: 200, headers: h }); // OPTIONS OK [web:52]
+    }
 
-  } catch (error) {
-    console.error('💥 Error:', error);
-    return new Response(`❌ Server error: ${error.message}`, { status: 500 });
-  }
-}
+    const range = request.headers.get('Range');
 
-// 🎯 BASIC STREAMING - SIMPLE AND RELIABLE
-async function handleBasicStreaming(request, kvNamespaces, masterMetadata, extension, env) {
-  const { chunks, filename, size } = masterMetadata;
-  const mimeType = getMimeType(extension);
-  const isVideo = isVideoFile(mimeType);
+    // If player asks for Range, must return 206 with Content-Range [web:56][web:87][web:92]
+    if (range && !isDownload) {
+      return await serveRange(range, kv, meta, mimeType);
+    }
 
-  const url = new URL(request.url);
-  const isDownload = url.searchParams.has('dl') && url.searchParams.get('dl') === '1';
+    // For small files (<=10MB), load-all then return 200 (fast start) [practical]
+    if (size <= 10 * 1024 * 1024) {
+      const buf = await loadAllChunks(kv, chunks, env);
+      const h = baseHeaders(mimeType, buf.byteLength, filename, isDownload, isVideo(mimeType));
+      return new Response(buf, { status: 200, headers: h }); // small full file OK
+    }
 
-  console.log(`🎯 Mode: ${isDownload ? 'DOWNLOAD' : (isVideo ? 'VIDEO STREAM' : 'FILE STREAM')}`);
-
-  // CRITICAL: Handle range requests for video (MUST return 206)
-  const range = request.headers.get('Range');
-  if (range && !isDownload) {
-    console.log('📺 RANGE REQUEST:', range);
-    return await handleBasicRange(request, kvNamespaces, masterMetadata, range, env, mimeType);
-  }
-
-  // BASIC: Simple full file streaming
-  console.log('🌊 BASIC FULL STREAMING...');
-
-  // Method 1: Try to load all chunks first (for small files like 2MB)
-  if (size <= 10 * 1024 * 1024) { // 10MB or less - load completely first
-    console.log('📦 SMALL FILE - Loading all chunks first...');
-    
-    try {
-      const allChunks = [];
-      
-      // Load all chunks sequentially for reliability
-      for (let i = 0; i < chunks.length; i++) {
-        const chunkInfo = chunks[i];
-        console.log(`📦 Loading chunk ${i + 1}/${chunks.length}...`);
-        
+    // For larger files, stream sequentially (simple and stable)
+    const stream = new ReadableStream({
+      async start(controller) {
         try {
-          const chunkData = await loadBasicChunk(kvNamespaces, chunkInfo, env, i);
-          allChunks.push(new Uint8Array(chunkData));
-        } catch (chunkError) {
-          console.error(`❌ Chunk ${i} failed:`, chunkError);
-          return new Response(`❌ Failed to load chunk ${i}: ${chunkError.message}`, { status: 500 });
-        }
-      }
-
-      // Combine all chunks
-      const totalSize = allChunks.reduce((sum, chunk) => sum + chunk.length, 0);
-      const combinedFile = new Uint8Array(totalSize);
-      
-      let offset = 0;
-      for (const chunk of allChunks) {
-        combinedFile.set(chunk, offset);
-        offset += chunk.length;
-      }
-
-      console.log(`✅ Small file completely loaded: ${Math.round(totalSize/1024/1024)}MB`);
-
-      // Return complete file with proper headers
-      const headers = createBasicHeaders(mimeType, totalSize, filename, isDownload, isVideo);
-      return new Response(combinedFile, { status: 200, headers });
-
-    } catch (error) {
-      console.error('💥 Small file loading failed, falling back to streaming:', error);
-      // Fall through to streaming method
-    }
-  }
-
-  // Method 2: Streaming for larger files
-  console.log('🌊 STREAMING mode for large file...');
-  
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for (let i = 0; i < chunks.length; i++) {
-          const chunkInfo = chunks[i];
-          console.log(`📦 Streaming chunk ${i + 1}/${chunks.length}...`);
-          
-          try {
-            const chunkData = await loadBasicChunk(kvNamespaces, chunkInfo, env, i);
+          for (let i = 0; i < chunks.length; i++) {
+            const chunkData = await fetchChunk(kv, chunks[i], env);
             controller.enqueue(new Uint8Array(chunkData));
-            
-            // Small delay between chunks
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-          } catch (chunkError) {
-            console.error(`❌ Chunk ${i} failed:`, chunkError);
-            // For videos, we can't continue with missing chunks
-            if (isVideo) {
-              controller.error(new Error(`Video chunk ${i} failed: ${chunkError.message}`));
-              return;
-            }
-            // For other files, continue with next chunk
-            continue;
+            await delay(50);
           }
+          controller.close();
+        } catch (e) {
+          controller.error(e);
         }
-
-        console.log('✅ Streaming completed');
-        controller.close();
-
-      } catch (error) {
-        console.error('💥 Streaming error:', error);
-        controller.error(error);
-      }
-    }
-  });
-
-  const headers = createBasicHeaders(mimeType, size, filename, isDownload, isVideo);
-  return new Response(readable, { status: 200, headers });
-}
-
-// 🎯 BASIC RANGE HANDLER (Essential for video seeking)
-async function handleBasicRange(request, kvNamespaces, masterMetadata, range, env, mimeType) {
-  const { size, chunks } = masterMetadata;
-  const chunkSize = masterMetadata.chunkSize || Math.ceil(size / chunks.length);
-  const isVideo = isVideoFile(mimeType);
-
-  console.log(`📺 RANGE: File size ${Math.round(size/1024/1024)}MB, Chunk size ${Math.round(chunkSize/1024)}KB`);
-
-  // Parse range request
-  const rangeMatch = range.match(/bytes=(d+)-(d*)/);
-  if (!rangeMatch) {
-    console.error('❌ Invalid range format:', range);
-    return new Response('Range Not Satisfiable', { 
-      status: 416,
-      headers: { 
-        'Content-Range': `bytes */${size}`,
-        'Accept-Ranges': 'bytes'
       }
     });
+
+    const h = baseHeaders(mimeType, size, filename, isDownload, isVideo(mimeType));
+    return new Response(stream, { status: 200, headers: h }); // full stream OK
+  } catch (e) {
+    return new Response('Server error', { status: 500 });
   }
-
-  const start = parseInt(rangeMatch[1], 10);
-  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : size - 1;
-  const requestedSize = end - start + 1;
-
-  console.log(`🎯 Range request: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB)`);
-
-  // Calculate needed chunks
-  const startChunk = Math.floor(start / chunkSize);
-  const endChunk = Math.floor(end / chunkSize);
-  const neededChunks = chunks.slice(startChunk, endChunk + 1);
-
-  console.log(`📦 Need chunks ${startChunk}-${endChunk} (${neededChunks.length} chunks)`);
-
-  // Load needed chunks
-  const chunkData = [];
-  for (let i = 0; i < neededChunks.length; i++) {
-    const chunkInfo = neededChunks[i];
-    const chunkIndex = startChunk + i;
-    
-    console.log(`📦 Loading range chunk ${chunkIndex}...`);
-    
-    try {
-      const data = await loadBasicChunk(kvNamespaces, chunkInfo, env, chunkIndex);
-      chunkData.push(new Uint8Array(data));
-    } catch (error) {
-      console.error(`❌ Range chunk ${chunkIndex} failed:`, error);
-      return new Response('Failed to load requested range', { status: 500 });
-    }
-  }
-
-  // Combine chunks
-  const totalChunkSize = chunkData.reduce((sum, chunk) => sum + chunk.length, 0);
-  const combinedBuffer = new Uint8Array(totalChunkSize);
-  
-  let offset = 0;
-  for (const chunk of chunkData) {
-    combinedBuffer.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  // Extract exact range
-  const rangeStart = start - (startChunk * chunkSize);
-  const actualSize = Math.min(requestedSize, combinedBuffer.length - rangeStart);
-  const rangeBuffer = combinedBuffer.slice(rangeStart, rangeStart + actualSize);
-
-  console.log(`✅ Range served: ${Math.round(actualSize/1024/1024)}MB`);
-
-  // CRITICAL: Return 206 status with proper headers
-  const headers = new Headers();
-  headers.set('Content-Type', mimeType);
-  headers.set('Content-Length', actualSize.toString());
-  headers.set('Content-Range', `bytes ${start}-${start + actualSize - 1}/${size}`);
-  headers.set('Accept-Ranges', 'bytes');
-  headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Cache-Control', 'public, max-age=86400');
-  headers.set('Content-Disposition', 'inline');
-
-  return new Response(rangeBuffer, { status: 206, headers }); // CRITICAL: 206 status
 }
 
-// 🎯 BASIC CHUNK LOADER (Simple and reliable)
-async function loadBasicChunk(kvNamespaces, chunkInfo, env, index) {
-  const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
-  const keyName = chunkInfo.keyName;
-  
-  console.log(`📦 Loading chunk ${index}: ${keyName}`);
+function baseHeaders(mimeType, size, filename, isDownload, isVideoFile) {
+  const h = new Headers();
+  h.set('Content-Type', mimeType);
+  h.set('Content-Length', String(size));
+  h.set('Accept-Ranges', 'bytes'); // critical for seeking [web:56]
+  h.set('Access-Control-Allow-Origin', '*');
+  h.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges, Content-Range, Content-Type'); // helpful [web:56]
+  h.set('Cache-Control', isVideoFile ? 'public, max-age=31536000' : 'public, max-age=86400');
 
-  // Get chunk metadata
-  const chunkMetadataString = await kvNamespace.get(keyName);
-  if (!chunkMetadataString) {
-    throw new Error(`Chunk ${keyName} not found in KV`);
+  if (isDownload || !isStreamable(mimeType)) {
+    h.set('Content-Disposition', `attachment; filename="${filename}"`);
+  } else {
+    h.set('Content-Disposition', 'inline');
+    if (isVideoFile) {
+      h.set('X-Content-Type-Options', 'nosniff'); // avoid sniff issues
+      h.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+  }
+  return h;
+}
+
+async function serveRange(range, kv, meta, mimeType) {
+  const { size, chunks } = meta;
+  const chunkSize = meta.chunkSize || Math.ceil(size / chunks.length);
+
+  const m = range.match(/bytes=(\d+)-(\d*)/);
+  if (!m) {
+    const h = new Headers();
+    h.set('Content-Range', `bytes */${size}`);
+    h.set('Accept-Ranges', 'bytes');
+    return new Response('Range Not Satisfiable', { status: 416, headers: h }); // spec compliant [web:56]
   }
 
-  const chunkMetadata = JSON.parse(chunkMetadataString);
-  let directUrl = chunkMetadata.directUrl;
+  let start = parseInt(m[1], 10);
+  let end = m[2] ? parseInt(m[2], 10) : size - 1;
 
-  // Try to fetch chunk
-  let response = await fetch(directUrl);
+  if (Number.isNaN(start) || start < 0 || start >= size) {
+    const h = new Headers();
+    h.set('Content-Range', `bytes */${size}`);
+    h.set('Accept-Ranges', 'bytes');
+    return new Response('Range Not Satisfiable', { status: 416, headers: h }); // spec [web:56]
+  }
+  if (Number.isNaN(end) || end >= size) end = size - 1;
+  if (start > end) {
+    const h = new Headers();
+    h.set('Content-Range', `bytes */${size}`);
+    h.set('Accept-Ranges', 'bytes');
+    return new Response('Range Not Satisfiable', { status: 416, headers: h }); // spec [web:56]
+  }
 
-  // If URL expired, refresh it
-  if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log(`🔄 URL expired for chunk ${index}, refreshing...`);
+  const needStart = Math.floor(start / chunkSize);
+  const needEnd = Math.floor(end / chunkSize);
+  const needed = chunks.slice(needStart, needEnd + 1);
 
-    const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(Boolean);
-    
-    if (botTokens.length > 0) {
-      const botToken = botTokens[0]; // Use first available token
+  // Load all needed chunks sequentially (simple & reliable)
+  const parts = [];
+  for (let i = 0; i < needed.length; i++) {
+    const buf = await fetchChunk(kv, needed[i], null);
+    parts.push(new Uint8Array(buf));
+  }
+  const combinedLen = parts.reduce((s, b) => s + b.byteLength, 0);
+  const combined = new Uint8Array(combinedLen);
+  let off = 0;
+  for (const p of parts) { combined.set(p, off); off += p.byteLength; }
 
-      try {
-        const getFileResponse = await fetch(
-          `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`
-        );
+  // Slice exact byte range from combined buffer
+  const offsetWithinFirst = start - (needStart * chunkSize);
+  const exactLen = (end - start + 1);
+  const slice = combined.slice(offsetWithinFirst, offsetWithinFirst + exactLen);
 
-        if (getFileResponse.ok) {
-          const getFileData = await getFileResponse.json();
-          if (getFileData.ok && getFileData.result?.file_path) {
-            const freshUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-            response = await fetch(freshUrl);
-            
-            if (response.ok) {
-              console.log(`✅ URL refreshed for chunk ${index}`);
-            }
+  const h = new Headers();
+  h.set('Content-Type', mimeType);
+  h.set('Content-Length', String(slice.byteLength));
+  h.set('Content-Range', `bytes ${start}-${end}/${size}`); // critical [web:92]
+  h.set('Accept-Ranges', 'bytes');
+  h.set('Access-Control-Allow-Origin', '*');
+  h.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges, Content-Range, Content-Type');
+
+  return new Response(slice, { status: 206, headers: h }); // must be 206 [web:87]
+}
+
+async function loadAllChunks(kv, chunks, env) {
+  const bufs = [];
+  for (let i = 0; i < chunks.length; i++) {
+    const buf = await fetchChunk(kv, chunks[i], env);
+    bufs.push(new Uint8Array(buf));
+  }
+  const total = bufs.reduce((s, b) => s + b.byteLength, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const b of bufs) { out.set(b, off); off += b.byteLength; }
+  return out;
+}
+
+async function fetchChunk(kvNamespaces, chunkInfo, env) {
+  const ns = kvNamespaces[chunkInfo.kvNamespace];
+  const key = chunkInfo.keyName;
+
+  const metaStr = await ns.get(key);
+  if (!metaStr) throw new Error(`Chunk missing: ${key}`);
+  const cm = JSON.parse(metaStr);
+
+  let res = await fetch(cm.directUrl);
+  if (!res.ok && (res.status === 403 || res.status === 404 || res.status === 410)) {
+    // Single refresh attempt against Telegram getFile
+    const tokens = [env?.BOT_TOKEN, env?.BOT_TOKEN2, env?.BOT_TOKEN3, env?.BOT_TOKEN4].filter(Boolean);
+    if (tokens.length) {
+      const t = tokens[0];
+      const gf = await fetch(`https://api.telegram.org/bot${t}/getFile?file_id=${encodeURIComponent(cm.telegramFileId)}`);
+      if (gf.ok) {
+        const data = await gf.json();
+        if (data.ok && data.result?.file_path) {
+          const fresh = `https://api.telegram.org/file/bot${t}/${data.result.file_path}`;
+          res = await fetch(fresh);
+          if (res.ok) {
+            // async update KV
+            ns.put(key, JSON.stringify({ ...cm, directUrl: fresh, lastRefreshed: Date.now() })).catch(() => {});
           }
         }
-      } catch (refreshError) {
-        console.error(`❌ Failed to refresh chunk ${index}:`, refreshError.message);
       }
     }
   }
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} for chunk ${index}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  console.log(`✅ Chunk ${index} loaded: ${Math.round(arrayBuffer.byteLength/1024)}KB`);
-
-  return arrayBuffer;
+  if (!res.ok) throw new Error(`Chunk fetch failed ${res.status}`);
+  return await res.arrayBuffer();
 }
 
-// 🎯 CREATE BASIC HEADERS (Essential for video playback)
-function createBasicHeaders(mimeType, size, filename, isDownload, isVideo) {
-  const headers = new Headers();
-  
-  // CRITICAL headers for video playback
-  headers.set('Content-Type', mimeType);
-  headers.set('Content-Length', size.toString());
-  
-  // ESSENTIAL for video seeking
-  headers.set('Accept-Ranges', 'bytes');
-  
-  // CORS headers
-  headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  headers.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges, Content-Range');
-  
-  // Caching
-  headers.set('Cache-Control', isVideo ? 'public, max-age=31536000' : 'public, max-age=86400');
-
-  if (isDownload) {
-    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-  } else {
-    headers.set('Content-Disposition', 'inline');
-    
-    if (isVideo) {
-      // CRITICAL for video streaming
-      headers.set('X-Content-Type-Options', 'nosniff');
-      headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
-    }
-  }
-
-  return headers;
-}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
