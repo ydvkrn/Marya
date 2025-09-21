@@ -20,151 +20,13 @@ export async function onRequest(context) {
 
     console.log('📥 Importing from URL:', url);
 
-    // Enhanced URL fetching with proper headers
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': '*/*',
-        'Accept-Encoding': 'gzip, deflate',
-        'Connection': 'keep-alive'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to download: HTTP ${response.status}`);
+    // Handle Telegram URLs specially
+    if (url.includes('t.me/') || url.includes('telegram.org/')) {
+      return await handleTelegramURL(url, env, request, corsHeaders);
     }
 
-    // Enhanced filename extraction
-    let filename = extractFilename(url, response);
-    
-    // Enhanced content type detection
-    let contentType = detectContentType(response, filename, url);
-
-    // Ensure filename has proper extension
-    filename = ensureProperExtension(filename, contentType);
-
-    console.log(`📦 File imported: ${filename} (Type: ${contentType})`);
-
-    // Convert to File object
-    const fileBuffer = await response.arrayBuffer();
-    const file = new File([fileBuffer], filename, { type: contentType });
-
-    const fileSizeMB = Math.round(file.size / 1024 / 1024);
-    console.log(`📊 File size: ${fileSizeMB}MB`);
-
-    // Check size limits (2GB max)
-    if (file.size > 2 * 1024 * 1024 * 1024) {
-      throw new Error(`File too large: ${fileSizeMB}MB (max 2GB)`);
-    }
-
-    // Generate MSM ID
-    const msmId = generateMSMId();
-    const extension = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '';
-
-    // Environment setup
-    const botTokens = [
-      env.BOT_TOKEN,
-      env.BOT_TOKEN2,
-      env.BOT_TOKEN3, 
-      env.BOT_TOKEN4
-    ].filter(token => token);
-
-    const CHANNEL_ID = env.CHANNEL_ID;
-
-    const kvNamespaces = [
-      { kv: env.FILES_KV, name: 'FILES_KV' },
-      { kv: env.FILES_KV2, name: 'FILES_KV2' },
-      { kv: env.FILES_KV3, name: 'FILES_KV3' },
-      { kv: env.FILES_KV4, name: 'FILES_KV4' },
-      { kv: env.FILES_KV5, name: 'FILES_KV5' },
-      { kv: env.FILES_KV6, name: 'FILES_KV6' },
-      { kv: env.FILES_KV7, name: 'FILES_KV7' }
-    ].filter(item => item.kv);
-
-    // Smart chunking based on file size
-    let chunkSize;
-    if (file.size <= 50 * 1024 * 1024) {
-      chunkSize = 10 * 1024 * 1024; // 10MB for smaller files
-    } else if (file.size <= 200 * 1024 * 1024) {
-      chunkSize = 20 * 1024 * 1024; // 20MB for medium files  
-    } else {
-      chunkSize = 50 * 1024 * 1024; // 50MB for large files
-    }
-
-    const totalChunks = Math.ceil(file.size / chunkSize);
-    const chunkResults = [];
-
-    console.log(`🚀 Starting chunked import: ${totalChunks} chunks × ${Math.round(chunkSize/1024/1024)}MB`);
-
-    // Upload chunks with proper error handling
-    for (let i = 0; i < totalChunks; i++) {
-      const start = i * chunkSize;
-      const end = Math.min(start + chunkSize, file.size);
-      const chunk = file.slice(start, end);
-
-      const kvIndex = Math.floor(i / 40);
-      const targetKV = kvNamespaces[kvIndex];
-      const botToken = botTokens[i % botTokens.length];
-
-      console.log(`⬆️ Importing chunk ${i + 1}/${totalChunks} (${Math.round(chunk.size/1024/1024)}MB)...`);
-
-      try {
-        const chunkResult = await uploadImportedChunk(
-          chunk, msmId, i, kvIndex, i % 40,
-          botToken, CHANNEL_ID, targetKV, filename
-        );
-
-        chunkResults.push(chunkResult);
-      } catch (chunkError) {
-        console.error(`Chunk ${i + 1} failed:`, chunkError);
-        throw new Error(`Upload failed at chunk ${i + 1}: ${chunkError.message}`);
-      }
-    }
-
-    // Store final metadata with enhanced info
-    const finalMetadata = {
-      filename: filename,
-      size: file.size,
-      contentType: contentType,
-      extension: extension,
-      uploadedAt: Date.now(),
-      type: 'url_import',
-      originalUrl: url,
-      totalChunks: totalChunks,
-      chunkSize: chunkSize,
-      strategy: 'url_imported_chunked',
-      neverExpires: true,
-      chunks: chunkResults.map((result, index) => ({
-        index: index,
-        kvNamespace: result.kvNamespace,
-        keyName: result.keyName,
-        telegramFileId: result.telegramFileId,
-        size: result.size
-      }))
-    };
-
-    await kvNamespaces[0].kv.put(msmId, JSON.stringify(finalMetadata));
-
-    const baseUrl = new URL(request.url).origin;
-
-    console.log(`✅ URL import completed: ${filename} (${fileSizeMB}MB)`);
-
-    return new Response(JSON.stringify({
-      success: true,
-      filename: filename,
-      size: file.size,
-      contentType: contentType,
-      url: `${baseUrl}/btfstorage/file/${msmId}${extension}`,
-      download: `${baseUrl}/btfstorage/file/${msmId}${extension}?dl=1`,
-      id: msmId,
-      strategy: 'url_imported',
-      originalUrl: url,
-      chunks: totalChunks,
-      chunkSize: `${Math.round(chunkSize/1024/1024)}MB`,
-      lifetime: 'Permanent (Never Expires)'
-    }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+    // Regular URL handling
+    return await handleRegularURL(url, env, request, corsHeaders);
 
   } catch (error) {
     console.error('URL import error:', error);
@@ -178,9 +40,306 @@ export async function onRequest(context) {
   }
 }
 
-// Enhanced filename extraction
+// Handle Telegram URLs (t.me links)
+async function handleTelegramURL(url, env, request, corsHeaders) {
+  console.log('📱 Processing Telegram URL...');
+  
+  // Extract file info from Telegram URL
+  const telegramMatch = url.match(/t\.me\/c\/(-?\d+)\/(\d+)/);
+  if (!telegramMatch) {
+    throw new Error('Invalid Telegram URL format. Use direct file URLs instead of t.me links.');
+  }
+
+  const [, chatId, messageId] = telegramMatch;
+  console.log(`📱 Telegram: Chat ${chatId}, Message ${messageId}`);
+
+  // Note: t.me URLs can't be directly downloaded
+  // We need the user to provide the direct file URL instead
+  return new Response(JSON.stringify({
+    success: false,
+    error: 'Telegram t.me URLs cannot be directly imported. Please:\n1. Right-click on the file in Telegram\n2. Copy the direct download link (not t.me link)\n3. Use that URL instead.\n\nOr upload the file directly to get a permanent URL.',
+    suggestion: 'Upload the file directly for better performance and permanent storage.'
+  }), {
+    status: 400,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+  });
+}
+
+// Handle regular URLs with enhanced error handling
+async function handleRegularURL(url, env, request, corsHeaders) {
+  // Enhanced URL fetching with multiple user agents
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
+  ];
+
+  let response;
+  let lastError;
+
+  for (const userAgent of userAgents) {
+    try {
+      console.log(`🔄 Trying with user agent: ${userAgent.slice(0, 50)}...`);
+      
+      response = await fetch(url, {
+        headers: {
+          'User-Agent': userAgent,
+          'Accept': '*/*',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        signal: AbortSignal.timeout(30000)
+      });
+
+      if (response.ok) {
+        console.log('✅ Successfully fetched with user agent');
+        break;
+      }
+      
+      lastError = `HTTP ${response.status}`;
+      console.log(`❌ Failed with status: ${response.status}`);
+      
+    } catch (fetchError) {
+      lastError = fetchError.message;
+      console.log(`❌ Fetch error: ${fetchError.message}`);
+      continue;
+    }
+  }
+
+  if (!response || !response.ok) {
+    throw new Error(`Failed to download from URL: ${lastError}`);
+  }
+
+  // Enhanced filename and content type detection
+  let filename = extractFilename(url, response);
+  let contentType = detectContentType(response, filename, url);
+  filename = ensureProperExtension(filename, contentType);
+
+  console.log(`📦 File imported: ${filename} (Type: ${contentType})`);
+
+  const fileBuffer = await response.arrayBuffer();
+  const file = new File([fileBuffer], filename, { type: contentType });
+
+  const fileSizeMB = Math.round(file.size / 1024 / 1024);
+  console.log(`📊 File size: ${fileSizeMB}MB`);
+
+  if (file.size > 2 * 1024 * 1024 * 1024) {
+    throw new Error(`File too large: ${fileSizeMB}MB (max 2GB)`);
+  }
+
+  // Generate MSM ID and process upload
+  const msmId = generateMSMId();
+  const extension = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '';
+
+  const botTokens = [
+    env.BOT_TOKEN,
+    env.BOT_TOKEN2,
+    env.BOT_TOKEN3, 
+    env.BOT_TOKEN4
+  ].filter(token => token);
+
+  const CHANNEL_ID = env.CHANNEL_ID;
+
+  const kvNamespaces = [
+    { kv: env.FILES_KV, name: 'FILES_KV' },
+    { kv: env.FILES_KV2, name: 'FILES_KV2' },
+    { kv: env.FILES_KV3, name: 'FILES_KV3' },
+    { kv: env.FILES_KV4, name: 'FILES_KV4' },
+    { kv: env.FILES_KV5, name: 'FILES_KV5' },
+    { kv: env.FILES_KV6, name: 'FILES_KV6' },
+    { kv: env.FILES_KV7, name: 'FILES_KV7' }
+  ].filter(item => item.kv);
+
+  // Smart chunking
+  let chunkSize;
+  if (file.size <= 50 * 1024 * 1024) {
+    chunkSize = 10 * 1024 * 1024; // 10MB
+  } else if (file.size <= 200 * 1024 * 1024) {
+    chunkSize = 20 * 1024 * 1024; // 20MB
+  } else {
+    chunkSize = 30 * 1024 * 1024; // 30MB for large files
+  }
+
+  const totalChunks = Math.ceil(file.size / chunkSize);
+  const chunkResults = [];
+
+  console.log(`🚀 Starting chunked import: ${totalChunks} chunks × ${Math.round(chunkSize/1024/1024)}MB`);
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, file.size);
+    const chunk = file.slice(start, end);
+
+    const kvIndex = Math.floor(i / 40);
+    const targetKV = kvNamespaces[kvIndex];
+    const botToken = botTokens[i % botTokens.length];
+
+    console.log(`⬆️ Importing chunk ${i + 1}/${totalChunks} (${Math.round(chunk.size/1024/1024)}MB)...`);
+
+    try {
+      const chunkResult = await uploadImportedChunkWithRetry(
+        chunk, msmId, i, kvIndex, i % 40,
+        botToken, CHANNEL_ID, targetKV, filename
+      );
+
+      chunkResults.push(chunkResult);
+      
+      // Small delay to avoid rate limits
+      if (i < totalChunks - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
+    } catch (chunkError) {
+      console.error(`Chunk ${i + 1} failed:`, chunkError);
+      throw new Error(`Upload failed at chunk ${i + 1}: ${chunkError.message}`);
+    }
+  }
+
+  // Store final metadata
+  const finalMetadata = {
+    filename: filename,
+    size: file.size,
+    contentType: contentType,
+    extension: extension,
+    uploadedAt: Date.now(),
+    type: 'url_import',
+    originalUrl: url,
+    totalChunks: totalChunks,
+    chunkSize: chunkSize,
+    strategy: 'url_imported_streaming',
+    neverExpires: true,
+    streamable: true,
+    chunks: chunkResults.map((result, index) => ({
+      index: index,
+      kvNamespace: result.kvNamespace,
+      keyName: result.keyName,
+      telegramFileId: result.telegramFileId,
+      size: result.size
+    }))
+  };
+
+  await kvNamespaces[0].kv.put(msmId, JSON.stringify(finalMetadata));
+
+  const baseUrl = new URL(request.url).origin;
+
+  console.log(`✅ URL import completed: ${filename} (${fileSizeMB}MB)`);
+
+  return new Response(JSON.stringify({
+    success: true,
+    filename: filename,
+    size: file.size,
+    contentType: contentType,
+    url: `${baseUrl}/btfstorage/file/${msmId}${extension}`,
+    download: `${baseUrl}/btfstorage/file/${msmId}${extension}?dl=1`,
+    stream: `${baseUrl}/btfstorage/file/${msmId}${extension}?stream=1`,
+    id: msmId,
+    strategy: 'url_imported',
+    originalUrl: url,
+    chunks: totalChunks,
+    chunkSize: `${Math.round(chunkSize/1024/1024)}MB`,
+    streamable: true,
+    lifetime: 'Permanent (Never Expires)'
+  }), {
+    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+  });
+}
+
+// Upload chunk with retry for URL imports
+async function uploadImportedChunkWithRetry(chunk, fileId, chunkIndex, kvIndex, keyIndex, botToken, channelId, kvNamespace, originalFilename) {
+  const maxRetries = 2;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = 2000 + (Math.random() * 3000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      
+      const chunkFile = new File([chunk], `${originalFilename}.imported.chunk${chunkIndex}`, { 
+        type: 'application/octet-stream' 
+      });
+
+      const telegramForm = new FormData();
+      telegramForm.append('chat_id', channelId);
+      telegramForm.append('document', chunkFile);
+
+      const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+        method: 'POST',
+        body: telegramForm,
+        signal: AbortSignal.timeout(90000)
+      });
+
+      if (!telegramResponse.ok) {
+        if (telegramResponse.status === 429) {
+          const retryAfter = telegramResponse.headers.get('Retry-After');
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : 30000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        const errorText = await telegramResponse.text();
+        throw new Error(`Telegram upload failed: ${telegramResponse.status} - ${errorText}`);
+      }
+
+      const telegramData = await telegramResponse.json();
+      
+      if (!telegramData.ok || !telegramData.result?.document?.file_id) {
+        throw new Error(`Telegram API error: ${telegramData.description || 'Unknown error'}`);
+      }
+
+      const telegramFileId = telegramData.result.document.file_id;
+
+      const getFileResponse = await fetch(
+        `https://api.telegram.org/bot${botToken}/getFile?file_id=${telegramFileId}`,
+        { signal: AbortSignal.timeout(30000) }
+      );
+      
+      if (!getFileResponse.ok) {
+        throw new Error(`GetFile failed: ${getFileResponse.status}`);
+      }
+
+      const getFileData = await getFileResponse.json();
+      
+      if (!getFileData.ok || !getFileData.result?.file_path) {
+        throw new Error('No file_path in GetFile response');
+      }
+
+      const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+
+      const keyName = `${fileId}_imported_chunk_${chunkIndex}_kv${kvIndex}_key${keyIndex}`;
+      const chunkMetadata = {
+        telegramFileId: telegramFileId,
+        directUrl: directUrl,
+        size: chunk.size,
+        chunkIndex: chunkIndex,
+        uploadedAt: Date.now(),
+        neverExpires: true,
+        importedFromUrl: true,
+        streamable: true
+      };
+
+      await kvNamespace.kv.put(keyName, JSON.stringify(chunkMetadata));
+
+      return {
+        telegramFileId: telegramFileId,
+        size: chunk.size,
+        directUrl: directUrl,
+        kvNamespace: kvNamespace.name,
+        keyName: keyName
+      };
+
+    } catch (error) {
+      if (attempt === maxRetries - 1) {
+        throw new Error(`Imported chunk ${chunkIndex} failed: ${error.message}`);
+      }
+    }
+  }
+}
+
+// Helper functions (same as before)
 function extractFilename(url, response) {
-  // Try Content-Disposition first
   const contentDisposition = response.headers.get('Content-Disposition');
   if (contentDisposition) {
     const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -192,17 +351,14 @@ function extractFilename(url, response) {
     }
   }
 
-  // Extract from URL
   let filename = url.split('/').pop().split('?')[0];
   
-  // Decode URL encoding
   try {
     filename = decodeURIComponent(filename);
   } catch (e) {
     // Keep original if decode fails
   }
 
-  // Fallback if no filename
   if (!filename || filename.length < 1) {
     filename = 'imported_file';
   }
@@ -210,19 +366,15 @@ function extractFilename(url, response) {
   return filename;
 }
 
-// Enhanced content type detection
 function detectContentType(response, filename, url) {
-  // Try response headers first
   let contentType = response.headers.get('Content-Type');
   if (contentType) {
-    // Clean up content type (remove charset etc)
     contentType = contentType.split(';')[0].trim();
     if (contentType !== 'application/octet-stream') {
       return contentType;
     }
   }
 
-  // Detect from filename extension
   const ext = filename.split('.').pop()?.toLowerCase();
   if (ext) {
     const mimeMap = {
@@ -255,25 +407,14 @@ function detectContentType(response, filename, url) {
     }
   }
 
-  // Detect from URL patterns
-  if (url.includes('telegram.org')) {
-    if (filename.includes('.')) {
-      const urlExt = filename.split('.').pop().toLowerCase();
-      if (urlExt === 'mkv') return 'video/x-matroska';
-      if (urlExt === 'mp4') return 'video/mp4';
-    }
-  }
-
   return 'application/octet-stream';
 }
 
-// Ensure proper file extension
 function ensureProperExtension(filename, contentType) {
   if (filename.includes('.')) {
-    return filename; // Already has extension
+    return filename;
   }
 
-  // Add extension based on content type
   const extensionMap = {
     'video/x-matroska': '.mkv',
     'video/mp4': '.mp4',
@@ -293,83 +434,6 @@ function ensureProperExtension(filename, contentType) {
   return filename + extension;
 }
 
-// Upload imported chunk
-async function uploadImportedChunk(chunk, fileId, chunkIndex, kvIndex, keyIndex, botToken, channelId, kvNamespace, originalFilename) {
-  try {
-    const chunkFile = new File([chunk], `${originalFilename}.imported.chunk${chunkIndex}`, { 
-      type: 'application/octet-stream' 
-    });
-
-    // Upload to Telegram
-    const telegramForm = new FormData();
-    telegramForm.append('chat_id', channelId);
-    telegramForm.append('document', chunkFile);
-
-    const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
-      method: 'POST',
-      body: telegramForm,
-      signal: AbortSignal.timeout(60000) // 60 second timeout
-    });
-
-    if (!telegramResponse.ok) {
-      const errorText = await telegramResponse.text();
-      throw new Error(`Telegram upload failed: ${telegramResponse.status} - ${errorText}`);
-    }
-
-    const telegramData = await telegramResponse.json();
-    
-    if (!telegramData.ok || !telegramData.result?.document?.file_id) {
-      throw new Error(`Telegram API error: ${telegramData.description || 'Unknown error'}`);
-    }
-
-    const telegramFileId = telegramData.result.document.file_id;
-
-    // Get file URL
-    const getFileResponse = await fetch(
-      `https://api.telegram.org/bot${botToken}/getFile?file_id=${telegramFileId}`,
-      { signal: AbortSignal.timeout(30000) }
-    );
-    
-    if (!getFileResponse.ok) {
-      throw new Error(`GetFile failed: ${getFileResponse.status}`);
-    }
-
-    const getFileData = await getFileResponse.json();
-    
-    if (!getFileData.ok || !getFileData.result?.file_path) {
-      throw new Error('No file_path in GetFile response');
-    }
-
-    const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-
-    // Store in KV
-    const keyName = `${fileId}_imported_chunk_${chunkIndex}_kv${kvIndex}_key${keyIndex}`;
-    const chunkMetadata = {
-      telegramFileId: telegramFileId,
-      directUrl: directUrl,
-      size: chunk.size,
-      chunkIndex: chunkIndex,
-      uploadedAt: Date.now(),
-      neverExpires: true,
-      importedFromUrl: true
-    };
-
-    await kvNamespace.kv.put(keyName, JSON.stringify(chunkMetadata));
-
-    return {
-      telegramFileId: telegramFileId,
-      size: chunk.size,
-      directUrl: directUrl,
-      kvNamespace: kvNamespace.name,
-      keyName: keyName
-    };
-
-  } catch (error) {
-    throw new Error(`Imported chunk ${chunkIndex} failed: ${error.message}`);
-  }
-}
-
-// Generate MSM ID
 function generateMSMId() {
   const timestamp = Date.now();
   const r1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
