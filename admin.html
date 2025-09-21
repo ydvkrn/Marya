@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Marya Vault - Mobile Admin</title>
+<title>Marya Vault - Debug Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
+/* Your existing CSS styles remain the same */
 :root {
     --primary-red: #dc2626;
     --primary-red-dark: #b91c1c;
@@ -157,7 +158,7 @@ body {
     display: none;
 }
 
-/* Mobile Admin Dashboard */
+/* Admin Dashboard */
 .admin-dashboard {
     display: none;
 }
@@ -298,7 +299,7 @@ body {
     gap: 0.5rem;
 }
 
-/* Mobile Files Section */
+/* Files Section */
 .files-section {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
@@ -332,6 +333,7 @@ body {
     border-bottom: 1px solid var(--gray-200);
     padding: 1rem;
     transition: all 0.3s;
+    position: relative;
 }
 
 .file-card:hover {
@@ -351,6 +353,7 @@ body {
 
 .file-checkbox {
     transform: scale(1.2);
+    cursor: pointer;
 }
 
 .file-icon {
@@ -424,7 +427,7 @@ body {
     color: var(--warning);
 }
 
-/* Mobile Quick Links */
+/* Quick Links */
 .quick-links {
     display: flex;
     gap: 0.5rem;
@@ -468,36 +471,7 @@ body {
     color: white;
 }
 
-/* Mobile Expiry Control */
-.expiry-section {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.expiry-control {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.expiry-select {
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--gray-300);
-    border-radius: 6px;
-    font-size: 0.7rem;
-    min-width: 80px;
-}
-
-.expiry-info {
-    font-size: 0.6rem;
-    color: var(--gray-600);
-}
-
-/* Mobile Actions */
+/* File Actions */
 .file-actions {
     display: flex;
     gap: 0.5rem;
@@ -694,7 +668,43 @@ body {
     padding: 0 1rem;
 }
 
-/* Responsive Adjustments */
+/* Debug Panel */
+.debug-panel {
+    background: rgba(0, 0, 0, 0.9);
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.debug-panel.show {
+    display: block;
+}
+
+/* Debug Toggle */
+.debug-toggle {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive */
 @media (max-width: 320px) {
     .stats-grid {
         grid-template-columns: 1fr;
@@ -744,17 +754,22 @@ body {
 </style>
 </head>
 <body>
+    <!-- Debug Toggle -->
+    <button class="debug-toggle" onclick="toggleDebug()" title="Toggle Debug">
+        <i class="fas fa-bug"></i>
+    </button>
+
     <!-- Login Screen -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
             <div class="login-icon">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1 class="login-title">Secure Admin</h1>
-            <p class="login-subtitle">Enter your admin key for secure access</p>
+            <h1 class="login-title">Debug Admin</h1>
+            <p class="login-subtitle">Enter admin key: MSMxMarya7</p>
             
             <form onsubmit="return validateLogin(event)">
-                <input type="password" id="adminKey" class="key-input" placeholder="Admin Key" required>
+                <input type="password" id="adminKey" class="key-input" placeholder="MSMxMarya7" required>
                 <button type="submit" class="login-btn" id="loginBtn">
                     <i class="fas fa-key"></i>
                     Access Panel
@@ -763,25 +778,23 @@ body {
                     Invalid admin key. Please try again.
                 </div>
             </form>
-            
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
-                <p style="font-size: 0.7rem; color: var(--gray-500);">
-                    <i class="fas fa-info-circle"></i>
-                    Secure mobile-optimized admin panel
-                </p>
-            </div>
         </div>
     </div>
 
     <!-- Admin Dashboard -->
     <div id="adminDashboard" class="admin-dashboard">
         <div class="container">
+            <!-- Debug Panel -->
+            <div id="debugPanel" class="debug-panel">
+                <div id="debugContent">Debug logs will appear here...</div>
+            </div>
+
             <!-- Header -->
             <header class="header">
                 <div class="header-content">
                     <div class="header-left">
-                        <h1><i class="fas fa-database"></i> Marya Admin</h1>
-                        <p>Mobile File Management</p>
+                        <h1><i class="fas fa-database"></i> Debug Admin</h1>
+                        <p>Full Debug Mobile Admin</p>
                     </div>
                     <button class="logout-btn" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i>
@@ -805,8 +818,8 @@ body {
                     <div class="stat-label">Permanent</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="kvNamespaces">0</div>
-                    <div class="stat-label">Namespaces</div>
+                    <div class="stat-value" id="selectedCount">0</div>
+                    <div class="stat-label">Selected</div>
                 </div>
             </div>
 
@@ -836,6 +849,7 @@ body {
                     <div class="select-all-container">
                         <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                         <label for="selectAll" style="font-size: 0.8rem; color: var(--gray-600);">Select All</label>
+                        <span id="selectionInfo" style="margin-left: auto; font-size: 0.7rem; color: var(--gray-600);"></span>
                     </div>
                     
                     <div id="filesList">
@@ -864,23 +878,23 @@ body {
                 <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 1rem; font-size: 0.9rem;">Are you sure you want to permanently delete the selected file(s)?</p>
+                <p style="margin-bottom: 1rem; font-size: 0.9rem;">Ready to delete <span id="deleteCount">0</span> file(s)?</p>
                 <div style="background: var(--error-light); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                     <p style="color: var(--error); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.5rem;">⚠️ Complete Removal:</p>
                     <ul style="color: var(--error); font-size: 0.8rem; padding-left: 1rem; margin: 0;">
                         <li>All file chunks from KV storage</li>
-                        <li>Telegram file references</li>
-                        <li>File metadata</li>
+                        <li>File metadata and references</li>
+                        <li>Cannot be undone</li>
                     </ul>
                 </div>
-                <p style="color: var(--error); font-weight: 600; font-size: 0.8rem;">This action cannot be undone!</p>
+                <div id="deleteFilesList" style="max-height: 100px; overflow-y: auto; font-size: 0.8rem; color: var(--gray-600);"></div>
             </div>
             <div class="modal-actions">
                 <button class="modal-btn" style="background: var(--gray-200); color: var(--gray-700);" onclick="closeDeleteModal()">
                     Cancel
                 </button>
                 <button class="modal-btn" style="background: var(--error); color: white;" onclick="confirmDelete()">
-                    <i class="fas fa-trash"></i> Delete
+                    <i class="fas fa-trash"></i> Delete Now
                 </button>
             </div>
         </div>
@@ -890,81 +904,54 @@ body {
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('📱 Secure Mobile Admin Panel - Loading...');
+        console.log('🐛 DEBUG ADMIN PANEL - Starting...');
         
-        let ADMIN_KEY = null;
+        // Global variables
+        let ADMIN_KEY = 'MSMxMarya7'; // Direct key assignment
         let allFiles = [];
         let selectedFiles = new Set();
         let deleteQueue = [];
         let isLoggedIn = false;
+        let debugMode = false;
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🔧 DOM loaded, starting key load...');
-            loadAdminKey();
-        });
-
-        // FIXED: Load admin key from server environment with fallback
-        async function loadAdminKey() {
-            try {
-                console.log('🔑 Loading admin key from server...');
-                
-                const response = await fetch('/admin/get-key', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                console.log('🔑 Get-key response status:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('🔑 Get-key response data:', data);
-                    
-                    if (data.success && data.key) {
-                        ADMIN_KEY = data.key;
-                        console.log('✅ Admin key loaded from server:', {
-                            key: ADMIN_KEY,
-                            length: ADMIN_KEY.length,
-                            source: data.debug?.keySource || 'server'
-                        });
-                        checkAuthStatus();
-                        return;
-                    }
+        // Debug function
+        function debugLog(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage, data || '');
+            
+            if (debugMode) {
+                const debugContent = document.getElementById('debugContent');
+                if (debugContent) {
+                    debugContent.innerHTML += logMessage + (data ? ' | ' + JSON.stringify(data).substring(0, 100) : '') + '\\n';
+                    debugContent.scrollTop = debugContent.scrollHeight;
                 }
-                
-                throw new Error(`Server response not OK: ${response.status}`);
-                
-            } catch (error) {
-                console.error('❌ Failed to load admin key from server:', error);
-                console.log('🔄 Using environment variable directly...');
-                
-                // Try to use your known key directly
-                ADMIN_KEY = 'MSMxMarya7'; // Your actual key
-                console.log('✅ Using direct admin key:', ADMIN_KEY);
-                checkAuthStatus();
             }
         }
 
-        // Check authentication status
-        function checkAuthStatus() {
-            console.log('🔐 Checking auth status...');
-            
-            if (!ADMIN_KEY) {
-                console.log('❌ No admin key available');
-                showLoginScreen();
-                return;
+        function toggleDebug() {
+            debugMode = !debugMode;
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugMode) {
+                debugPanel.classList.add('show');
+                debugLog('🐛 Debug mode enabled');
+            } else {
+                debugPanel.classList.remove('show');
             }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('🔧 DOM loaded');
+            checkAuthStatus();
+        });
+
+        // Auth functions
+        function checkAuthStatus() {
+            debugLog('🔐 Checking auth status');
             
             const savedAuth = localStorage.getItem('maryaAdminAuth');
             const savedTime = localStorage.getItem('maryaAdminTime');
-            
-            console.log('🔐 Auth check:', {
-                savedAuth: !!savedAuth,
-                savedTime: !!savedTime,
-                adminKeyReady: !!ADMIN_KEY
-            });
             
             if (savedAuth === 'true' && savedTime) {
                 const loginTime = parseInt(savedTime);
@@ -972,36 +959,23 @@ body {
                 const timeDiff = currentTime - loginTime;
                 const fourHours = 4 * 60 * 60 * 1000;
                 
-                console.log('🔐 Session check:', {
-                    loginTime: new Date(loginTime).toISOString(),
-                    currentTime: new Date(currentTime).toISOString(),
+                debugLog('🔐 Session check', {
                     timeDiff: Math.round(timeDiff / 1000 / 60) + ' minutes',
-                    maxAge: '240 minutes',
                     valid: timeDiff < fourHours
                 });
                 
                 if (timeDiff < fourHours) {
-                    console.log('✅ Valid session found, showing dashboard');
                     showAdminDashboard();
                     return;
                 }
             }
             
-            console.log('🔐 No valid session, showing login');
             showLoginScreen();
         }
 
-        // FIXED: Validate login with debug
         function validateLogin(event) {
             event.preventDefault();
-            
-            console.log('🔐 Login attempt started');
-            
-            if (!ADMIN_KEY) {
-                console.log('❌ Admin key not available');
-                showToast('Admin key not loaded. Please refresh the page.', 'error');
-                return false;
-            }
+            debugLog('🔐 Login attempt');
             
             const keyInput = document.getElementById('adminKey');
             const loginBtn = document.getElementById('loginBtn');
@@ -1009,11 +983,9 @@ body {
             
             const enteredKey = keyInput.value.trim();
             
-            console.log('🔐 Login validation:', {
-                enteredKey: enteredKey,
-                enteredLength: enteredKey.length,
-                expectedKey: ADMIN_KEY,
-                expectedLength: ADMIN_KEY.length,
+            debugLog('🔐 Key validation', {
+                entered: enteredKey,
+                expected: ADMIN_KEY,
                 matches: enteredKey === ADMIN_KEY
             });
             
@@ -1023,13 +995,13 @@ body {
             
             setTimeout(() => {
                 if (enteredKey === ADMIN_KEY) {
-                    console.log('✅ Login successful!');
+                    debugLog('✅ Login successful');
                     localStorage.setItem('maryaAdminAuth', 'true');
                     localStorage.setItem('maryaAdminTime', Date.now().toString());
                     showAdminDashboard();
-                    showToast('Secure access granted!', 'success');
+                    showToast('Debug admin access granted!', 'success');
                 } else {
-                    console.log('❌ Login failed - key mismatch');
+                    debugLog('❌ Login failed');
                     errorDiv.style.display = 'block';
                     keyInput.value = '';
                     keyInput.focus();
@@ -1043,23 +1015,14 @@ body {
         }
 
         function showLoginScreen() {
-            console.log('🔐 Showing login screen');
+            debugLog('🔐 Showing login screen');
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('adminDashboard').classList.remove('show');
             isLoggedIn = false;
-            
-            setTimeout(() => {
-                const keyInput = document.getElementById('adminKey');
-                if (keyInput) {
-                    keyInput.focus();
-                    // Pre-fill for testing (remove in production)
-                    // keyInput.value = ADMIN_KEY;
-                }
-            }, 100);
         }
 
         function showAdminDashboard() {
-            console.log('🔐 Showing admin dashboard');
+            debugLog('🔐 Showing admin dashboard');
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('adminDashboard').classList.add('show');
             isLoggedIn = true;
@@ -1069,21 +1032,21 @@ body {
         }
 
         function logout() {
-            console.log('🔐 Logging out');
+            debugLog('🔐 Logging out');
             localStorage.removeItem('maryaAdminAuth');
             localStorage.removeItem('maryaAdminTime');
             showLoginScreen();
-            showToast('Logged out successfully', 'success');
+            showToast('Logged out', 'success');
         }
 
-        // Load files with optimized API
+        // Load files
         async function loadFiles() {
-            if (!isLoggedIn || !ADMIN_KEY) {
-                console.log('❌ Cannot load files - not logged in or no key');
+            if (!isLoggedIn) {
+                debugLog('❌ Not logged in, cannot load files');
                 return;
             }
             
-            console.log('📂 Loading files...');
+            debugLog('📂 Loading files from API...');
             
             try {
                 showLoading(true);
@@ -1096,7 +1059,7 @@ body {
                     }
                 });
 
-                console.log('📂 List-files response:', response.status);
+                debugLog('📂 API Response', { status: response.status });
 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -1104,25 +1067,43 @@ body {
                 }
 
                 const data = await response.json();
+                debugLog('📂 API Data', { 
+                    success: data.success, 
+                    filesCount: data.files ? data.files.length : 0 
+                });
                 
                 if (data.success) {
                     allFiles = data.files || [];
                     
-                    const validFiles = allFiles.filter(file => 
-                        file && typeof file.filename === 'string' && file.id
-                    );
+                    // Filter and validate files
+                    const validFiles = allFiles.filter(file => {
+                        const isValid = file && 
+                                       typeof file.filename === 'string' && 
+                                       file.id && 
+                                       typeof file.id === 'string' &&
+                                       file.id.startsWith('MSM');
+                        
+                        if (!isValid) {
+                            debugLog('⚠️ Invalid file filtered out', file);
+                        }
+                        return isValid;
+                    });
                     
                     allFiles = validFiles;
                     
+                    debugLog('✅ Files processed', { 
+                        total: allFiles.length,
+                        sample: allFiles.slice(0, 3).map(f => ({ id: f.id, filename: f.filename }))
+                    });
+                    
                     updateStats(data.stats);
                     displayMobileFiles(allFiles);
-                    console.log(`✅ Loaded ${allFiles.length} files`);
                 } else {
-                    throw new Error(data.error || 'Failed to load files');
+                    throw new Error(data.error || 'API returned success: false');
                 }
                 
             } catch (error) {
-                console.error('❌ Failed to load files:', error);
+                debugLog('❌ Load files error', error.message);
                 showToast(`Failed to load files: ${error.message}`, 'error');
                 showEmptyState();
             } finally {
@@ -1132,16 +1113,23 @@ body {
 
         // Update statistics
         function updateStats(stats) {
-            if (!stats) return;
+            if (!stats) {
+                debugLog('⚠️ No stats provided');
+                return;
+            }
             
             document.getElementById('totalFiles').textContent = stats.totalFiles || 0;
             document.getElementById('totalSize').textContent = formatBytesShort(stats.totalSize || 0);
             document.getElementById('permanentFiles').textContent = stats.activeFiles || 0;
-            document.getElementById('kvNamespaces').textContent = stats.kvNamespaces || 0;
+            document.getElementById('selectedCount').textContent = selectedFiles.size;
+            
+            debugLog('📊 Stats updated', stats);
         }
 
-        // Display files in mobile-friendly cards
+        // Display files
         function displayMobileFiles(files) {
+            debugLog('🖼️ Displaying files', { count: files.length });
+            
             const filesList = document.getElementById('filesList');
             const filesContainer = document.getElementById('filesContainer');
             const emptyState = document.getElementById('emptyState');
@@ -1160,12 +1148,14 @@ body {
                     const card = createMobileFileCard(file, index);
                     filesList.appendChild(card);
                 } catch (cardError) {
-                    console.error('❌ Failed to create card for file:', file, cardError);
+                    debugLog('❌ Card creation error', { file: file.id, error: cardError.message });
                 }
             });
+            
+            debugLog('✅ Files displayed successfully');
         }
 
-        // Create mobile file card
+        // Create file card
         function createMobileFileCard(file, index) {
             const card = document.createElement('div');
             card.className = 'file-card';
@@ -1175,6 +1165,12 @@ body {
             const fileIcon = getFileIcon(safeFilename);
             const uploadDate = file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'Unknown';
             const status = getFileStatus(file);
+            
+            debugLog('🃏 Creating card', { 
+                id: file.id, 
+                filename: safeFilename, 
+                size: file.size 
+            });
             
             card.innerHTML = `
                 <div class="file-header">
@@ -1187,7 +1183,7 @@ body {
                         <div class="file-meta">
                             <span class="file-size">${formatBytesShort(file.size || 0)}</span>
                             <span>${uploadDate}</span>
-                            <span>ID: ${truncateText(file.id, 8)}</span>
+                            <span>ID: ${truncateText(file.id, 10)}</span>
                         </div>
                     </div>
                 </div>
@@ -1206,19 +1202,6 @@ body {
                             <i class="fas fa-download"></i> Download
                         </a>
                     </div>
-                    
-                    <div class="expiry-section">
-                        <div class="expiry-control">
-                            <select class="expiry-select" onchange="updateExpiry('${file.id}', this.value)">
-                                <option value="permanent" ${file.neverExpires ? 'selected' : ''}>Permanent</option>
-                                <option value="7" ${file.expiryDays === 7 ? 'selected' : ''}>7 days</option>
-                                <option value="30" ${file.expiryDays === 30 ? 'selected' : ''}>30 days</option>
-                                <option value="90" ${file.expiryDays === 90 ? 'selected' : ''}>90 days</option>
-                                <option value="365" ${file.expiryDays === 365 ? 'selected' : ''}>1 year</option>
-                            </select>
-                        </div>
-                        <div class="expiry-info">${getExpiryInfo(file)}</div>
-                    </div>
                 </div>
                 
                 <div class="file-actions">
@@ -1234,7 +1217,239 @@ body {
             return card;
         }
 
-        // Get file icon
+        // File selection functions
+        function toggleSelectAll() {
+            debugLog('🔄 Toggle select all');
+            
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.file-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                if (checkbox.value) {
+                    toggleFileSelection(checkbox.value, false); // Skip individual logging
+                }
+            });
+            
+            debugLog('✅ Select all toggled', { 
+                checked: selectAll.checked, 
+                count: selectedFiles.size 
+            });
+        }
+
+        function toggleFileSelection(fileId, logIndividual = true) {
+            if (logIndividual) {
+                debugLog('✅ Toggle file selection', fileId);
+            }
+            
+            if (!fileId || typeof fileId !== 'string') {
+                debugLog('❌ Invalid file ID for selection', fileId);
+                return;
+            }
+            
+            const checkbox = document.querySelector(`input[value="${fileId}"]`);
+            
+            if (checkbox && checkbox.checked) {
+                selectedFiles.add(fileId);
+                if (logIndividual) debugLog('➕ Added to selection', fileId);
+            } else {
+                selectedFiles.delete(fileId);
+                if (logIndividual) debugLog('➖ Removed from selection', fileId);
+            }
+            
+            updateDeleteButton();
+            updateSelectionInfo();
+        }
+
+        function updateDeleteButton() {
+            const deleteBtn = document.getElementById('deleteSelectedBtn');
+            
+            if (selectedFiles.size > 0) {
+                deleteBtn.style.display = 'flex';
+                deleteBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedFiles.size} Selected`;
+            } else {
+                deleteBtn.style.display = 'none';
+            }
+        }
+
+        function updateSelectionInfo() {
+            const selectionInfo = document.getElementById('selectionInfo');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selectionInfo) {
+                selectionInfo.textContent = `${selectedFiles.size} selected`;
+            }
+            
+            if (selectedCount) {
+                selectedCount.textContent = selectedFiles.size;
+            }
+        }
+
+        // Delete functions
+        function deleteFile(fileId, filename) {
+            debugLog('🗑️ Single file delete initiated', { fileId, filename });
+            
+            if (!fileId || !fileId.startsWith('MSM')) {
+                debugLog('❌ Invalid file ID for deletion', fileId);
+                showToast('Invalid file ID format', 'error');
+                return;
+            }
+            
+            deleteQueue = [{ id: fileId, filename: filename }];
+            debugLog('🗑️ Delete queue set for single file', deleteQueue);
+            showDeleteModal();
+        }
+
+        function deleteSelected() {
+            debugLog('🗑️ Bulk delete initiated', { 
+                selectedCount: selectedFiles.size,
+                selectedIds: Array.from(selectedFiles)
+            });
+            
+            if (selectedFiles.size === 0) {
+                debugLog('❌ No files selected for bulk delete');
+                return;
+            }
+            
+            deleteQueue = Array.from(selectedFiles).map(fileId => {
+                const file = allFiles.find(f => f && f.id === fileId);
+                return { 
+                    id: fileId, 
+                    filename: file?.filename || 'Unknown File'
+                };
+            });
+            
+            debugLog('🗑️ Delete queue set for bulk delete', { 
+                queueLength: deleteQueue.length,
+                queue: deleteQueue
+            });
+            
+            showDeleteModal();
+        }
+
+        function showDeleteModal() {
+            const deleteCount = document.getElementById('deleteCount');
+            const deleteFilesList = document.getElementById('deleteFilesList');
+            
+            deleteCount.textContent = deleteQueue.length;
+            
+            // Show files to be deleted
+            const filesList = deleteQueue.map(f => `• ${f.filename} (${f.id})`).join('<br>');
+            deleteFilesList.innerHTML = filesList;
+            
+            document.getElementById('deleteModal').classList.add('show');
+            
+            debugLog('🗑️ Delete modal shown', { count: deleteQueue.length });
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            deleteQueue = [];
+            debugLog('🗑️ Delete modal closed');
+        }
+
+        // ULTRA DEBUG DELETE FUNCTION
+        async function confirmDelete() {
+            debugLog('🗑️ CONFIRM DELETE STARTED', { queueLength: deleteQueue.length });
+            
+            if (deleteQueue.length === 0) {
+                debugLog('❌ Delete queue is empty');
+                return;
+            }
+            
+            try {
+                closeDeleteModal();
+                showToast('Starting deletion process...', 'success');
+                
+                // Extract and validate file IDs
+                const rawFileIds = deleteQueue.map(f => f.id);
+                debugLog('🗑️ RAW FILE IDS', rawFileIds);
+                
+                const cleanFileIds = rawFileIds.filter(id => {
+                    const isString = typeof id === 'string';
+                    const hasContent = id && id.trim() !== '';
+                    const isMSM = hasContent && id.startsWith('MSM');
+                    
+                    debugLog('🔍 ID VALIDATION', { 
+                        id, 
+                        isString, 
+                        hasContent, 
+                        isMSM,
+                        valid: isString && hasContent && isMSM 
+                    });
+                    
+                    return isString && hasContent && isMSM;
+                });
+                
+                debugLog('🗑️ CLEAN FILE IDS', cleanFileIds);
+                
+                if (cleanFileIds.length === 0) {
+                    throw new Error('No valid MSM file IDs found after filtering');
+                }
+                
+                // Create request payload
+                const requestPayload = {
+                    fileIds: cleanFileIds
+                };
+                
+                debugLog('📤 REQUEST PAYLOAD', requestPayload);
+                
+                const requestBody = JSON.stringify(requestPayload);
+                debugLog('📤 REQUEST BODY', requestBody);
+                
+                // Send delete request
+                const response = await fetch('/admin/delete-files', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ADMIN_KEY}`
+                    },
+                    body: requestBody
+                });
+
+                debugLog('📥 DELETE RESPONSE', { 
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok
+                });
+
+                const responseText = await response.text();
+                debugLog('📥 RESPONSE TEXT', responseText);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText}`);
+                }
+
+                const result = JSON.parse(responseText);
+                debugLog('📥 DELETE RESULT', result);
+                
+                if (result.success) {
+                    showToast(`✅ Successfully deleted ${result.deletedCount} files!`, 'success');
+                    
+                    // Clear selections
+                    selectedFiles.clear();
+                    document.getElementById('selectAll').checked = false;
+                    updateDeleteButton();
+                    updateSelectionInfo();
+                    
+                    // Refresh file list
+                    setTimeout(() => refreshFilesList(), 1500);
+                    
+                    debugLog('✅ DELETE OPERATION COMPLETED SUCCESSFULLY');
+                } else {
+                    throw new Error(result.error || 'Delete operation failed');
+                }
+                
+            } catch (error) {
+                debugLog('💥 DELETE ERROR', { 
+                    message: error.message, 
+                    stack: error.stack 
+                });
+                showToast(`Delete failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Utility functions
         function getFileIcon(filename) {
             if (!filename) return { type: 'other', icon: 'fas fa-file' };
             
@@ -1255,7 +1470,6 @@ body {
             return { type: 'other', icon: 'fas fa-file' };
         }
 
-        // Get file status
         function getFileStatus(file) {
             if (file.neverExpires) {
                 return { class: 'status-permanent', text: 'Permanent', icon: 'fas fa-infinity' };
@@ -1274,56 +1488,13 @@ body {
             return { class: 'status-permanent', text: 'Active', icon: 'fas fa-check' };
         }
 
-        // Get expiry info
-        function getExpiryInfo(file) {
-            if (file.neverExpires) return 'Never expires';
-            if (file.expiresAt) {
-                return new Date(file.expiresAt).toLocaleDateString();
-            }
-            return 'No expiry';
-        }
-
-        // Update expiry
-        async function updateExpiry(fileId, expiryValue) {
-            if (!fileId) return;
-            
-            try {
-                showToast('Updating...', 'success');
-                
-                const response = await fetch('/admin/update-expiry', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${ADMIN_KEY}`
-                    },
-                    body: JSON.stringify({
-                        fileId: fileId,
-                        expiryDays: expiryValue === 'permanent' ? null : parseInt(expiryValue)
-                    })
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(`Expiry updated: ${expiryValue === 'permanent' ? 'Permanent' : expiryValue + ' days'}`, 'success');
-                    setTimeout(() => refreshFilesList(), 1000);
-                } else {
-                    throw new Error(result.error || 'Update failed');
-                }
-                
-            } catch (error) {
-                showToast(`Update failed: ${error.message}`, 'error');
-            }
-        }
-
-        // Copy file info
         function copyFileInfo(fileId, filename) {
             const baseUrl = window.location.origin;
-            const info = `${filename}\nStream: ${baseUrl}/btfstorage/file/${fileId}\nDownload: ${baseUrl}/btfstorage/file/${fileId}?dl=1`;
+            const info = `${filename}\\nStream: ${baseUrl}/btfstorage/file/${fileId}\\nDownload: ${baseUrl}/btfstorage/file/${fileId}?dl=1`;
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(info).then(() => {
-                    showToast('Info copied!', 'success');
+                    showToast('File info copied!', 'success');
                 });
             } else {
                 const textArea = document.createElement('textarea');
@@ -1332,11 +1503,12 @@ body {
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showToast('Info copied!', 'success');
+                showToast('File info copied!', 'success');
             }
+            
+            debugLog('📋 File info copied', { fileId, filename });
         }
 
-        // Search functionality
         function setupSearchFilter() {
             const searchInput = document.getElementById('searchInput');
             
@@ -1356,145 +1528,20 @@ body {
                 });
                 
                 displayMobileFiles(filtered);
+                debugLog('🔍 Search performed', { query, results: filtered.length });
             });
         }
 
-        // File selection
-        function toggleSelectAll() {
-            const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.file-checkbox');
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAll.checked;
-                if (checkbox.value) {
-                    toggleFileSelection(checkbox.value);
-                }
-            });
-        }
-
-        function toggleFileSelection(fileId) {
-            console.log('✅ Toggle selection:', fileId);
-            
-            if (!fileId) return;
-            
-            const checkbox = document.querySelector(`input[value="${fileId}"]`);
-            
-            if (checkbox && checkbox.checked) {
-                selectedFiles.add(fileId);
-            } else {
-                selectedFiles.delete(fileId);
-            }
-            
-            updateDeleteButton();
-        }
-
-        function updateDeleteButton() {
-            const deleteBtn = document.getElementById('deleteSelectedBtn');
-            
-            if (selectedFiles.size > 0) {
-                deleteBtn.style.display = 'flex';
-                deleteBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedFiles.size} Selected`;
-            } else {
-                deleteBtn.style.display = 'none';
-            }
-        }
-
-        // Delete functions
-        function deleteFile(fileId, filename) {
-            console.log('🗑️ Single delete:', { fileId, filename });
-            
-            if (!fileId || !fileId.startsWith('MSM')) {
-                showToast('Invalid file ID', 'error');
-                return;
-            }
-            
-            deleteQueue = [{ id: fileId, filename: filename }];
-            showDeleteModal();
-        }
-
-        function deleteSelected() {
-            console.log('🗑️ Delete selected:', Array.from(selectedFiles));
-            
-            if (selectedFiles.size === 0) return;
-            
-            deleteQueue = Array.from(selectedFiles).map(fileId => {
-                const file = allFiles.find(f => f && f.id === fileId);
-                return { 
-                    id: fileId, 
-                    filename: file?.filename || 'Unknown File'
-                };
-            });
-            
-            showDeleteModal();
-        }
-
-        function showDeleteModal() {
-            document.getElementById('deleteModal').classList.add('show');
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('show');
-            deleteQueue = [];
-        }
-
-        // FIXED: Complete deletion
-        async function confirmDelete() {
-            if (deleteQueue.length === 0) return;
-            
-            try {
-                closeDeleteModal();
-                showToast('Deleting files...', 'success');
-                
-                const validFileIds = deleteQueue
-                    .map(f => f.id)
-                    .filter(id => id && typeof id === 'string' && id.startsWith('MSM'));
-                
-                console.log('🗑️ Deleting files:', validFileIds);
-                
-                const response = await fetch('/admin/delete-files', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${ADMIN_KEY}`
-                    },
-                    body: JSON.stringify({
-                        fileIds: validFileIds
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(`✅ Deleted ${result.deletedCount} files!`, 'success');
-                    selectedFiles.clear();
-                    document.getElementById('selectAll').checked = false;
-                    updateDeleteButton();
-                    setTimeout(() => refreshFilesList(), 1500);
-                } else {
-                    throw new Error(result.error || 'Delete failed');
-                }
-                
-            } catch (error) {
-                console.error('Delete error:', error);
-                showToast(`Delete failed: ${error.message}`, 'error');
-            }
-        }
-
-        // Refresh files list
         async function refreshFilesList() {
+            debugLog('🔄 Refresh files list');
             selectedFiles.clear();
             document.getElementById('selectAll').checked = false;
             updateDeleteButton();
+            updateSelectionInfo();
             await loadFiles();
             showToast('Files refreshed', 'success');
         }
 
-        // Utility functions
         function showLoading(show) {
             document.getElementById('loadingSection').style.display = show ? 'block' : 'none';
         }
@@ -1537,7 +1584,7 @@ body {
             }, 4000);
         }
 
-        console.log('✅ Secure Mobile Admin Panel - Ready!');
-</script>
+        debugLog('✅ Debug Admin Panel - Ready!');
+    </script>
 </body>
 </html>
