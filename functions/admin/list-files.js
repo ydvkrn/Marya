@@ -64,21 +64,47 @@ export async function onRequest(context) {
               if (metadata) {
                 const fileData = JSON.parse(metadata);
                 
-                // Add required fields
-                fileData.id = key.name;
-                fileData.kvNamespace = kvNamespace.name;
+                // Ensure all required fields are present with defaults
+                const processedFile = {
+                  id: key.name,
+                  filename: fileData.filename || 'Unknown File',
+                  size: fileData.size || 0,
+                  contentType: fileData.contentType || 'application/octet-stream',
+                  extension: fileData.extension || '',
+                  uploadedAt: fileData.uploadedAt || Date.now(),
+                  kvNamespace: kvNamespace.name,
+                  neverExpires: fileData.neverExpires || false,
+                  type: fileData.type || 'unknown',
+                  chunks: fileData.chunks || [],
+                  totalChunks: fileData.totalChunks || 0
+                };
                 
-                allFiles.push(fileData);
-                totalSize += fileData.size || 0;
+                allFiles.push(processedFile);
+                totalSize += processedFile.size;
                 
-                if (fileData.neverExpires) {
+                if (processedFile.neverExpires) {
                   activeFiles++;
                 }
                 
-                console.log(`📁 File found: ${fileData.filename} (${Math.round((fileData.size || 0)/1024/1024)}MB)`);
+                console.log(`📁 File processed: ${processedFile.filename} (${Math.round(processedFile.size/1024/1024)}MB)`);
               }
             } catch (parseError) {
               console.error(`❌ Failed to parse ${key.name}:`, parseError.message);
+              
+              // Add a placeholder for corrupted entries
+              allFiles.push({
+                id: key.name,
+                filename: `Corrupted File (${key.name})`,
+                size: 0,
+                contentType: 'application/octet-stream',
+                extension: '',
+                uploadedAt: Date.now(),
+                kvNamespace: kvNamespace.name,
+                neverExpires: false,
+                type: 'corrupted',
+                chunks: [],
+                totalChunks: 0
+              });
             }
           }
         }
@@ -103,7 +129,11 @@ export async function onRequest(context) {
       success: true,
       files: allFiles,
       stats: stats,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      debug: {
+        scannedNamespaces: kvNamespaces.length,
+        processedFiles: allFiles.length
+      }
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
@@ -113,7 +143,8 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      stack: error.stack
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
