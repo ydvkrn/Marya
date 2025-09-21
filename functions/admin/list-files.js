@@ -1,10 +1,9 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
-  // CORS Headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
   };
 
@@ -13,11 +12,13 @@ export async function onRequest(context) {
   }
 
   try {
-    console.log('🔍 Admin list-files API called');
+    console.log('⚡ Fast admin list-files API called');
 
-    // Simple auth check
+    // Get admin key from environment
+    const adminKey = env.KEYMSM || 'MARYA2025ADMIN';
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.includes('MARYA2025ADMIN')) {
+    
+    if (!authHeader || !authHeader.includes(adminKey)) {
       console.log('❌ Unauthorized access attempt');
       return new Response(JSON.stringify({
         success: false,
@@ -28,9 +29,7 @@ export async function onRequest(context) {
       });
     }
 
-    console.log('✅ Auth successful, scanning KV namespaces...');
-
-    // All KV namespaces
+    // All KV namespaces with parallel processing
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
       { kv: env.FILES_KV2, name: 'FILES_KV2' },
@@ -41,31 +40,39 @@ export async function onRequest(context) {
       { kv: env.FILES_KV7, name: 'FILES_KV7' }
     ].filter(item => item.kv);
 
-    let allFiles = [];
-    let totalSize = 0;
-    let activeFiles = 0;
+    console.log(`⚡ Fast scanning ${kvNamespaces.length} KV namespaces in parallel...`);
 
-    console.log(`📂 Scanning ${kvNamespaces.length} KV namespaces...`);
-
-    // Scan each KV namespace
-    for (const kvNamespace of kvNamespaces) {
+    // Parallel processing for speed
+    const scanPromises = kvNamespaces.map(async (kvNamespace) => {
+      const files = [];
+      
       try {
-        console.log(`🔍 Scanning ${kvNamespace.name}...`);
-
-        // List all keys in this namespace
-        const listResponse = await kvNamespace.kv.list();
-        console.log(`📊 Found ${listResponse.keys.length} keys in ${kvNamespace.name}`);
+        console.log(`⚡ Fast scanning ${kvNamespace.name}...`);
         
-        for (const key of listResponse.keys) {
-          // Only process MSM format files (skip chunks and progress)
-          if (key.name.startsWith('MSM') && !key.name.includes('_chunk_') && !key.name.includes('progress_')) {
+        // Fast list with limit for performance
+        const listResponse = await kvNamespace.kv.list({ limit: 1000 });
+        
+        // Process files in batches for speed
+        const fileKeys = listResponse.keys.filter(key => 
+          key.name.startsWith('MSM') && 
+          !key.name.includes('_chunk_') && 
+          !key.name.includes('progress_')
+        );
+
+        console.log(`📊 Found ${fileKeys.length} files in ${kvNamespace.name}`);
+
+        // Get metadata in parallel batches
+        const batchSize = 10;
+        for (let i = 0; i < fileKeys.length; i += batchSize) {
+          const batch = fileKeys.slice(i, i + batchSize);
+          
+          const batchPromises = batch.map(async (key) => {
             try {
               const metadata = await kvNamespace.kv.get(key.name);
               if (metadata) {
                 const fileData = JSON.parse(metadata);
                 
-                // Ensure all required fields are present with defaults
-                const processedFile = {
+                return {
                   id: key.name,
                   filename: fileData.filename || 'Unknown File',
                   size: fileData.size || 0,
@@ -76,25 +83,16 @@ export async function onRequest(context) {
                   neverExpires: fileData.neverExpires || false,
                   type: fileData.type || 'unknown',
                   chunks: fileData.chunks || [],
-                  totalChunks: fileData.totalChunks || 0
+                  totalChunks: fileData.totalChunks || 0,
+                  expiryDays: fileData.expiryDays,
+                  expiresAt: fileData.expiresAt
                 };
-                
-                allFiles.push(processedFile);
-                totalSize += processedFile.size;
-                
-                if (processedFile.neverExpires) {
-                  activeFiles++;
-                }
-                
-                console.log(`📁 File processed: ${processedFile.filename} (${Math.round(processedFile.size/1024/1024)}MB)`);
               }
             } catch (parseError) {
-              console.error(`❌ Failed to parse ${key.name}:`, parseError.message);
-              
-              // Add a placeholder for corrupted entries
-              allFiles.push({
+              console.error(`❌ Parse error for ${key.name}:`, parseError.message);
+              return {
                 id: key.name,
-                filename: `Corrupted File (${key.name})`,
+                filename: `Corrupted (${key.name})`,
                 size: 0,
                 contentType: 'application/octet-stream',
                 extension: '',
@@ -104,47 +102,56 @@ export async function onRequest(context) {
                 type: 'corrupted',
                 chunks: [],
                 totalChunks: 0
-              });
+              };
             }
-          }
+          });
+          
+          const batchResults = await Promise.all(batchPromises);
+          files.push(...batchResults.filter(file => file));
         }
+        
       } catch (kvError) {
         console.error(`❌ Failed to scan ${kvNamespace.name}:`, kvError.message);
       }
-    }
+      
+      return files;
+    });
+
+    // Wait for all namespaces to complete
+    const namespaceResults = await Promise.all(scanPromises);
+    const allFiles = namespaceResults.flat();
 
     // Sort by upload date (newest first)
     allFiles.sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
 
+    const totalSize = allFiles.reduce((sum, file) => sum + (file.size || 0), 0);
+    const permanentFiles = allFiles.filter(file => file.neverExpires).length;
+
     const stats = {
       totalFiles: allFiles.length,
       totalSize: totalSize,
-      activeFiles: activeFiles,
+      activeFiles: permanentFiles,
       kvNamespaces: kvNamespaces.length
     };
 
-    console.log(`✅ Admin scan complete: ${allFiles.length} files, ${Math.round(totalSize/1024/1024)}MB total`);
+    console.log(`⚡ Fast scan complete: ${allFiles.length} files in ${Date.now() - Date.now()}ms`);
 
     return new Response(JSON.stringify({
       success: true,
       files: allFiles,
       stats: stats,
       timestamp: Date.now(),
-      debug: {
-        scannedNamespaces: kvNamespaces.length,
-        processedFiles: allFiles.length
-      }
+      performance: 'optimized'
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('💥 Admin list-files error:', error);
+    console.error('💥 Fast admin list-files error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
-      timestamp: Date.now(),
-      stack: error.stack
+      timestamp: Date.now()
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
