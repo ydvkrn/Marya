@@ -1,14 +1,14 @@
-// Browser-compatible MIME types - ENHANCED
+// Browser-compatible MIME types (same as original)
 const MIME_TYPES = {
   'mp4': 'video/mp4',
   'webm': 'video/webm',
   'mkv': 'video/mp4',
-  'mov': 'video/quicktime',
+  'mov': 'video/mp4',
   'avi': 'video/mp4',
   'm4v': 'video/mp4',
   'wmv': 'video/mp4',
   'flv': 'video/mp4',
-  '3gp': 'video/3gpp',
+  '3gp': 'video/mp4',
   'mp3': 'audio/mpeg',
   'wav': 'audio/wav',
   'flac': 'audio/mpeg',
@@ -41,7 +41,7 @@ export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
 
-  console.log('🎬 OPTIMIZED STREAMING INITIATED:', fileId);
+  console.log('🎬 LARGE FILE OPTIMIZED STREAMING:', fileId);
 
   try {
     const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
@@ -71,7 +71,7 @@ export async function onRequest(context) {
 
     console.log(`📁 File: ${filename} (${Math.round(size/1024/1024)}MB, ${totalChunks} chunks)`);
 
-    // IMPROVED: Always use optimized streaming for ALL files
+    // Use optimized streaming for ALL files
     return await handleLargeFileOptimized(request, kvNamespaces, masterMetadata, extension, env);
 
   } catch (error) {
@@ -80,101 +80,68 @@ export async function onRequest(context) {
   }
 }
 
-// ENHANCED: Much better optimized streaming
+// MINIMAL FIX: Keep original logic but fix the key issues
 async function handleLargeFileOptimized(request, kvNamespaces, masterMetadata, extension, env) {
   const { chunks, filename, size } = masterMetadata;
   const mimeType = getMimeType(extension);
-  const isVideo = mimeType.startsWith('video/');
 
-  console.log(`🎬 Optimized streaming: ${filename} (Type: ${mimeType}, ${chunks.length} chunks, Video: ${isVideo})`);
+  console.log(`🎬 Optimized streaming: ${filename} (Type: ${mimeType}, ${chunks.length} chunks)`);
 
   const url = new URL(request.url);
   const isDownload = url.searchParams.has('dl') && url.searchParams.get('dl') === '1';
 
   console.log(`📺 Mode: ${isDownload ? 'DOWNLOAD' : 'STREAM'}`);
 
-  // IMPROVED: Better range request handling especially for videos
+  // CRITICAL FIX: Handle Range requests properly for video streaming
   const range = request.headers.get('Range');
   if (range && !isDownload) {
-    console.log('📺 Range request with enhanced optimization:', range);
+    console.log('📺 Range request detected:', range);
     return await handleOptimizedRangeStream(request, kvNamespaces, masterMetadata, extension, range, env, mimeType);
   }
 
-  // ENHANCED: Better sequential chunk streaming (optimized for all file types)
-  console.log('🌊 Enhanced sequential streaming...');
+  // MINIMAL CHANGE: Keep original sequential approach but with better error handling
+  console.log('🌊 Sequential streaming (optimized)...');
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        console.log(`🌊 Starting enhanced streaming (${chunks.length} chunks)...`);
+        console.log(`🌊 Starting streaming (${chunks.length} chunks)...`);
 
-        // OPTIMIZED: Better batch processing based on file type
-        const BATCH_SIZE = isVideo ? 8 : 12; // Videos need more careful handling
-        const CHUNK_DELAY = isVideo ? 30 : 50; // Faster for videos
+        // KEEP ORIGINAL: Small batches to avoid subrequest limits
+        const BATCH_SIZE = 10;
 
         for (let batchStart = 0; batchStart < chunks.length; batchStart += BATCH_SIZE) {
           const batchEnd = Math.min(batchStart + BATCH_SIZE, chunks.length);
           const batchChunks = chunks.slice(batchStart, batchEnd);
 
-          console.log(`📦 Processing enhanced batch ${Math.floor(batchStart/BATCH_SIZE) + 1}/${Math.ceil(chunks.length/BATCH_SIZE)} (${batchChunks.length} chunks)`);
+          console.log(`📦 Processing batch ${Math.floor(batchStart/BATCH_SIZE) + 1}/${Math.ceil(chunks.length/BATCH_SIZE)} (${batchChunks.length} chunks)`);
 
-          // IMPROVED: Parallel processing within batch for better speed
-          if (isVideo || batchChunks.length <= 4) {
-            // For videos or small batches, use parallel loading for speed
-            const chunkPromises = batchChunks.map((chunkInfo, i) => {
-              const chunkIndex = batchStart + i;
-              return getChunkOptimized(kvNamespaces, chunkInfo, env, chunkIndex);
-            });
+          // KEEP ORIGINAL: Sequential processing (not parallel)
+          for (let i = 0; i < batchChunks.length; i++) {
+            const chunkInfo = batchChunks[i];
+            const chunkIndex = batchStart + i;
+
+            console.log(`📦 Loading chunk ${chunkIndex + 1}/${chunks.length}...`);
 
             try {
-              const chunkResults = await Promise.all(chunkPromises);
-              
-              // Stream all chunks from this batch
-              for (const chunkData of chunkResults) {
-                if (chunkData) {
-                  controller.enqueue(new Uint8Array(chunkData));
-                }
-              }
-            } catch (batchError) {
-              console.error(`❌ Batch ${Math.floor(batchStart/BATCH_SIZE) + 1} had errors, continuing...`);
-              
-              // Fallback: Process sequentially if parallel fails
-              for (let i = 0; i < batchChunks.length; i++) {
-                const chunkInfo = batchChunks[i];
-                const chunkIndex = batchStart + i;
-                
-                try {
-                  const chunkData = await getChunkOptimized(kvNamespaces, chunkInfo, env, chunkIndex);
-                  controller.enqueue(new Uint8Array(chunkData));
-                } catch (chunkError) {
-                  console.error(`❌ Chunk ${chunkIndex} failed, skipping...`);
-                  continue;
-                }
-              }
-            }
-          } else {
-            // For non-videos with large batches, use sequential for stability
-            for (let i = 0; i < batchChunks.length; i++) {
-              const chunkInfo = batchChunks[i];
-              const chunkIndex = batchStart + i;
+              const chunkData = await getChunkSequentially(kvNamespaces[chunkInfo.kvNamespace], chunkInfo.keyName, chunkInfo, env, chunkIndex);
 
-              try {
-                const chunkData = await getChunkOptimized(kvNamespaces, chunkInfo, env, chunkIndex);
-                controller.enqueue(new Uint8Array(chunkData));
-                
-                // Micro delay for stability
-                await new Promise(resolve => setTimeout(resolve, 20));
+              // CRITICAL: Stream chunk immediately
+              controller.enqueue(new Uint8Array(chunkData));
 
-              } catch (chunkError) {
-                console.error(`❌ Chunk ${chunkIndex} failed:`, chunkError);
-                continue;
-              }
+              // KEEP ORIGINAL: Small delay between chunks for stability
+              await new Promise(resolve => setTimeout(resolve, 50));
+
+            } catch (chunkError) {
+              console.error(`❌ Chunk ${chunkIndex} failed:`, chunkError);
+              // Continue with next chunk instead of failing completely
+              continue;
             }
           }
 
-          // Delay between batches - shorter for videos
+          // KEEP ORIGINAL: Delay between batches
           if (batchEnd < chunks.length) {
-            await new Promise(resolve => setTimeout(resolve, CHUNK_DELAY));
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
 
@@ -182,40 +149,29 @@ async function handleLargeFileOptimized(request, kvNamespaces, masterMetadata, e
         controller.close();
 
       } catch (error) {
-        console.error('💥 Enhanced streaming error:', error);
+        console.error('💥 Sequential streaming error:', error);
         controller.error(error);
       }
     }
   });
 
-  // ENHANCED: Perfect headers for better streaming
+  // CRITICAL FIX: Perfect headers for streaming
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
   headers.set('Content-Length', size.toString());
-  headers.set('Accept-Ranges', 'bytes'); // CRITICAL for video seeking
+  headers.set('Accept-Ranges', 'bytes'); // ESSENTIAL for video seeking
   headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges, Content-Range');
-  
-  // IMPROVED: Better caching strategy
-  if (isVideo) {
-    headers.set('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for videos
-  } else {
-    headers.set('Cache-Control', 'public, max-age=86400'); // 1 day for others
-  }
+  headers.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges');
+  headers.set('Cache-Control', 'public, max-age=86400');
 
   if (isDownload) {
     headers.set('Content-Disposition', `attachment; filename="${filename}"`);
   } else {
     if (isStreamable(mimeType)) {
       headers.set('Content-Disposition', 'inline');
-      // ENHANCED: Essential headers for perfect video playback
+      // ESSENTIAL for video streaming
       headers.set('X-Content-Type-Options', 'nosniff');
       headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
-      
-      // Additional video-specific headers
-      if (isVideo) {
-        headers.set('Cross-Origin-Embedder-Policy', 'cross-origin');
-      }
     } else {
       headers.set('Content-Disposition', `attachment; filename="${filename}"`);
     }
@@ -225,11 +181,10 @@ async function handleLargeFileOptimized(request, kvNamespaces, masterMetadata, e
   return new Response(readable, { status: 200, headers });
 }
 
-// ENHANCED: Much better range streaming with video optimization
+// CRITICAL FIX: Proper Range streaming with 206 status
 async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata, extension, range, env, mimeType) {
   const { size, chunks } = masterMetadata;
   const chunkSize = masterMetadata.chunkSize || Math.ceil(size / chunks.length);
-  const isVideo = mimeType.startsWith('video/');
 
   const ranges = parseRange(range, size);
   if (!ranges || ranges.length !== 1) {
@@ -245,54 +200,44 @@ async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata,
   const { start, end } = ranges[0];
   const requestedSize = end - start + 1;
 
-  console.log(`📺 Enhanced range: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB, Video: ${isVideo})`);
+  console.log(`📺 Range request: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB)`);
 
-  // Determine needed chunks
+  // Calculate needed chunks
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
   const neededChunks = chunks.slice(startChunk, endChunk + 1);
 
   console.log(`📦 Need chunks ${startChunk}-${endChunk} (${neededChunks.length} chunks)`);
 
-  // ENHANCED: Optimized concurrent chunk fetches
-  const MAX_CONCURRENT = Math.min(neededChunks.length, isVideo ? 6 : 8);
+  // CONSERVATIVE: Load chunks one by one to avoid issues
   const chunkResults = [];
-
-  // IMPROVED: Better batch processing for range requests
-  for (let i = 0; i < neededChunks.length; i += MAX_CONCURRENT) {
-    const batchChunks = neededChunks.slice(i, Math.min(i + MAX_CONCURRENT, neededChunks.length));
-
-    console.log(`📦 Loading range batch ${Math.floor(i/MAX_CONCURRENT) + 1} (${batchChunks.length} chunks)...`);
-
-    const batchPromises = batchChunks.map(async (chunkInfo, batchIndex) => {
-      const actualIndex = startChunk + i + batchIndex;
+  
+  for (let i = 0; i < neededChunks.length; i++) {
+    const chunkInfo = neededChunks[i];
+    const actualIndex = startChunk + i;
+    
+    try {
+      console.log(`📦 Loading range chunk ${actualIndex}...`);
+      const chunkData = await getChunkSequentially(kvNamespaces[chunkInfo.kvNamespace], chunkInfo.keyName, chunkInfo, env, actualIndex);
       
-      try {
-        const chunkData = await getChunkOptimized(kvNamespaces, chunkInfo, env, actualIndex);
-        return {
-          index: actualIndex,
-          data: chunkData
-        };
-      } catch (error) {
-        console.error(`❌ Range chunk ${actualIndex} failed:`, error);
-        return {
-          index: actualIndex,
-          data: new ArrayBuffer(0) // Empty data to maintain order
-        };
-      }
-    });
-
-    const batchResults = await Promise.all(batchPromises);
-    chunkResults.push(...batchResults);
-
-    // OPTIMIZED: Shorter delay for videos
-    if (i + MAX_CONCURRENT < neededChunks.length) {
-      await new Promise(resolve => setTimeout(resolve, isVideo ? 50 : 100));
+      chunkResults.push({
+        index: actualIndex,
+        data: chunkData
+      });
+      
+      // Small delay between chunks
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+    } catch (error) {
+      console.error(`❌ Range chunk ${actualIndex} failed:`, error);
+      // Continue with next chunk
+      continue;
     }
   }
 
-  // Sort results by index
-  chunkResults.sort((a, b) => a.index - b.index);
+  if (chunkResults.length === 0) {
+    return new Response('Failed to load requested range', { status: 500 });
+  }
 
   // Combine chunks
   const combinedSize = chunkResults.reduce((sum, chunk) => sum + chunk.data.byteLength, 0);
@@ -300,51 +245,32 @@ async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata,
 
   let offset = 0;
   for (const chunk of chunkResults) {
-    if (chunk.data.byteLength > 0) {
-      combinedBuffer.set(new Uint8Array(chunk.data), offset);
-      offset += chunk.data.byteLength;
-    }
+    combinedBuffer.set(new Uint8Array(chunk.data), offset);
+    offset += chunk.data.byteLength;
   }
 
   // Extract exact range
   const rangeStart = start - (startChunk * chunkSize);
-  const actualRequestedSize = Math.min(requestedSize, combinedBuffer.length - rangeStart);
-  const rangeBuffer = combinedBuffer.slice(rangeStart, rangeStart + actualRequestedSize);
+  const actualSize = Math.min(requestedSize, combinedBuffer.length - rangeStart);
+  const rangeBuffer = combinedBuffer.slice(rangeStart, rangeStart + actualSize);
 
-  // ENHANCED: Perfect streaming headers for range requests
+  // CRITICAL: 206 status with proper headers for video streaming
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
-  headers.set('Content-Length', actualRequestedSize.toString());
-  headers.set('Content-Range', `bytes ${start}-${start + actualRequestedSize - 1}/${size}`);
+  headers.set('Content-Length', actualSize.toString());
+  headers.set('Content-Range', `bytes ${start}-${start + actualSize - 1}/${size}`);
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges, Content-Range');
-  
-  // ENHANCED: Better caching for range requests
-  if (isVideo) {
-    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-  } else {
-    headers.set('Cache-Control', 'public, max-age=86400');
-  }
-  
+  headers.set('Cache-Control', 'public, max-age=86400');
   headers.set('Content-Disposition', 'inline');
-  
-  // Video-specific headers for range requests
-  if (isVideo) {
-    headers.set('X-Content-Type-Options', 'nosniff');
-    headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
-  }
 
-  console.log(`✅ Range streaming: ${Math.round(actualRequestedSize/1024/1024)}MB`);
-  return new Response(rangeBuffer, { status: 206, headers });
+  console.log(`✅ Range streaming: ${Math.round(actualSize/1024/1024)}MB`);
+  return new Response(rangeBuffer, { status: 206, headers }); // CRITICAL: 206 status
 }
 
-// ENHANCED: Much better chunk loading with optimization
-async function getChunkOptimized(kvNamespaces, chunkInfo, env, index) {
-  const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
-  const keyName = chunkInfo.keyName;
-  
-  console.log(`📦 Optimized load chunk ${index}: ${keyName}`);
+// KEEP ORIGINAL: Sequential chunk loading (same as your working code)
+async function getChunkSequentially(kvNamespace, keyName, chunkInfo, env, index) {
+  console.log(`📦 Sequential load chunk ${index}: ${keyName}`);
 
   let chunkMetadata;
   try {
@@ -358,21 +284,15 @@ async function getChunkOptimized(kvNamespaces, chunkInfo, env, index) {
   }
 
   let directUrl = chunkMetadata.directUrl;
-  
-  // ENHANCED: Better fetch with optimized settings
   let response = await fetch(directUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; MaryaStreamer/2.0)',
-      'Accept': '*/*',
-      'Connection': 'keep-alive'
-    },
-    // IMPROVED: Better timeout handling
-    signal: AbortSignal.timeout(20000) // 20 seconds
+      'User-Agent': 'Mozilla/5.0 (compatible; MaryaVault/1.0)'
+    }
   });
 
-  // ENHANCED: Smarter URL refresh with better error handling
+  // KEEP ORIGINAL: Single URL refresh attempt
   if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log(`🔄 URL expired for chunk ${index}, refreshing...`);
+    console.log(`🔄 URL expired for chunk ${index}, attempting refresh...`);
 
     const botTokens = [
       env.BOT_TOKEN,
@@ -383,14 +303,14 @@ async function getChunkOptimized(kvNamespaces, chunkInfo, env, index) {
 
     let refreshed = false;
 
-    // IMPROVED: Try up to 2 different bot tokens for better reliability
-    for (let tokenIndex = 0; tokenIndex < Math.min(2, botTokens.length) && !refreshed; tokenIndex++) {
-      const botToken = botTokens[tokenIndex];
+    // Try only the first available bot token
+    if (botTokens.length > 0) {
+      const botToken = botTokens[0];
 
       try {
         const getFileResponse = await fetch(
           `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
-          { signal: AbortSignal.timeout(8000) }
+          { signal: AbortSignal.timeout(10000) }
         );
 
         if (getFileResponse.ok) {
@@ -398,12 +318,11 @@ async function getChunkOptimized(kvNamespaces, chunkInfo, env, index) {
           if (getFileData.ok && getFileData.result?.file_path) {
             const freshUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
 
-            // ENHANCED: Update KV with fresh URL (fire and forget)
+            // Update KV with fresh URL (fire and forget)
             const updatedMetadata = {
               ...chunkMetadata,
               directUrl: freshUrl,
-              lastRefreshed: Date.now(),
-              refreshCount: (chunkMetadata.refreshCount || 0) + 1
+              lastRefreshed: Date.now()
             };
 
             kvNamespace.put(keyName, JSON.stringify(updatedMetadata)).catch(() => {});
@@ -411,30 +330,28 @@ async function getChunkOptimized(kvNamespaces, chunkInfo, env, index) {
             // Try with fresh URL
             response = await fetch(freshUrl, {
               headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; MaryaStreamer/2.0)',
-                'Accept': '*/*',
-                'Connection': 'keep-alive'
+                'User-Agent': 'Mozilla/5.0 (compatible; MaryaVault/1.0)'
               }
             });
 
             if (response.ok) {
-              console.log(`✅ URL refreshed for chunk ${index} using token ${tokenIndex + 1}`);
+              console.log(`✅ URL refreshed for chunk ${index}`);
               refreshed = true;
             }
           }
         }
       } catch (refreshError) {
-        console.error(`❌ Failed to refresh chunk ${index} with token ${tokenIndex + 1}:`, refreshError.message);
+        console.error(`❌ Failed to refresh chunk ${index}:`, refreshError.message);
       }
     }
 
     if (!refreshed) {
-      console.error(`💥 Could not refresh chunk ${index} with any bot token`);
+      console.error(`💥 Could not refresh chunk ${index}, using expired URL`);
     }
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch chunk ${index}: HTTP ${response.status} ${response.statusText}`);
+    throw new Error(`Failed to fetch chunk ${index}: HTTP ${response.status}`);
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -443,32 +360,15 @@ async function getChunkOptimized(kvNamespaces, chunkInfo, env, index) {
   return arrayBuffer;
 }
 
-// ENHANCED: Better Range parser with improved error handling
+// KEEP ORIGINAL: Parse Range header (same logic)
 function parseRange(range, size) {
-  if (!range || !range.startsWith('bytes=')) {
-    return null;
-  }
-
-  // Support multiple range formats
   const rangeMatch = range.match(/bytes=(d+)-(d*)/);
-  if (!rangeMatch) {
-    return null;
-  }
+  if (!rangeMatch) return null;
 
   const start = parseInt(rangeMatch[1], 10);
   const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : size - 1;
 
-  // ENHANCED: Better validation
-  if (isNaN(start) || isNaN(end) || start < 0 || start >= size) {
-    return null;
-  }
+  if (start >= size || end >= size || start > end) return null;
 
-  // IMPROVED: Handle edge cases
-  const actualEnd = Math.min(end, size - 1);
-  
-  if (start > actualEnd) {
-    return null;
-  }
-
-  return [{ start, end: actualEnd }];
+  return [{ start, end }];
 }
