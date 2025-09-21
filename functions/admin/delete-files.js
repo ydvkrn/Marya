@@ -38,10 +38,40 @@ export async function onRequest(context) {
       });
     }
 
-    const { fileIds } = await request.json();
+    // Parse request body
+    let requestData;
+    try {
+      const requestText = await request.text();
+      console.log('📝 Request body:', requestText);
+      
+      if (!requestText || requestText.trim() === '') {
+        throw new Error('Empty request body');
+      }
+      
+      requestData = JSON.parse(requestText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse request:', parseError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid JSON in request body'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    const { fileIds } = requestData;
+    console.log('🗑️ Parsed fileIds:', fileIds);
     
-    if (!Array.isArray(fileIds) || fileIds.length === 0) {
-      throw new Error('No file IDs provided');
+    if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+      console.error('❌ No valid file IDs provided:', fileIds);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No file IDs provided or invalid format'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     console.log(`🗑️ Deleting ${fileIds.length} files: ${fileIds.join(', ')}`);
@@ -58,6 +88,7 @@ export async function onRequest(context) {
 
     let deletedCount = 0;
     let errors = [];
+    let deletedDetails = [];
 
     for (const fileId of fileIds) {
       try {
@@ -87,6 +118,8 @@ export async function onRequest(context) {
           continue;
         }
 
+        let chunksDeleted = 0;
+
         // Delete all chunks if they exist
         if (fileMetadata.chunks && Array.isArray(fileMetadata.chunks)) {
           console.log(`🗑️ Deleting ${fileMetadata.chunks.length} chunks for ${fileId}...`);
@@ -96,11 +129,12 @@ export async function onRequest(context) {
               const chunkKV = kvNamespaces.find(ns => ns.name === chunkInfo.kvNamespace);
               if (chunkKV && chunkInfo.keyName) {
                 await chunkKV.kv.delete(chunkInfo.keyName);
+                chunksDeleted++;
                 console.log(`✅ Deleted chunk: ${chunkInfo.keyName}`);
               }
             } catch (chunkError) {
               console.error(`❌ Failed to delete chunk ${chunkInfo.keyName}:`, chunkError.message);
-              errors.push(`Failed to delete chunk ${chunkInfo.keyName}`);
+              errors.push(`Failed to delete chunk ${chunkInfo.keyName}: ${chunkError.message}`);
             }
           }
         }
@@ -108,7 +142,15 @@ export async function onRequest(context) {
         // Delete main file metadata
         await sourceKV.kv.delete(fileId);
         deletedCount++;
-        console.log(`✅ Successfully deleted file: ${fileId}`);
+        
+        deletedDetails.push({
+          fileId: fileId,
+          filename: fileMetadata.filename || 'Unknown',
+          chunksDeleted: chunksDeleted,
+          kvNamespace: sourceKV.name
+        });
+        
+        console.log(`✅ Successfully deleted file: ${fileId} (${chunksDeleted} chunks)`);
 
       } catch (fileError) {
         console.error(`❌ Failed to delete file ${fileId}:`, fileError.message);
@@ -122,6 +164,7 @@ export async function onRequest(context) {
       success: true,
       deletedCount: deletedCount,
       totalRequested: fileIds.length,
+      deletedDetails: deletedDetails,
       errors: errors.length > 0 ? errors : undefined,
       timestamp: Date.now()
     }), {
@@ -133,6 +176,7 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
+      stack: error.stack,
       timestamp: Date.now()
     }), {
       status: 500,
