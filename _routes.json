@@ -2,13 +2,15 @@
   "version": 1,
   "include": [
     "/upload",
+    "/upload-from-url",
+    "/telegram-import",
+    "/admin/list-files",
+    "/admin/delete-files", 
     "/btfstorage/file/*"
   ],
   "exclude": [
     "/assets/*",
     "/static/*",
-    "/favicon.ico",
-    "/robots.txt",
-    "/sitemap.xml"
+    "/favicon.ico"
   ]
 }
