@@ -1,15 +1,37 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  };
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Method not allowed'
+    }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
   }
 
   try {
     const { url } = await request.json();
     
     if (!url || !url.startsWith('http')) {
-      throw new Error('Invalid URL provided');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid URL provided'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     console.log('Downloading from URL:', url);
@@ -17,7 +39,13 @@ export async function onRequest(context) {
     // Download file from URL
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to download file: ${response.status}`);
+      return new Response(JSON.stringify({
+        success: false,
+        error: `Failed to download file: ${response.status}`
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     // Get filename from URL
@@ -32,16 +60,25 @@ export async function onRequest(context) {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Forward to existing upload handler
-    const uploadRequest = new Request(new URL('/upload', request.url), {
+    // Create new request to upload endpoint
+    const uploadUrl = new URL('/upload', request.url);
+    const uploadRequest = new Request(uploadUrl, {
       method: 'POST',
-      body: formData,
-      headers: {
-        'Accept': 'application/json'
-      }
+      body: formData
     });
 
-    return await context.env.ASSETS.fetch(uploadRequest);
+    // Forward to upload handler
+    const uploadContext = {
+      request: uploadRequest,
+      env: env
+    };
+
+    // Import and call upload function
+    const { onRequest: uploadHandler } = await import('./upload.js');
+    const uploadResponse = await uploadHandler(uploadContext);
+    
+    // Return the upload response
+    return uploadResponse;
 
   } catch (error) {
     console.error('URL upload error:', error);
@@ -50,7 +87,7 @@ export async function onRequest(context) {
       error: error.message
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
   }
 }
