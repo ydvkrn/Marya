@@ -1,16 +1,5 @@
 {
   "version": 1,
-  "include": [
-    "/upload",
-    "/upload-from-url", 
-    "/telegram-import",
-    "/btfstorage/file/*",
-    "/cache-info",
-    "/performance",
-    "/admin/*"
-  ],
-  "exclude": [
-    "/assets/*",
-    "/static/*"
-  ]
+  "include": ["/btfstorage/file/*"],
+  "exclude": ["/assets/*","/static/*"]
 }
