@@ -2,6 +2,7 @@
   "version": 1,
   "include": [
     "/upload",
+    "/upload-from-url",
     "/btfstorage/file/*"
   ],
   "exclude": [
