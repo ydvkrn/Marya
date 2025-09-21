@@ -14,673 +14,579 @@
 <!-- ✅ Preload critical resources -->
 <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-</head>
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marya Vault - Professional File Storage</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        :root {
-            --primary-red: #dc2626;
-            --primary-red-dark: #b91c1c;
-            --primary-red-light: #fef2f2;
-            --white: #ffffff;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-            --success: #059669;
-            --success-light: #d1fae5;
-            --error: #dc2626;
-            --error-light: #fee2e2;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
-            min-height: 100vh;
-            color: var(--gray-900);
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem 0;
-        }
-
-        .logo {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-radius: 24px;
-            margin: 0 auto 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-xl);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .logo::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-            animation: shimmer 3s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .title {
-            font-size: 3.5rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-            letter-spacing: -0.02em;
-        }
-
-        .subtitle {
-            font-size: 1.25rem;
-            color: var(--gray-600);
-            font-weight: 500;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Upload Card */
-        .upload-section {
-            background: var(--white);
-            border-radius: 24px;
-            box-shadow: var(--shadow-xl);
-            padding: 3rem;
-            margin-bottom: 3rem;
-            border: 1px solid var(--gray-100);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .upload-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
-        }
-
-        .dropzone {
-            border: 2px dashed var(--gray-200);
-            border-radius: 16px;
-            padding: 4rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: var(--gray-50);
-            position: relative;
-            min-height: 300px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dropzone:hover,
-        .dropzone.dragover {
-            border-color: var(--primary-red);
-            background: var(--primary-red-light);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .upload-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary-red);
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .upload-title {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 0.5rem;
-        }
-
-        .upload-description {
-            font-size: 1.125rem;
-            color: var(--gray-600);
-            margin-bottom: 2rem;
-        }
-
-        .file-types {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 2rem;
-        }
-
-        .file-type-badge {
-            background: var(--primary-red);
-            color: var(--white);
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.025em;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s;
-        }
-
-        .file-type-badge:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .file-type-badge i {
-            margin-right: 0.5rem;
-        }
-
-        .file-input { display: none; }
-
-        /* URL Upload Section */
-        .url-upload-section {
-            background: var(--gray-50);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-top: 2rem;
-            border: 1px solid var(--gray-200);
-        }
-
-        .url-upload-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .url-input-container {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .url-input {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            border: 2px solid var(--gray-300);
-            border-radius: 12px;
-            font-size: 1rem;
-            background: var(--white);
-            transition: all 0.3s;
-        }
-
-        .url-input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-            box-shadow: 0 0 0 3px var(--primary-red-light);
-        }
-
-        .url-upload-btn {
-            padding: 1rem 2rem;
-            background: var(--primary-red);
-            color: var(--white);
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .url-upload-btn:hover {
-            background: var(--primary-red-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .url-upload-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Results Section */
-        .results {
-            display: none;
-        }
-
-        .results.show {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .results-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .results-title {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: var(--gray-900);
-        }
-
-        .results-count {
-            background: var(--primary-red-light);
-            color: var(--primary-red);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-
-        .file-item {
-            background: var(--white);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--gray-100);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .file-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--primary-red);
-        }
-
-        .file-item:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .file-header {
-            display: flex;
-            align-items: flex-start;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .file-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: var(--white);
-            flex-shrink: 0;
-        }
-
-        .file-icon i {
-            font-size: 2rem;
-        }
-
-        .file-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .file-name {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 0.5rem;
-            word-break: break-all;
-        }
-
-        .file-meta {
-            color: var(--gray-600);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        .file-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 600;
-        }
-
-        .file-status.uploading {
-            color: var(--primary-red);
-        }
-
-        .file-status.completed {
-            color: var(--success);
-        }
-
-        .file-status.failed {
-            color: var(--error);
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            margin: 1.5rem 0;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--gray-200);
-            border-radius: 50px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 50px;
-            position: relative;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: progress-shimmer 2s infinite;
-        }
-
-        @keyframes progress-shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .progress-text {
-            text-align: center;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--primary-red);
-        }
-
-        /* Action Buttons */
-        .file-actions {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.875rem 1.5rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-width: 120px;
-            justify-content: center;
-        }
-
-        .btn i {
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: var(--primary-red);
-            color: var(--white);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-red-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: var(--white);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .btn-success:hover {
-            background: #047857;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-outline {
-            background: var(--white);
-            color: var(--gray-700);
-            border: 1px solid var(--gray-300);
-        }
-
-        .btn-outline:hover {
-            background: var(--gray-50);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        /* Toast Notifications */
-        .toast {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-xl);
-            border: 1px solid var(--gray-200);
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 400px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .toast.show {
-            transform: translateX(0);
-        }
-
-        .toast.success {
-            border-left: 4px solid var(--success);
-        }
-
-        .toast.error {
-            border-left: 4px solid var(--error);
-        }
-
-        .toast-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .toast.success .toast-icon {
-            background: var(--success-light);
-            color: var(--success);
-        }
-
-        .toast.error .toast-icon {
-            background: var(--error-light);
-            color: var(--error);
-        }
-
-        .toast-content {
-            flex: 1;
-        }
-
-        .toast-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .toast-message {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-
-            .title {
-                font-size: 2.5rem;
-            }
-
-            .upload-section {
-                padding: 2rem 1.5rem;
-            }
-
-            .dropzone {
-                padding: 3rem 1.5rem;
-                min-height: 250px;
-            }
-
-            .upload-title {
-                font-size: 1.5rem;
-            }
-
-            .file-types {
-                gap: 0.5rem;
-            }
-
-            .file-type-badge {
-                padding: 0.5rem 1rem;
-                font-size: 0.75rem;
-            }
-
-            .file-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .file-actions {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-
-            .url-input-container {
-                flex-direction: column;
-            }
-
-            .url-upload-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .toast {
-                top: 1rem;
-                right: 1rem;
-                left: 1rem;
-                max-width: none;
-                transform: translateY(-100px);
-            }
-
-            .toast.show {
-                transform: translateY(0);
-            }
-        }
-
-        /* Loading Animation */
-        .loading-spinner {
-            display: inline-block;
-            width: 1rem;
-            height: 1rem;
-            border: 2px solid var(--gray-300);
-            border-radius: 50%;
-            border-top-color: var(--primary-red);
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marya Vault - Professional File Storage</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+:root {
+    --primary-red: #dc2626;
+    --primary-red-dark: #b91c1c;
+    --primary-red-light: #fef2f2;
+    --white: #ffffff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --success: #059669;
+    --success-light: #d1fae5;
+    --error: #dc2626;
+    --error-light: #fee2e2;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+    min-height: 100vh;
+    color: var(--gray-900);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+    border-radius: 24px;
+    margin: 0 auto 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.logo::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: var(--gray-600);
+    font-weight: 500;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Upload Card */
+.upload-section {
+    background: var(--white);
+    border-radius: 24px;
+    box-shadow: var(--shadow-xl);
+    padding: 3rem;
+    margin-bottom: 3rem;
+    border: 1px solid var(--gray-100);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+}
+
+.dropzone {
+    border: 2px dashed var(--gray-200);
+    border-radius: 16px;
+    padding: 4rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--gray-50);
+    position: relative;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+    border-color: var(--primary-red);
+    background: var(--primary-red-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.upload-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-red);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.upload-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.upload-description {
+    font-size: 1.125rem;
+    color: var(--gray-600);
+    margin-bottom: 2rem;
+}
+
+.file-types {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.file-type-badge {
+    background: var(--primary-red);
+    color: var(--white);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+}
+
+.file-type-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.file-type-badge i {
+    margin-right: 0.5rem;
+}
+
+.file-input { display: none; }
+
+/* Results Section */
+.results {
+    display: none;
+}
+
+.results.show {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.results-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.results-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.results-count {
+    background: var(--primary-red-light);
+    color: var(--primary-red);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.file-item {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-100);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.file-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-red);
+}
+
+.file-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.file-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.file-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--white);
+    flex-shrink: 0;
+}
+
+.file-icon i {
+    font-size: 2rem;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+    word-break: break-all;
+}
+
+.file-meta {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.file-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.file-status.uploading {
+    color: var(--primary-red);
+}
+
+.file-status.completed {
+    color: var(--success);
+}
+
+.file-status.failed {
+    color: var(--error);
+}
+
+/* Progress Bar */
+.progress-container {
+    margin: 1.5rem 0;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 50px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 50px;
+    position: relative;
+}
+
+.progress-text {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary-red);
+}
+
+/* Action Buttons */
+.file-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.btn i {
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--primary-red);
+    color: var(--white);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+    background: var(--primary-red-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+    background: var(--success);
+    color: var(--white);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-success:hover {
+    background: #047857;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-outline:hover {
+    background: var(--gray-50);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--gray-200);
+    z-index: 1000;
+    transform: translateX(400px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    border-left: 4px solid var(--success);
+}
+
+.toast.error {
+    border-left: 4px solid var(--error);
+}
+
+.toast-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.toast.success .toast-icon {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.toast.error .toast-icon {
+    background: var(--error-light);
+    color: var(--error);
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.toast-message {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+/* Loading Animation */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--gray-300);
+    border-radius: 50%;
+    border-top-color: var(--primary-red);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 2.5rem;
+    }
+
+    .upload-section {
+        padding: 2rem 1.5rem;
+    }
+
+    .dropzone {
+        padding: 3rem 1.5rem;
+        min-height: 250px;
+    }
+
+    .upload-title {
+        font-size: 1.5rem;
+    }
+
+    .file-types {
+        gap: 0.5rem;
+    }
+
+    .file-type-badge {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+
+    .file-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .file-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .toast {
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+        transform: translateY(-100px);
+    }
+
+    .toast.show {
+        transform: translateY(0);
+    }
+}
+</style>
 </head>
 <body>
     <div class="container">
@@ -690,7 +596,7 @@
                 <i class="fas fa-cloud" style="font-size: 3rem; color: var(--white);"></i>
             </div>
             <h1 class="title">Marya Vault</h1>
-            <p class="subtitle">Professional Multi-KV file storage solution with enterprise-grade security and lightning-fast chunked uploads up to 175MB per file.</p>
+            <p class="subtitle">Professional file storage solution with enterprise-grade security and lightning-fast uploads. Supports files up to 560MB!</p>
         </header>
 
         <!-- Upload Section -->
@@ -709,21 +615,6 @@
                 </div>
             </label>
             <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
-
-            <!-- URL Upload Section -->
-            <div class="url-upload-section">
-                <h3 class="url-upload-title">
-                    <i class="fas fa-link"></i>
-                    Upload from URL
-                </h3>
-                <div class="url-input-container">
-                    <input type="url" id="urlInput" class="url-input" placeholder="Paste direct file URL (e.g., https://example.com/file.mp4)">
-                    <button class="url-upload-btn" id="urlUploadBtn" onclick="uploadFromUrl()">
-                        <i class="fas fa-upload"></i>
-                        Upload
-                    </button>
-                </div>
-            </div>
         </section>
 
         <!-- Results Section -->
@@ -740,32 +631,30 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 Marya Vault Multi-KV Professional - Loading...');
+        console.log('🚀 Marya Vault Professional - Loading...');
 
         let fileCounter = 0;
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Initializing Multi-KV Professional File Uploader');
+            console.log('✅ DOM Ready - Initializing Professional File Uploader');
 
             const dropzone = document.getElementById('dropzone');
             const fileInput = document.getElementById('fileInput');
             const results = document.getElementById('results');
             const filesList = document.getElementById('filesList');
             const filesCount = document.getElementById('filesCount');
-            const urlInput = document.getElementById('urlInput');
-            const urlUploadBtn = document.getElementById('urlUploadBtn');
 
             if (!dropzone || !fileInput) {
                 console.error('❌ Required elements not found');
                 return;
             }
 
-            // File selection handler for input change (triggered by click or drop)
+            // File selection handler
             fileInput.addEventListener('change', function(e) {
-                console.log('📂 Files selected via click:', e.target.files.length);
+                console.log('📂 Files selected:', e.target.files.length);
                 if (e.target.files.length > 0) {
                     handleFiles(Array.from(e.target.files));
-                    fileInput.value = ''; // Reset input for next selection
+                    fileInput.value = '';
                 }
             });
 
@@ -822,10 +711,12 @@
             }
 
             function uploadFile(file) {
-                console.log('⬆️ Starting Multi-KV upload:', file.name, formatBytes(file.size));
+                console.log('⬆️ Starting upload:', file.name, formatBytes(file.size));
 
-                if (file.size > 175 * 1024 * 1024) { // 175MB limit for 7 KV namespaces
-                    showToast(`File "${file.name}" is too large (max 175MB for Multi-KV system)`, 'error');
+                // Check file size limit (560MB = 7 KV × 40 keys × 2MB)
+                const maxSize = 560 * 1024 * 1024; // 560MB
+                if (file.size > maxSize) {
+                    showToast(`File "${file.name}" is too large (max 560MB)`, 'error');
                     fileCounter--;
                     updateFilesCount();
                     return;
@@ -839,7 +730,7 @@
                 const statusElement = fileItem.querySelector('.file-status');
                 const actionsContainer = fileItem.querySelector('.file-actions');
 
-                // XMLHttpRequest for progress tracking
+                // XMLHttpRequest with better error handling
                 const xhr = new XMLHttpRequest();
                 const formData = new FormData();
                 formData.append('file', file);
@@ -849,25 +740,29 @@
                     if (e.lengthComputable) {
                         const percentComplete = Math.round((e.loaded / e.total) * 100);
                         progressFill.style.width = percentComplete + '%';
-                        progressText.textContent = `${percentComplete}% uploaded (Multi-KV Chunked)`;
-
-                        console.log('📊 Multi-KV Upload progress:', percentComplete + '%');
+                        progressText.textContent = `${percentComplete}% uploaded`;
                     }
                 });
 
                 // Upload completion
                 xhr.addEventListener('load', function() {
-                    console.log('✅ Multi-KV Upload response:', xhr.status);
+                    console.log('📥 Upload response:', xhr.status, xhr.responseText);
 
                     if (xhr.status === 200) {
                         try {
-                            const result = JSON.parse(xhr.responseText);
+                            let result;
+                            if (xhr.responseText.trim()) {
+                                result = JSON.parse(xhr.responseText);
+                            } else {
+                                throw new Error('Empty response from server');
+                            }
+
                             if (result.success) {
-                                statusElement.innerHTML = '<i class="fas fa-check"></i> Multi-KV Upload Complete';
+                                statusElement.innerHTML = '<i class="fas fa-check"></i> Upload Complete';
                                 statusElement.className = 'file-status completed';
 
                                 progressFill.style.width = '100%';
-                                progressText.textContent = `100% complete - Distributed across ${result.chunks} chunks in ${result.kvDistribution.length} KV namespaces`;
+                                progressText.textContent = '100% complete';
 
                                 // Add action buttons
                                 actionsContainer.innerHTML = `
@@ -882,110 +777,49 @@
                                     </button>
                                 `;
 
-                                showToast(`${file.name} uploaded successfully to Multi-KV storage!`, 'success');
+                                showToast(`${file.name} uploaded successfully!`, 'success');
                             } else {
-                                throw new Error(result.error || 'Multi-KV Upload failed');
+                                throw new Error(result.error || 'Upload failed');
                             }
                         } catch (parseError) {
+                            console.error('JSON Parse Error:', parseError, 'Response:', xhr.responseText);
                             handleUploadError(statusElement, 'Invalid server response');
-                            showToast(`Upload failed: ${file.name}`, 'error');
+                            showToast(`Upload failed: ${file.name} - Server error`, 'error');
                         }
                     } else {
-                        handleUploadError(statusElement, `HTTP ${xhr.status}`);
-                        showToast(`Upload failed: ${file.name}`, 'error');
+                        console.error('HTTP Error:', xhr.status, xhr.statusText, xhr.responseText);
+                        let errorMessage = `HTTP ${xhr.status}`;
+                        
+                        if (xhr.status === 413) {
+                            errorMessage = 'File too large for single request';
+                        } else if (xhr.status === 500) {
+                            errorMessage = 'Server error';
+                        } else if (xhr.status === 0) {
+                            errorMessage = 'Network error';
+                        }
+                        
+                        handleUploadError(statusElement, errorMessage);
+                        showToast(`Upload failed: ${file.name} - ${errorMessage}`, 'error');
                     }
                 });
 
                 xhr.addEventListener('error', function() {
+                    console.error('Network Error during upload');
                     handleUploadError(statusElement, 'Network error');
                     showToast(`Network error: ${file.name}`, 'error');
                 });
 
-                // Start upload
+                xhr.addEventListener('timeout', function() {
+                    console.error('Upload timeout');
+                    handleUploadError(statusElement, 'Upload timeout');
+                    showToast(`Upload timeout: ${file.name}`, 'error');
+                });
+
+                // Set timeout and start upload
+                xhr.timeout = 300000; // 5 minute timeout
                 xhr.open('POST', '/upload');
                 xhr.send(formData);
             }
-
-            // URL Upload Function
-            window.uploadFromUrl = async function() {
-                const url = urlInput.value.trim();
-                
-                if (!url) {
-                    showToast('Please enter a URL', 'error');
-                    return;
-                }
-
-                if (!url.startsWith('http')) {
-                    showToast('Please enter a valid HTTP/HTTPS URL', 'error');
-                    return;
-                }
-
-                urlUploadBtn.disabled = true;
-                urlUploadBtn.innerHTML = '<div class="loading-spinner"></div> Downloading...';
-
-                try {
-                    const response = await fetch('/upload-from-url', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: url })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        results.classList.add('show');
-                        fileCounter++;
-                        updateFilesCount();
-
-                        // Create file item for URL upload
-                        const fileItem = document.createElement('div');
-                        fileItem.className = 'file-item';
-                        fileItem.innerHTML = `
-                            <div class="file-header">
-                                <div class="file-icon">
-                                    <i class="fas fa-link"></i>
-                                </div>
-                                <div class="file-details">
-                                    <div class="file-name">${result.filename}</div>
-                                    <div class="file-meta">${formatBytes(result.size)} • <span class="file-status completed"><i class="fas fa-check"></i> Multi-KV Upload Complete</span></div>
-                                </div>
-                            </div>
-                            <div class="progress-container">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 100%"></div>
-                                </div>
-                                <div class="progress-text">100% complete - Distributed across ${result.chunks} chunks in ${result.kvDistribution.length} KV namespaces</div>
-                            </div>
-                            <div class="file-actions">
-                                <a href="${result.url}" target="_blank" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i> View File
-                                </a>
-                                <a href="${result.download}" class="btn btn-success">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                                <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
-                                    <i class="fas fa-copy"></i> Copy Link
-                                </button>
-                            </div>
-                        `;
-
-                        filesList.appendChild(fileItem);
-                        showToast('File uploaded from URL successfully to Multi-KV storage!', 'success');
-                        urlInput.value = '';
-                    } else {
-                        throw new Error(result.error || 'Upload failed');
-                    }
-                } catch (error) {
-                    showToast(`URL upload failed: ${error.message}`, 'error');
-                } finally {
-                    urlUploadBtn.disabled = false;
-                    urlUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
-                }
-            };
 
             function createFileItem(file) {
                 const item = document.createElement('div');
@@ -998,7 +832,7 @@
                         <div class="file-icon">${icon}</div>
                         <div class="file-details">
                             <div class="file-name">${file.name}</div>
-                            <div class="file-meta">${formatBytes(file.size)} • <span class="file-status uploading"><i class="fas fa-spinner fa-spin"></i> Preparing Multi-KV upload...</span></div>
+                            <div class="file-meta">${formatBytes(file.size)} • <span class="file-status uploading"><i class="fas fa-spinner fa-spin"></i> Preparing upload...</span></div>
                         </div>
                     </div>
                     <div class="progress-container">
@@ -1094,7 +928,7 @@
                 }, 5000);
             }
 
-            console.log('✅ Marya Vault Multi-KV Professional - Ready!');
+            console.log('✅ Marya Vault Professional - Ready!');
         });
     </script>
 </body>
