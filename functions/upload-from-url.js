@@ -20,14 +20,19 @@ export async function onRequest(context) {
 
     console.log('📥 Importing from URL:', url);
 
-    // Download file from URL
-    const response = await fetch(url);
+    // Download file from URL with proper headers
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Marya-Vault/1.0 (+https://marya-vault.pages.dev)'
+      }
+    });
+
     if (!response.ok) {
       throw new Error(`Failed to download: HTTP ${response.status}`);
     }
 
-    // Get filename from URL or Content-Disposition
-    let filename = url.split('/').pop().split('?')[0] || 'download';
+    // Extract filename from URL or Content-Disposition
+    let filename = url.split('/').pop().split('?')[0] || 'imported_file';
     const contentDisposition = response.headers.get('Content-Disposition');
     if (contentDisposition) {
       const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -36,8 +41,14 @@ export async function onRequest(context) {
       }
     }
 
+    // Ensure filename has extension
+    if (!filename.includes('.')) {
+      const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+      const extension = getExtensionFromMime(contentType);
+      filename += extension;
+    }
+
     const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
-    const contentLength = response.headers.get('Content-Length');
     
     // Convert to File object
     const fileBuffer = await response.arrayBuffer();
@@ -45,12 +56,7 @@ export async function onRequest(context) {
 
     console.log(`📦 File imported: ${filename} (${Math.round(file.size/1024/1024)}MB)`);
 
-    // If it's a Telegram file, copy it to our channel
-    if (url.includes('api.telegram.org/file/bot')) {
-      console.log('🔄 Telegram file detected - copying to our channel');
-    }
-
-    // Upload using our chunked system
+    // Generate MSM ID
     const msmId = generateMSMId();
     const extension = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '';
 
@@ -80,6 +86,8 @@ export async function onRequest(context) {
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
     const chunkResults = [];
 
+    console.log(`🚀 Starting chunked import of ${totalChunks} chunks...`);
+
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, file.size);
@@ -88,6 +96,8 @@ export async function onRequest(context) {
       const kvIndex = Math.floor(i / 40);
       const targetKV = kvNamespaces[kvIndex];
       const botToken = botTokens[i % botTokens.length];
+
+      console.log(`⬆️ Importing chunk ${i + 1}/${totalChunks}...`);
 
       const chunkResult = await uploadImportedChunk(
         chunk, msmId, i, kvIndex, i % 40,
@@ -122,6 +132,8 @@ export async function onRequest(context) {
 
     const baseUrl = new URL(request.url).origin;
 
+    console.log(`✅ URL import completed: ${filename}`);
+
     return new Response(JSON.stringify({
       success: true,
       filename: filename,
@@ -132,7 +144,8 @@ export async function onRequest(context) {
       id: msmId,
       strategy: 'imported_from_url',
       originalUrl: url,
-      lifetime: '20+ years (never expires)'
+      chunks: totalChunks,
+      lifetime: 'Permanent (20+ years)'
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
@@ -149,6 +162,7 @@ export async function onRequest(context) {
   }
 }
 
+// Upload imported chunk
 async function uploadImportedChunk(chunk, fileId, chunkIndex, kvIndex, keyIndex, botToken, channelId, kvNamespace, originalFilename) {
   try {
     const chunkFile = new File([chunk], `${originalFilename}.imported.chunk${chunkIndex}`, { 
@@ -163,7 +177,7 @@ async function uploadImportedChunk(chunk, fileId, chunkIndex, kvIndex, keyIndex,
     const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
       method: 'POST',
       body: telegramForm,
-      signal: AbortSignal.timeout(30000)
+      signal: AbortSignal.timeout(45000)
     });
 
     if (!telegramResponse.ok) {
@@ -205,6 +219,25 @@ async function uploadImportedChunk(chunk, fileId, chunkIndex, kvIndex, keyIndex,
   }
 }
 
+// Get file extension from MIME type
+function getExtensionFromMime(mimeType) {
+  const mimeMap = {
+    'video/mp4': '.mp4',
+    'video/x-matroska': '.mkv',
+    'video/webm': '.webm',
+    'video/quicktime': '.mov',
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'audio/mpeg': '.mp3',
+    'audio/wav': '.wav',
+    'application/pdf': '.pdf',
+    'application/zip': '.zip'
+  };
+  return mimeMap[mimeType] || '.bin';
+}
+
+// Generate MSM ID
 function generateMSMId() {
   const timestamp = Date.now();
   const r1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
