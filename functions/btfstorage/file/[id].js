@@ -2,7 +2,7 @@
 const MIME_TYPES = {
   'mp4': 'video/mp4',
   'webm': 'video/webm',
-  'mkv': 'video/mp4',
+  'mkv': 'video/mp4', // Serve as MP4 for instant browser play
   'mov': 'video/mp4',
   'avi': 'video/mp4',
   'm4v': 'video/mp4',
@@ -37,11 +37,39 @@ function isStreamable(mimeType) {
          mimeType === 'application/pdf';
 }
 
+// Smart cache for chunks (in-memory cache per worker)
+const chunkCache = new Map();
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const MAX_CACHE_SIZE = 50; // Max 50 chunks cached
+
+function getCachedChunk(key) {
+  const cached = chunkCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    console.log(`💾 Cache hit for chunk: ${key}`);
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedChunk(key, data) {
+  // Clean old cache entries if full
+  if (chunkCache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = chunkCache.keys().next().value;
+    chunkCache.delete(oldestKey);
+  }
+  
+  chunkCache.set(key, {
+    data: data,
+    timestamp: Date.now()
+  });
+  console.log(`💾 Cached chunk: ${key} (${chunkCache.size}/${MAX_CACHE_SIZE})`);
+}
+
 export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
 
-  console.log('🎬 LARGE FILE OPTIMIZED STREAMING:', fileId);
+  console.log('🎬 PROGRESSIVE STREAMING WITH CACHE:', fileId);
 
   try {
     const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
@@ -71,8 +99,8 @@ export async function onRequest(context) {
     
     console.log(`📁 File: ${filename} (${Math.round(size/1024/1024)}MB, ${totalChunks} chunks)`);
 
-    // ALWAYS use subrequest-optimized streaming for ALL files
-    return await handleLargeFileOptimized(request, kvNamespaces, masterMetadata, extension, env);
+    // Progressive streaming with smart caching
+    return await handleProgressiveStreaming(request, kvNamespaces, masterMetadata, extension, env);
 
   } catch (error) {
     console.error('💥 Error:', error);
@@ -80,83 +108,102 @@ export async function onRequest(context) {
   }
 }
 
-// Subrequest-optimized streaming (never exceeds limits)
-async function handleLargeFileOptimized(request, kvNamespaces, masterMetadata, extension, env) {
+// Progressive streaming (YouTube-style - only load what's needed)
+async function handleProgressiveStreaming(request, kvNamespaces, masterMetadata, extension, env) {
   const { chunks, filename, size } = masterMetadata;
   const mimeType = getMimeType(extension);
   
-  console.log(`🎬 Optimized streaming: ${filename} (Type: ${mimeType}, ${chunks.length} chunks)`);
+  console.log(`🎬 Progressive streaming: ${filename} (Type: ${mimeType}, ${chunks.length} chunks)`);
 
   const url = new URL(request.url);
   const isDownload = url.searchParams.has('dl') && url.searchParams.get('dl') === '1';
   
-  console.log(`📺 Mode: ${isDownload ? 'DOWNLOAD' : 'STREAM'}`);
+  console.log(`📺 Mode: ${isDownload ? 'DOWNLOAD' : 'PROGRESSIVE_STREAM'}`);
 
-  // Handle Range requests with subrequest optimization
+  // Handle Range requests (video seeking/skipping)
   const range = request.headers.get('Range');
   if (range && !isDownload) {
-    console.log('📺 Range request with subrequest optimization:', range);
-    return await handleOptimizedRangeStream(request, kvNamespaces, masterMetadata, extension, range, env, mimeType);
+    console.log('📺 Range request (smart seeking):', range);
+    return await handleSmartRangeStreaming(request, kvNamespaces, masterMetadata, extension, range, env, mimeType);
   }
 
-  // For large files, use sequential chunk streaming (no subrequest limits)
-  console.log('🌊 Sequential chunk streaming (subrequest-safe)...');
+  // Progressive streaming - start playing immediately, load chunks on demand
+  if (!isDownload && isStreamable(mimeType)) {
+    console.log('🚀 Starting progressive video streaming...');
+    return await handleVideoProgressiveStream(request, kvNamespaces, masterMetadata, extension, env, mimeType);
+  }
+
+  // Full download mode
+  console.log('💾 Full file download mode...');
+  return await handleFullDownload(request, kvNamespaces, masterMetadata, extension, env, mimeType, isDownload);
+}
+
+// Smart video progressive streaming (YouTube-style)
+async function handleVideoProgressiveStream(request, kvNamespaces, masterMetadata, extension, env, mimeType) {
+  const { chunks, filename, size } = masterMetadata;
+  const chunkSize = masterMetadata.chunkSize || Math.ceil(size / chunks.length);
   
+  console.log(`🚀 Video progressive stream: ${filename}`);
+
+  // Create a readable stream that loads chunks progressively
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        console.log(`🌊 Starting sequential streaming (${chunks.length} chunks)...`);
+        // Start with first few chunks for instant playback
+        const INITIAL_CHUNKS = Math.min(5, chunks.length); // Load first 5 chunks immediately
         
-        // Process chunks in small batches to avoid subrequest limits
-        const BATCH_SIZE = 10; // Max 10 chunks at once
+        console.log(`🚀 Loading initial ${INITIAL_CHUNKS} chunks for instant playback...`);
         
-        for (let batchStart = 0; batchStart < chunks.length; batchStart += BATCH_SIZE) {
-          const batchEnd = Math.min(batchStart + BATCH_SIZE, chunks.length);
-          const batchChunks = chunks.slice(batchStart, batchEnd);
+        // Load initial chunks for smooth start
+        const initialPromises = [];
+        for (let i = 0; i < INITIAL_CHUNKS; i++) {
+          const chunkInfo = chunks[i];
+          const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
           
-          console.log(`📦 Processing batch ${Math.floor(batchStart/BATCH_SIZE) + 1}/${Math.ceil(chunks.length/BATCH_SIZE)} (${batchChunks.length} chunks)`);
+          const promise = getChunkWithCache(kvNamespace, chunkInfo.keyName, chunkInfo, env, i);
+          initialPromises.push(promise);
+        }
+
+        // Wait for initial chunks and stream them
+        const initialResults = await Promise.all(initialPromises);
+        
+        for (let i = 0; i < initialResults.length; i++) {
+          console.log(`📺 Streaming initial chunk ${i + 1}/${INITIAL_CHUNKS}`);
+          controller.enqueue(new Uint8Array(initialResults[i]));
+        }
+
+        // Now progressively load and stream remaining chunks
+        for (let i = INITIAL_CHUNKS; i < chunks.length; i++) {
+          const chunkInfo = chunks[i];
+          const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
           
-          // Process this batch sequentially (not parallel)
-          for (let i = 0; i < batchChunks.length; i++) {
-            const chunkInfo = batchChunks[i];
-            const chunkIndex = batchStart + i;
-            const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
+          console.log(`📺 Progressive loading chunk ${i + 1}/${chunks.length}...`);
+          
+          try {
+            const chunkData = await getChunkWithCache(kvNamespace, chunkInfo.keyName, chunkInfo, env, i);
+            controller.enqueue(new Uint8Array(chunkData));
             
-            console.log(`📦 Loading chunk ${chunkIndex + 1}/${chunks.length}...`);
-            
-            try {
-              const chunkData = await getChunkSequentially(kvNamespace, chunkInfo.keyName, chunkInfo, env, chunkIndex);
-              
-              // Stream chunk immediately
-              controller.enqueue(new Uint8Array(chunkData));
-              
-              // Small delay between chunks for stability
-              await new Promise(resolve => setTimeout(resolve, 50));
-              
-            } catch (chunkError) {
-              console.error(`❌ Chunk ${chunkIndex} failed:`, chunkError);
-              // Continue with next chunk instead of failing completely
-              continue;
-            }
-          }
-          
-          // Delay between batches
-          if (batchEnd < chunks.length) {
+            // Small delay for smooth streaming
             await new Promise(resolve => setTimeout(resolve, 100));
+            
+          } catch (chunkError) {
+            console.error(`❌ Progressive chunk ${i} failed, continuing...`, chunkError);
+            // Continue streaming other chunks instead of failing
+            continue;
           }
         }
         
-        console.log('✅ All chunks streamed successfully');
+        console.log('✅ Progressive streaming completed');
         controller.close();
         
       } catch (error) {
-        console.error('💥 Sequential streaming error:', error);
+        console.error('💥 Progressive streaming error:', error);
         controller.error(error);
       }
     }
   });
 
-  // Perfect headers for large file streaming
+  // Perfect headers for progressive video streaming
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
   headers.set('Content-Length', size.toString());
@@ -164,26 +211,20 @@ async function handleLargeFileOptimized(request, kvNamespaces, masterMetadata, e
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges');
   headers.set('Cache-Control', 'public, max-age=86400');
+  
+  // Force inline for instant video playback
+  headers.set('Content-Disposition', 'inline');
+  
+  // Video streaming optimizations
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
 
-  if (isDownload) {
-    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-  } else {
-    if (isStreamable(mimeType)) {
-      headers.set('Content-Disposition', 'inline');
-      // Essential for video streaming
-      headers.set('X-Content-Type-Options', 'nosniff');
-      headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
-    } else {
-      headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-    }
-  }
-
-  console.log(`🚀 Starting optimized ${isDownload ? 'download' : 'stream'} as ${mimeType}`);
+  console.log(`🎬 Progressive video stream started as ${mimeType}`);
   return new Response(readable, { status: 200, headers });
 }
 
-// Optimized Range streaming with minimal subrequests
-async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata, extension, range, env, mimeType) {
+// Smart range streaming (for video seeking/skipping)
+async function handleSmartRangeStreaming(request, kvNamespaces, masterMetadata, extension, range, env, mimeType) {
   const { size, chunks } = masterMetadata;
   const chunkSize = masterMetadata.chunkSize || Math.ceil(size / chunks.length);
   
@@ -201,31 +242,31 @@ async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata,
   const { start, end } = ranges[0];
   const requestedSize = end - start + 1;
 
-  console.log(`📺 Optimized range: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB)`);
+  console.log(`📺 Smart range: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB) - Video seeking`);
 
-  // Determine needed chunks
+  // Determine which chunks are needed for this range
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
   const neededChunks = chunks.slice(startChunk, endChunk + 1);
 
-  console.log(`📦 Need chunks ${startChunk}-${endChunk} (${neededChunks.length} chunks)`);
+  console.log(`📦 Smart loading chunks ${startChunk}-${endChunk} for seek operation`);
 
-  // Limit concurrent chunk fetches to avoid subrequest limits
-  const MAX_CONCURRENT = Math.min(neededChunks.length, 8); // Max 8 concurrent
-  
+  // Load only the required chunks (not all chunks)
   const chunkResults = [];
   
-  // Process chunks in batches
-  for (let i = 0; i < neededChunks.length; i += MAX_CONCURRENT) {
-    const batchChunks = neededChunks.slice(i, Math.min(i + MAX_CONCURRENT, neededChunks.length));
+  // Load chunks in small batches for seeking
+  const SEEK_BATCH_SIZE = 3; // Only 3 chunks at a time for fast seeking
+  
+  for (let i = 0; i < neededChunks.length; i += SEEK_BATCH_SIZE) {
+    const batchChunks = neededChunks.slice(i, Math.min(i + SEEK_BATCH_SIZE, neededChunks.length));
     
-    console.log(`📦 Loading batch ${Math.floor(i/MAX_CONCURRENT) + 1} (${batchChunks.length} chunks)...`);
+    console.log(`📦 Loading seek batch ${Math.floor(i/SEEK_BATCH_SIZE) + 1} (${batchChunks.length} chunks)...`);
     
     const batchPromises = batchChunks.map(async (chunkInfo, batchIndex) => {
       const actualIndex = startChunk + i + batchIndex;
       const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
       
-      const chunkData = await getChunkSequentially(kvNamespace, chunkInfo.keyName, chunkInfo, env, actualIndex);
+      const chunkData = await getChunkWithCache(kvNamespace, chunkInfo.keyName, chunkInfo, env, actualIndex);
       return {
         index: actualIndex,
         data: chunkData
@@ -234,11 +275,6 @@ async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata,
     
     const batchResults = await Promise.all(batchPromises);
     chunkResults.push(...batchResults);
-    
-    // Small delay between batches
-    if (i + MAX_CONCURRENT < neededChunks.length) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
   }
 
   // Sort results by index
@@ -258,7 +294,7 @@ async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata,
   const rangeStart = start - (startChunk * chunkSize);
   const rangeBuffer = combinedBuffer.slice(rangeStart, rangeStart + requestedSize);
 
-  // Perfect streaming headers
+  // Perfect range headers
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
   headers.set('Content-Length', requestedSize.toString());
@@ -268,13 +304,64 @@ async function handleOptimizedRangeStream(request, kvNamespaces, masterMetadata,
   headers.set('Cache-Control', 'public, max-age=86400');
   headers.set('Content-Disposition', 'inline');
 
-  console.log(`✅ Range streaming: ${Math.round(requestedSize/1024/1024)}MB`);
+  console.log(`✅ Smart range streaming: ${Math.round(requestedSize/1024/1024)}MB for seek`);
   return new Response(rangeBuffer, { status: 206, headers });
 }
 
-// Sequential chunk loading (no parallel subrequests)
-async function getChunkSequentially(kvNamespace, keyName, chunkInfo, env, index) {
-  console.log(`📦 Sequential load chunk ${index}: ${keyName}`);
+// Full download for non-streamable files
+async function handleFullDownload(request, kvNamespaces, masterMetadata, extension, env, mimeType, isDownload) {
+  const { chunks, filename, size } = masterMetadata;
+  
+  console.log(`💾 Full download: ${filename} (${chunks.length} chunks)`);
+
+  // Use sequential loading to avoid subrequest limits
+  const readable = new ReadableStream({
+    async start(controller) {
+      try {
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkInfo = chunks[i];
+          const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
+          
+          console.log(`💾 Download loading chunk ${i + 1}/${chunks.length}...`);
+          
+          const chunkData = await getChunkWithCache(kvNamespace, chunkInfo.keyName, chunkInfo, env, i);
+          controller.enqueue(new Uint8Array(chunkData));
+        }
+        
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    }
+  });
+
+  const headers = new Headers();
+  headers.set('Content-Type', mimeType);
+  headers.set('Content-Length', size.toString());
+  headers.set('Accept-Ranges', 'bytes');
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Cache-Control', 'public, max-age=86400');
+
+  if (isDownload) {
+    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+  } else {
+    headers.set('Content-Disposition', 'inline');
+  }
+
+  return new Response(readable, { status: 200, headers });
+}
+
+// Enhanced chunk loading with smart caching
+async function getChunkWithCache(kvNamespace, keyName, chunkInfo, env, index) {
+  const cacheKey = `${keyName}_${chunkInfo.telegramFileId}`;
+  
+  // Check cache first
+  const cachedData = getCachedChunk(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
+  console.log(`📦 Loading chunk ${index}: ${keyName}`);
 
   let chunkMetadata;
   try {
@@ -294,9 +381,9 @@ async function getChunkSequentially(kvNamespace, keyName, chunkInfo, env, index)
     }
   });
 
-  // If URL expired, refresh ONCE (no loops)
+  // Auto-refresh expired URLs
   if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log(`🔄 URL expired for chunk ${index}, attempting single refresh...`);
+    console.log(`🔄 URL expired for chunk ${index}, refreshing...`);
 
     const botTokens = [
       env.BOT_TOKEN,
@@ -305,16 +392,13 @@ async function getChunkSequentially(kvNamespace, keyName, chunkInfo, env, index)
       env.BOT_TOKEN4
     ].filter(token => token);
 
-    let refreshed = false;
-    
-    // Try only the first available bot token (no loops)
     if (botTokens.length > 0) {
-      const botToken = botTokens[0];
+      const botToken = botTokens[0]; // Use first available bot
       
       try {
         const getFileResponse = await fetch(
           `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
-          { signal: AbortSignal.timeout(10000) }
+          { signal: AbortSignal.timeout(15000) }
         );
 
         if (getFileResponse.ok) {
@@ -340,17 +424,12 @@ async function getChunkSequentially(kvNamespace, keyName, chunkInfo, env, index)
             
             if (response.ok) {
               console.log(`✅ URL refreshed for chunk ${index}`);
-              refreshed = true;
             }
           }
         }
       } catch (refreshError) {
         console.error(`❌ Failed to refresh chunk ${index}:`, refreshError.message);
       }
-    }
-
-    if (!refreshed) {
-      console.error(`💥 Could not refresh chunk ${index}, using expired URL`);
     }
   }
 
@@ -360,6 +439,9 @@ async function getChunkSequentially(kvNamespace, keyName, chunkInfo, env, index)
 
   const arrayBuffer = await response.arrayBuffer();
   console.log(`✅ Chunk ${index} loaded: ${Math.round(arrayBuffer.byteLength/1024)}KB`);
+
+  // Cache the chunk
+  setCachedChunk(cacheKey, arrayBuffer);
 
   return arrayBuffer;
 }
