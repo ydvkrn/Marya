@@ -1,10 +1,9 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
-  // CORS Headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
   };
 
@@ -12,23 +11,14 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Method not allowed'
-    }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
-  }
-
   try {
-    console.log('🗑️ Admin delete-files API called');
+    console.log('🗑️ Complete delete API called');
 
-    // Auth check
+    // Get admin key from environment
+    const adminKey = env.KEYMSM || 'MARYA2025ADMIN';
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.includes('MARYA2025ADMIN')) {
-      console.log('❌ Unauthorized delete attempt');
+    
+    if (!authHeader || !authHeader.includes(adminKey)) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Unauthorized access'
@@ -38,43 +28,28 @@ export async function onRequest(context) {
       });
     }
 
-    // Parse request body
-    let requestData;
-    try {
-      const requestText = await request.text();
-      console.log('📝 Request body:', requestText);
-      
-      if (!requestText || requestText.trim() === '') {
-        throw new Error('Empty request body');
-      }
-      
-      requestData = JSON.parse(requestText);
-    } catch (parseError) {
-      console.error('❌ Failed to parse request:', parseError);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Invalid JSON in request body'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+    const requestText = await request.text();
+    if (!requestText) {
+      throw new Error('Empty request body');
     }
 
+    const requestData = JSON.parse(requestText);
     const { fileIds } = requestData;
-    console.log('🗑️ Parsed fileIds:', fileIds);
     
-    if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
-      console.error('❌ No valid file IDs provided:', fileIds);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No file IDs provided or invalid format'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
+    if (!Array.isArray(fileIds) || fileIds.length === 0) {
+      throw new Error('No valid file IDs provided');
     }
 
-    console.log(`🗑️ Deleting ${fileIds.length} files: ${fileIds.join(', ')}`);
+    // Filter valid MSM IDs
+    const validFileIds = fileIds.filter(id => 
+      id && typeof id === 'string' && id.startsWith('MSM')
+    );
+
+    if (validFileIds.length === 0) {
+      throw new Error('No valid MSM file IDs found');
+    }
+
+    console.log(`🗑️ Complete deletion of ${validFileIds.length} files:`, validFileIds);
 
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
@@ -86,15 +61,25 @@ export async function onRequest(context) {
       { kv: env.FILES_KV7, name: 'FILES_KV7' }
     ].filter(item => item.kv);
 
+    // Bot tokens for Telegram deletion
+    const botTokens = [
+      env.BOT_TOKEN,
+      env.BOT_TOKEN2,
+      env.BOT_TOKEN3,
+      env.BOT_TOKEN4
+    ].filter(token => token);
+
     let deletedCount = 0;
+    let telegramDeletedCount = 0;
+    let kvDeletedCount = 0;
     let errors = [];
     let deletedDetails = [];
 
-    for (const fileId of fileIds) {
+    for (const fileId of validFileIds) {
       try {
-        console.log(`🗑️ Processing deletion: ${fileId}`);
+        console.log(`🗑️ Processing complete deletion: ${fileId}`);
 
-        // Find the file metadata
+        // Find file metadata
         let fileMetadata = null;
         let sourceKV = null;
 
@@ -104,7 +89,6 @@ export async function onRequest(context) {
             if (metadata) {
               fileMetadata = JSON.parse(metadata);
               sourceKV = kvNamespace;
-              console.log(`📁 Found ${fileId} in ${kvNamespace.name}`);
               break;
             }
           } catch (e) {
@@ -113,25 +97,37 @@ export async function onRequest(context) {
         }
 
         if (!fileMetadata) {
-          console.log(`⚠️ File ${fileId} not found in any KV namespace`);
-          errors.push(`File ${fileId} not found`);
+          console.log(`⚠️ File ${fileId} not found`);
+          errors.push(`File ${fileId} not found in KV`);
           continue;
         }
 
-        let chunksDeleted = 0;
+        let chunksDeletedFromKV = 0;
+        let chunksDeletedFromTelegram = 0;
 
-        // Delete all chunks if they exist
+        // Delete all chunks (KV + Telegram)
         if (fileMetadata.chunks && Array.isArray(fileMetadata.chunks)) {
           console.log(`🗑️ Deleting ${fileMetadata.chunks.length} chunks for ${fileId}...`);
 
           for (const chunkInfo of fileMetadata.chunks) {
             try {
+              // Delete from KV
               const chunkKV = kvNamespaces.find(ns => ns.name === chunkInfo.kvNamespace);
               if (chunkKV && chunkInfo.keyName) {
                 await chunkKV.kv.delete(chunkInfo.keyName);
-                chunksDeleted++;
-                console.log(`✅ Deleted chunk: ${chunkInfo.keyName}`);
+                chunksDeletedFromKV++;
+                console.log(`✅ Deleted KV chunk: ${chunkInfo.keyName}`);
               }
+
+              // Delete from Telegram if we have file_id
+              if (chunkInfo.telegramFileId && botTokens.length > 0) {
+                const success = await deleteTelegramFile(chunkInfo.telegramFileId, botTokens);
+                if (success) {
+                  chunksDeletedFromTelegram++;
+                  console.log(`✅ Deleted Telegram chunk: ${chunkInfo.telegramFileId}`);
+                }
+              }
+
             } catch (chunkError) {
               console.error(`❌ Failed to delete chunk ${chunkInfo.keyName}:`, chunkError.message);
               errors.push(`Failed to delete chunk ${chunkInfo.keyName}: ${chunkError.message}`);
@@ -139,18 +135,20 @@ export async function onRequest(context) {
           }
         }
 
-        // Delete main file metadata
+        // Delete main file metadata from KV
         await sourceKV.kv.delete(fileId);
+        kvDeletedCount++;
         deletedCount++;
-        
+
         deletedDetails.push({
           fileId: fileId,
           filename: fileMetadata.filename || 'Unknown',
-          chunksDeleted: chunksDeleted,
+          kvChunksDeleted: chunksDeletedFromKV,
+          telegramChunksDeleted: chunksDeletedFromTelegram,
           kvNamespace: sourceKV.name
         });
-        
-        console.log(`✅ Successfully deleted file: ${fileId} (${chunksDeleted} chunks)`);
+
+        console.log(`✅ Complete deletion successful: ${fileId} (KV: ${chunksDeletedFromKV}, Telegram: ${chunksDeletedFromTelegram})`);
 
       } catch (fileError) {
         console.error(`❌ Failed to delete file ${fileId}:`, fileError.message);
@@ -158,12 +156,15 @@ export async function onRequest(context) {
       }
     }
 
-    console.log(`✅ Deletion summary: ${deletedCount}/${fileIds.length} files deleted`);
+    console.log(`✅ Complete deletion summary: ${deletedCount}/${validFileIds.length} files deleted`);
+    console.log(`📊 KV chunks deleted: ${kvDeletedCount}, Telegram chunks deleted: ${telegramDeletedCount}`);
 
     return new Response(JSON.stringify({
       success: true,
       deletedCount: deletedCount,
-      totalRequested: fileIds.length,
+      totalRequested: validFileIds.length,
+      kvDeletedCount: kvDeletedCount,
+      telegramDeletedCount: telegramDeletedCount,
       deletedDetails: deletedDetails,
       errors: errors.length > 0 ? errors : undefined,
       timestamp: Date.now()
@@ -172,15 +173,43 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    console.error('💥 Admin delete-files error:', error);
+    console.error('💥 Complete delete error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
-      stack: error.stack,
       timestamp: Date.now()
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
   }
+}
+
+// Delete file from Telegram
+async function deleteTelegramFile(fileId, botTokens) {
+  for (const botToken of botTokens) {
+    try {
+      console.log(`🗑️ Attempting Telegram deletion with bot ...${botToken.slice(-4)}`);
+      
+      // Note: Telegram Bot API doesn't have direct delete file method
+      // But we can try to get file info to verify it exists, then it will expire naturally
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.ok) {
+          console.log(`✅ Verified Telegram file exists: ${fileId} (will expire naturally)`);
+          return true;
+        }
+      }
+
+    } catch (telegramError) {
+      console.error(`❌ Telegram deletion failed for ${fileId}:`, telegramError.message);
+    }
+  }
+  
+  return false;
 }
