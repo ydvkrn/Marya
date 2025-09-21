@@ -805,7 +805,7 @@ body {
             showToast('Logged out successfully', 'success');
         }
 
-        // FIXED: Load all files from KV with proper error handling
+        // FIXED: Load all files from KV with better error handling
         async function loadFiles() {
             if (!isLoggedIn) return;
             
@@ -824,20 +824,18 @@ body {
                 });
 
                 console.log('📡 Response status:', response.status);
-                console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
 
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('❌ Response not OK:', response.status, errorText);
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 200)}`);
                 }
 
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     const responseText = await response.text();
                     console.error('❌ Invalid content type:', contentType);
-                    console.error('❌ Response text:', responseText.substring(0, 500));
-                    throw new Error(`Expected JSON, got: ${contentType}. Response: ${responseText.substring(0, 200)}...`);
+                    throw new Error(`Expected JSON, got: ${contentType}. Response starts with: ${responseText.substring(0, 100)}`);
                 }
 
                 const data = await response.json();
@@ -845,9 +843,26 @@ body {
                 
                 if (data.success) {
                     allFiles = data.files || [];
+                    console.log('📁 Raw files data:', allFiles);
+                    
+                    // Validate files data
+                    const validFiles = allFiles.filter(file => {
+                        const isValid = file && typeof file.filename === 'string';
+                        if (!isValid) {
+                            console.warn('⚠️ Invalid file object:', file);
+                        }
+                        return isValid;
+                    });
+                    
+                    allFiles = validFiles;
+                    
                     updateStats(data.stats);
                     displayFiles(allFiles);
-                    console.log(`✅ Loaded ${allFiles.length} files`);
+                    console.log(`✅ Loaded ${allFiles.length} valid files`);
+                    
+                    if (data.debug) {
+                        console.log('🐛 Debug info:', data.debug);
+                    }
                 } else {
                     throw new Error(data.error || 'Failed to load files');
                 }
@@ -863,6 +878,11 @@ body {
 
         // Update statistics
         function updateStats(stats) {
+            if (!stats) {
+                console.warn('⚠️ No stats provided');
+                return;
+            }
+            
             document.getElementById('totalFiles').textContent = stats.totalFiles || 0;
             document.getElementById('totalSize').textContent = formatBytes(stats.totalSize || 0);
             document.getElementById('activeFiles').textContent = stats.activeFiles || 0;
@@ -871,9 +891,11 @@ body {
 
         // Display files in table
         function displayFiles(files) {
+            console.log('🖼️ Displaying files:', files);
+            
             const tbody = document.getElementById('filesTableBody');
             
-            if (files.length === 0) {
+            if (!files || files.length === 0) {
                 showEmptyState();
                 return;
             }
@@ -881,24 +903,41 @@ body {
             tbody.innerHTML = '';
             showFilesTable();
 
-            files.forEach(file => {
-                const row = createFileRow(file);
-                tbody.appendChild(row);
+            files.forEach((file, index) => {
+                try {
+                    const row = createFileRow(file, index);
+                    tbody.appendChild(row);
+                } catch (rowError) {
+                    console.error('❌ Failed to create row for file:', file, rowError);
+                }
             });
         }
 
-        // Create file table row
-        function createFileRow(file) {
-            const row = document.createElement('tr');
-            row.dataset.fileId = file.id;
+        // FIXED: Create file table row with better error handling
+        function createFileRow(file, index) {
+            if (!file) {
+                throw new Error('File object is null or undefined');
+            }
             
-            const fileIcon = getFileIcon(file.filename);
-            const uploadDate = new Date(file.uploadedAt).toLocaleDateString();
+            const row = document.createElement('tr');
+            row.dataset.fileId = file.id || `unknown_${index}`;
+            
+            // Safe filename handling
+            const safeFilename = file.filename || 'Unknown File';
+            const fileIcon = getFileIcon(safeFilename);
+            const uploadDate = file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'Unknown';
             const status = getFileStatus(file);
+            
+            console.log('🔧 Creating row for file:', {
+                id: file.id,
+                filename: safeFilename,
+                size: file.size,
+                uploadDate: uploadDate
+            });
             
             row.innerHTML = `
                 <td>
-                    <input type="checkbox" class="file-checkbox" value="${file.id}" onchange="toggleFileSelection('${file.id}')">
+                    <input type="checkbox" class="file-checkbox" value="${file.id || ''}" onchange="toggleFileSelection('${file.id || ''}')">
                 </td>
                 <td>
                     <div class="file-info">
@@ -906,24 +945,25 @@ body {
                             <i class="${fileIcon.icon}"></i>
                         </div>
                         <div class="file-details">
-                            <h4>${truncateText(file.filename, 40)}</h4>
-                            <p>ID: ${file.id}</p>
+                            <h4>${truncateText(safeFilename, 40)}</h4>
+                            <p>ID: ${file.id || 'Unknown'}</p>
+                            <p>Type: ${file.type || 'Unknown'}</p>
                         </div>
                     </div>
                 </td>
-                <td class="file-size">${formatBytes(file.size)}</td>
+                <td class="file-size">${formatBytes(file.size || 0)}</td>
                 <td>${file.contentType || 'Unknown'}</td>
                 <td>${uploadDate}</td>
                 <td><span class="status-badge ${status.class}">${status.text}</span></td>
                 <td>
                     <div class="file-actions">
-                        <a href="/btfstorage/file/${file.id}${file.extension || ''}" target="_blank" class="btn btn-primary btn-sm">
+                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}" target="_blank" class="btn btn-primary btn-sm">
                             <i class="fas fa-eye"></i> View
                         </a>
-                        <a href="/btfstorage/file/${file.id}${file.extension || ''}?dl=1" class="btn btn-success btn-sm">
+                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}?dl=1" class="btn btn-success btn-sm">
                             <i class="fas fa-download"></i> Download
                         </a>
-                        <button onclick="deleteFile('${file.id}', '${file.filename}')" class="btn btn-danger btn-sm">
+                        <button onclick="deleteFile('${file.id || ''}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn btn-danger btn-sm">
                             <i class="fas fa-trash"></i> Delete
                         </button>
                     </div>
@@ -933,9 +973,14 @@ body {
             return row;
         }
 
-        // Get file icon based on type
+        // FIXED: Get file icon with safe handling
         function getFileIcon(filename) {
-            const ext = filename.split('.').pop()?.toLowerCase() || '';
+            if (!filename || typeof filename !== 'string') {
+                return { type: 'other', icon: 'fas fa-file' };
+            }
+            
+            const parts = filename.split('.');
+            const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
             
             if (['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', '3gp'].includes(ext)) {
                 return { type: 'video', icon: 'fas fa-video' };
@@ -954,8 +999,16 @@ body {
 
         // Get file status
         function getFileStatus(file) {
+            if (!file) {
+                return { class: 'status-active', text: 'Unknown' };
+            }
+            
             if (file.neverExpires) {
                 return { class: 'status-permanent', text: 'Permanent' };
+            }
+            
+            if (file.type === 'corrupted') {
+                return { class: 'status-error', text: 'Corrupted' };
             }
             
             return { class: 'status-active', text: 'Active' };
@@ -973,11 +1026,17 @@ body {
                     return;
                 }
                 
-                const filtered = allFiles.filter(file => 
-                    file.filename.toLowerCase().includes(query) ||
-                    file.id.toLowerCase().includes(query) ||
-                    (file.contentType && file.contentType.toLowerCase().includes(query))
-                );
+                const filtered = allFiles.filter(file => {
+                    if (!file) return false;
+                    
+                    const filename = (file.filename || '').toLowerCase();
+                    const id = (file.id || '').toLowerCase();
+                    const contentType = (file.contentType || '').toLowerCase();
+                    
+                    return filename.includes(query) || 
+                           id.includes(query) || 
+                           contentType.includes(query);
+                });
                 
                 displayFiles(filtered);
             });
@@ -990,14 +1049,18 @@ body {
             
             checkboxes.forEach(checkbox => {
                 checkbox.checked = selectAll.checked;
-                toggleFileSelection(checkbox.value);
+                if (checkbox.value) {
+                    toggleFileSelection(checkbox.value);
+                }
             });
         }
 
         function toggleFileSelection(fileId) {
+            if (!fileId) return;
+            
             const checkbox = document.querySelector(`input[value="${fileId}"]`);
             
-            if (checkbox.checked) {
+            if (checkbox && checkbox.checked) {
                 selectedFiles.add(fileId);
             } else {
                 selectedFiles.delete(fileId);
@@ -1028,7 +1091,12 @@ body {
 
         // Delete functions
         function deleteFile(fileId, filename) {
-            deleteQueue = [{ id: fileId, filename: filename }];
+            if (!fileId) {
+                showToast('Invalid file ID', 'error');
+                return;
+            }
+            
+            deleteQueue = [{ id: fileId, filename: filename || 'Unknown File' }];
             showDeleteModal();
         }
 
@@ -1036,8 +1104,11 @@ body {
             if (selectedFiles.size === 0) return;
             
             deleteQueue = Array.from(selectedFiles).map(fileId => {
-                const file = allFiles.find(f => f.id === fileId);
-                return { id: fileId, filename: file ? file.filename : 'Unknown' };
+                const file = allFiles.find(f => f && f.id === fileId);
+                return { 
+                    id: fileId, 
+                    filename: file && file.filename ? file.filename : 'Unknown File' 
+                };
             });
             
             showDeleteModal();
@@ -1068,7 +1139,7 @@ body {
                         'Authorization': `Bearer ${ADMIN_KEY}`
                     },
                     body: JSON.stringify({
-                        fileIds: deleteQueue.map(f => f.id)
+                        fileIds: deleteQueue.map(f => f.id).filter(id => id)
                     })
                 });
 
@@ -1109,7 +1180,7 @@ body {
         }
 
         function formatBytes(bytes) {
-            if (bytes === 0) return '0 Bytes';
+            if (!bytes || bytes === 0) return '0 Bytes';
             const k = 1024;
             const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -1117,6 +1188,7 @@ body {
         }
 
         function truncateText(text, maxLength) {
+            if (!text || typeof text !== 'string') return 'Unknown';
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
         }
@@ -1141,6 +1213,6 @@ body {
         }
 
         console.log('✅ Secure Admin Panel - Ready!');
-    </script>
+</script>
 </body>
 </html>
