@@ -1,56 +1,642 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chunked File Upload</title>
-  <style> /* White/Red pro design... */ </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marya Vault - Professional File Storage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #dc2626;
+            --primary-red-dark: #b91c1c;
+            --primary-red-light: #fef2f2;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --success: #059669;
+            --success-light: #d1fae5;
+            --error: #dc2626;
+            --error-light: #fee2e2;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+            min-height: 100vh;
+            color: var(--gray-900);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            border-radius: 24px;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo::before {
+            content: '☁';
+            font-size: 3rem;
+            color: var(--white);
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            font-weight: 500;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            padding: 3rem;
+            margin-bottom: 3rem;
+            border: 1px solid var(--gray-100);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+        }
+
+        .dropzone {
+            border: 2px dashed var(--gray-200);
+            border-radius: 16px;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--gray-50);
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropzone:hover,
+        .dropzone.dragover {
+            border-color: var(--primary-red);
+            background: var(--primary-red-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-red);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-description {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        .file-types {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .file-type-badge {
+            background: var(--primary-red);
+            color: var(--white);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .file-type-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .file-input { display: none; }
+
+        /* URL Upload Section */
+        .url-upload {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .url-upload-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--white);
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 4px var(--primary-red-light);
+        }
+
+        .url-upload-btn {
+            background: var(--primary-red);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .url-upload-btn:hover {
+            background: var(--primary-red-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 1.5rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 50px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 50px;
+            position: relative;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-red);
+        }
+
+        /* Results */
+        .results {
+            display: none;
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            margin-top: 2rem;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .file-link {
+            background: var(--success-light);
+            color: var(--success);
+            padding: 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 1rem;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .file-link:hover {
+            background: #065f46;
+            color: var(--white);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .title {
+                font-size: 2.5rem;
+            }
+
+            .upload-section {
+                padding: 2rem 1.5rem;
+            }
+
+            .dropzone {
+                padding: 3rem 1.5rem;
+                min-height: 250px;
+            }
+
+            .toast {
+                top: 1rem;
+                right: 1rem;
+                left: 1rem;
+                max-width: none;
+                transform: translateY(-100px);
+            }
+
+            .toast.show {
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <h1>📦 Large File Chunk Upload</h1>
-    <input type="file" id="fileInput" />
-    <button onclick="uploadFile()" class="btn">Upload</button>
-    <input id="urlInput" placeholder="Paste direct .mp4/.zip/.jpg file link" style="width:90%"><br>
-    <button onclick="uploadFromUrl()" class="btn">Upload via URL</button>
-    <div id="progress"></div>
-    <div id="result"></div>
-  </div>
-<script>
-const CHUNK_SIZE = 20 * 1024 * 1024;
-async function uploadFile() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) return alert("Select a file!");
-  let total = file.size, uploaded = 0, chunkCount = Math.ceil(total/CHUNK_SIZE);
-  let id = Math.random().toString(36).slice(2,12)+Date.now().toString(36);
-  for (let i=0; i<chunkCount; i++) {
-    const chunk = file.slice(i*CHUNK_SIZE, (i+1)*CHUNK_SIZE);
-    const form = new FormData();
-    form.append("chunk", chunk);
-    form.append("id", id);
-    form.append("idx", i);
-    form.append("total", chunkCount);
-    form.append("filename", file.name);
-    let res = await fetch("/api/upload-chunk", {method:"POST", body:form});
-    if(!res.ok) return alert("Upload failed chunk "+i);
-    document.getElementById("progress").innerText = `Uploading ${i+1}/${chunkCount} ...`;
-    uploaded += chunk.size;
-  }
-  document.getElementById("progress").innerText = "";
-  document.getElementById("result").innerHTML = `✅ Uploaded! <a href="/btfstorage/file/${id}_${file.name}">Direct Link</a>`;
-}
-// URL upload (fetches and chunks in Worker)
-async function uploadFromUrl() {
-  let url = document.getElementById('urlInput').value.trim();
-  if (!url) return alert("Paste a valid url");
-  const res = await fetch("/api/upload-from-url", {
-    method:"POST",
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ url })
-  });
-  if (!res.ok) return alert("Upload failed: "+(await res.text()));
-  const data = await res.json();
-  document.getElementById("result").innerHTML = `✅ Uploaded! <a href="${data.link}">Direct Link</a>`;
-}
-</script>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo"></div>
+            <h1 class="title">Marya Vault</h1>
+            <p class="subtitle">Professional Multi-KV file storage with chunked upload system and permanent URLs.</p>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <div class="dropzone" id="dropzone">
+                <div class="upload-icon">📁</div>
+                <h2 class="upload-title">Drop your files here</h2>
+                <p class="upload-description">or click to browse from your device</p>
+                
+                <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
+                
+                <div class="file-types">
+                    <span class="file-type-badge">📷 Images</span>
+                    <span class="file-type-badge">🎥 Videos</span>
+                    <span class="file-type-badge">📄 Documents</span>
+                    <span class="file-type-badge">🎵 Audio</span>
+                    <span class="file-type-badge">📦 Archives</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Ready to upload</div>
+            </div>
+
+            <!-- URL Upload -->
+            <div class="url-upload">
+                <h3 class="url-upload-title">📎 Upload from URL</h3>
+                <input type="url" id="urlInput" class="url-input" placeholder="Paste direct file URL (e.g. https://example.com/file.mp4)">
+                <button class="url-upload-btn" onclick="uploadFromUrl()">Upload from URL</button>
+            </div>
+
+            <!-- Results -->
+            <div class="results" id="results">
+                <h3 class="results-title">✅ Upload Complete</h3>
+                <div id="resultLinks"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        console.log('🚀 Marya Vault Multi-KV - Loading...');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const results = document.getElementById('results');
+            const resultLinks = document.getElementById('resultLinks');
+
+            // File selection handlers
+            dropzone.addEventListener('click', function(e) {
+                e.preventDefault();
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFiles(Array.from(e.target.files));
+                }
+            });
+
+            // Drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, unhighlight, false);
+            });
+
+            dropzone.addEventListener('drop', handleDrop, false);
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight() {
+                dropzone.classList.add('dragover');
+            }
+
+            function unhighlight() {
+                dropzone.classList.remove('dragover');
+            }
+
+            function handleDrop(e) {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFiles(Array.from(files));
+                }
+            }
+
+            function handleFiles(files) {
+                if (files.length === 0) {
+                    showToast('No files selected', 'error');
+                    return;
+                }
+
+                files.forEach(file => uploadFile(file));
+            }
+
+            function uploadFile(file) {
+                console.log('⬆️ Starting upload:', file.name, formatBytes(file.size));
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = Math.round((e.loaded / e.total) * 100);
+                        progressFill.style.width = percentComplete + '%';
+                        progressText.textContent = `${percentComplete}% uploaded`;
+                    }
+                });
+
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200) {
+                        try {
+                            const result = JSON.parse(xhr.responseText);
+                            if (result.success) {
+                                progressFill.style.width = '100%';
+                                progressText.textContent = '100% complete';
+                                
+                                results.classList.add('show');
+                                resultLinks.innerHTML += `
+                                    <a href="${result.url}" target="_blank" class="file-link">
+                                        📁 ${result.filename} (${formatBytes(result.size)})
+                                    </a>
+                                `;
+                                
+                                showToast(`${file.name} uploaded successfully!`, 'success');
+                            } else {
+                                throw new Error(result.error || 'Upload failed');
+                            }
+                        } catch (parseError) {
+                            showToast(`Upload failed: ${file.name}`, 'error');
+                        }
+                    } else {
+                        showToast(`Upload failed: ${file.name}`, 'error');
+                    }
+                });
+
+                xhr.addEventListener('error', function() {
+                    showToast(`Network error: ${file.name}`, 'error');
+                });
+
+                xhr.open('POST', '/upload');
+                xhr.send(formData);
+            }
+
+            function formatBytes(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                const icon = type === 'success' ? '✅' : '❌';
+                
+                toast.innerHTML = `${icon} ${message}`;
+                toast.className = `toast ${type} show`;
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 5000);
+            }
+
+            // URL Upload Function
+            window.uploadFromUrl = async function() {
+                const url = document.getElementById('urlInput').value.trim();
+                if (!url) {
+                    showToast('Please enter a URL', 'error');
+                    return;
+                }
+
+                progressText.textContent = 'Downloading from URL...';
+                progressFill.style.width = '50%';
+
+                try {
+                    const response = await fetch('/upload-from-url', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        progressFill.style.width = '100%';
+                        progressText.textContent = '100% complete';
+                        
+                        results.classList.add('show');
+                        resultLinks.innerHTML += `
+                            <a href="${result.url}" target="_blank" class="file-link">
+                                🌐 ${result.filename} (from URL)
+                            </a>
+                        `;
+                        
+                        showToast('File uploaded from URL successfully!', 'success');
+                        document.getElementById('urlInput').value = '';
+                    } else {
+                        throw new Error(result.error || 'URL upload failed');
+                    }
+                } catch (error) {
+                    progressFill.style.width = '0%';
+                    progressText.textContent = 'Upload failed';
+                    showToast(`URL upload failed: ${error.message}`, 'error');
+                }
+            };
+
+            console.log('✅ Marya Vault Multi-KV Ready!');
+        });
+    </script>
 </body>
 </html>
