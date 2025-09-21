@@ -3,46 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marya Vault - Ultimate File Storage</title>
+<title>Marya Vault - Professional File Storage</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 :root {
-    --primary: #3b82f6;
-    --primary-dark: #2563eb;
-    --primary-light: #dbeafe;
-    --success: #10b981;
-    --error: #ef4444;
-    --warning: #f59e0b;
+    --primary-red: #dc2626;
+    --primary-red-dark: #b91c1c;
+    --primary-red-light: #fef2f2;
     --white: #ffffff;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
     --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
     --gray-900: #111827;
-    --shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-    --gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    --success: #059669;
+    --success-light: #d1fae5;
+    --error: #dc2626;
+    --error-light: #fee2e2;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     min-height: 100vh;
     color: var(--gray-900);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
 }
 
-.container { 
-    max-width: 1000px; 
-    margin: 0 auto; 
-    padding: 2rem; 
-    position: relative;
-}
-
-/* Floating Particles Background */
+/* Animated Background */
 .particles {
     position: fixed;
     top: 0;
@@ -67,24 +69,31 @@ body {
     50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
 }
 
+.container { 
+    max-width: 1000px; 
+    margin: 0 auto; 
+    padding: 2rem; 
+    position: relative;
+    z-index: 1;
+}
+
 /* Header */
 .header {
     text-align: center;
     margin-bottom: 3rem;
-    position: relative;
-    z-index: 1;
+    padding: 2rem 0;
 }
 
 .logo {
     width: 120px;
     height: 120px;
-    background: var(--gradient);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 30px;
     margin: 0 auto 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-xl);
     backdrop-filter: blur(10px);
     position: relative;
     overflow: hidden;
@@ -94,7 +103,7 @@ body {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    background: linear-gradient(45deg, transparent, rgba(220,38,38,0.1), transparent);
     animation: shimmer 3s infinite;
 }
 
@@ -106,12 +115,10 @@ body {
 .title {
     font-size: 4rem;
     font-weight: 900;
-    background: linear-gradient(135deg, #fff, #f0f8ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: white;
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    letter-spacing: -0.02em;
 }
 
 .subtitle {
@@ -127,13 +134,12 @@ body {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     border-radius: 24px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-xl);
     padding: 3rem;
     margin-bottom: 2rem;
     border: 1px solid rgba(255,255,255,0.2);
-    position: relative;
-    z-index: 1;
     overflow: hidden;
+    position: relative;
 }
 
 .upload-card::before {
@@ -143,7 +149,7 @@ body {
     left: 0;
     right: 0;
     height: 4px;
-    background: var(--gradient);
+    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
 }
 
 /* Drag & Drop Zone */
@@ -154,7 +160,7 @@ body {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(59, 130, 246, 0.02);
+    background: rgba(220, 38, 38, 0.02);
     position: relative;
     overflow: hidden;
     min-height: 300px;
@@ -165,16 +171,16 @@ body {
 }
 
 .dropzone:hover, .dropzone.dragover {
-    border-color: var(--primary);
-    background: var(--primary-light);
+    border-color: var(--primary-red);
+    background: var(--primary-red-light);
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 20px 40px rgba(220, 38, 38, 0.15);
 }
 
 .upload-icon {
     font-size: 5rem;
     margin-bottom: 2rem;
-    color: var(--primary);
+    color: var(--primary-red);
     animation: bounce 2s infinite;
 }
 
@@ -205,37 +211,37 @@ body {
 }
 
 .file-type {
-    background: var(--gradient);
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
     font-size: 0.9rem;
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
     transition: all 0.3s;
 }
 
 .file-type:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4);
 }
 
 .file-input { display: none; }
 
 /* URL Upload Section */
 .url-section {
-    background: rgba(16, 185, 129, 0.05);
+    background: rgba(220, 38, 38, 0.05);
     border-radius: 16px;
     padding: 2rem;
     margin-top: 2rem;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .url-title {
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    color: var(--success);
+    color: var(--primary-red);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -260,12 +266,12 @@ body {
 
 .url-input:focus {
     outline: none;
-    border-color: var(--success);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
 }
 
 .url-btn {
-    background: var(--success);
+    background: var(--primary-red);
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -280,9 +286,9 @@ body {
 }
 
 .url-btn:hover {
-    background: #0f766e;
+    background: var(--primary-red-dark);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
 }
 
 .url-btn:disabled {
@@ -299,7 +305,7 @@ body {
     border-radius: 20px;
     padding: 2rem;
     margin: 2rem 0;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-xl);
     border: 1px solid rgba(255,255,255,0.2);
 }
 
@@ -342,7 +348,7 @@ body {
 .stat-value {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--primary);
+    color: var(--primary-red);
 }
 
 .stat-label {
@@ -351,11 +357,11 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Glass Progress Bar */
+/* Progress Bar */
 .progress-container {
     position: relative;
     height: 12px;
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(220, 38, 38, 0.1);
     border-radius: 50px;
     overflow: hidden;
     margin: 1rem 0;
@@ -363,7 +369,7 @@ body {
 
 .progress-bar {
     height: 100%;
-    background: var(--gradient);
+    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
     width: 0%;
     transition: width 0.3s ease;
     border-radius: 50px;
@@ -392,7 +398,7 @@ body {
     margin-top: 0.5rem;
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--primary);
+    color: var(--primary-red);
 }
 
 /* File Results */
@@ -430,7 +436,7 @@ body {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: var(--gradient);
+    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
 }
 
 .file-item:hover {
@@ -448,7 +454,7 @@ body {
 .file-icon {
     width: 64px;
     height: 64px;
-    background: var(--gradient);
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -456,7 +462,7 @@ body {
     font-size: 1.5rem;
     color: white;
     flex-shrink: 0;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
 }
 
 .file-details {
@@ -489,17 +495,17 @@ body {
 }
 
 .file-status.uploading {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--primary);
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--primary-red);
 }
 
 .file-status.completed {
-    background: rgba(16, 185, 129, 0.1);
+    background: var(--success-light);
     color: var(--success);
 }
 
 .file-status.failed {
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--error-light);
     color: var(--error);
 }
 
@@ -526,25 +532,25 @@ body {
 }
 
 .btn-primary {
-    background: var(--gradient);
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
     color: white;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4);
 }
 
 .btn-success {
-    background: linear-gradient(135deg, var(--success), #0f766e);
+    background: linear-gradient(135deg, var(--success), #047857);
     color: white;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
 }
 
 .btn-success:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
 }
 
 .btn-outline {
@@ -595,12 +601,12 @@ body {
 }
 
 .toast.success .toast-icon {
-    background: rgba(16, 185, 129, 0.1);
+    background: var(--success-light);
     color: var(--success);
 }
 
 .toast.error .toast-icon {
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--error-light);
     color: var(--error);
 }
 
@@ -643,10 +649,10 @@ body {
         <!-- Header -->
         <header class="header">
             <div class="logo">
-                <i class="fas fa-cloud" style="font-size: 3rem; color: white;"></i>
+                <i class="fas fa-cloud" style="font-size: 3rem; color: var(--primary-red);"></i>
             </div>
             <h1 class="title">Marya Vault</h1>
-            <p class="subtitle">Ultimate file storage with lightning-fast chunked uploads, URL importing, and 20+ year lifetime guarantee!</p>
+            <p class="subtitle">Professional file storage with lightning-fast chunked uploads and permanent URLs!</p>
         </header>
 
         <!-- Upload Card -->
@@ -721,12 +727,12 @@ body {
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 Marya Vault Ultimate - Loading...');
+        console.log('🚀 Marya Vault RED THEME - Loading...');
         
         // Global variables
-        let currentUploads = new Map();
         let uploadStartTime = 0;
         let totalBytesUploaded = 0;
+        let currentFileId = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
@@ -791,10 +797,10 @@ body {
         }
 
         async function uploadFileWithChunking(file) {
-            console.log('🚀 Starting ultra-fast chunked upload:', file.name);
+            console.log('🚀 Starting RED THEME chunked upload:', file.name);
 
-            const fileId = generateUniqueId();
-            const fileItem = createFileItem(file, fileId);
+            currentFileId = generateUniqueId();
+            const fileItem = createFileItem(file, currentFileId);
             document.getElementById('filesList').appendChild(fileItem);
 
             const progressElement = document.getElementById('uploadProgress');
@@ -807,54 +813,54 @@ body {
                 uploadStartTime = Date.now();
                 totalBytesUploaded = 0;
 
-                console.log(`File will be uploaded in ${totalChunks} ultra-fast chunks`);
+                console.log(`File will be uploaded in ${totalChunks} chunks`);
 
-                updateFileStatus(fileId, 'uploading', `Uploading ${totalChunks} chunks...`);
+                updateFileStatus(currentFileId, 'uploading', `Uploading ${totalChunks} chunks...`);
                 
-                const uploadPromises = [];
-                const maxConcurrent = 3; // Upload 3 chunks simultaneously for speed
+                let uploadedChunks = 0;
 
-                for (let i = 0; i < totalChunks; i += maxConcurrent) {
-                    const batchPromises = [];
+                // Upload chunks sequentially for reliability
+                for (let i = 0; i < totalChunks; i++) {
+                    const start = i * CHUNK_SIZE;
+                    const end = Math.min(start + CHUNK_SIZE, file.size);
+                    const chunk = file.slice(start, end);
+
+                    const result = await uploadChunk(file, chunk, i, totalChunks, currentFileId);
                     
-                    for (let j = 0; j < maxConcurrent && (i + j) < totalChunks; j++) {
-                        const chunkIndex = i + j;
-                        const start = chunkIndex * CHUNK_SIZE;
-                        const end = Math.min(start + CHUNK_SIZE, file.size);
-                        const chunk = file.slice(start, end);
-
-                        batchPromises.push(uploadChunk(file, chunk, chunkIndex, totalChunks, fileId));
-                    }
-
-                    const batchResults = await Promise.all(batchPromises);
-                    uploadPromises.push(...batchResults);
-
+                    uploadedChunks++;
+                    totalBytesUploaded += chunk.size;
+                    
                     // Update progress
-                    const progress = Math.round((uploadPromises.length / totalChunks) * 100);
-                    updateProgress(progress, uploadPromises.length, totalChunks, file.size);
+                    const progress = Math.round((uploadedChunks / totalChunks) * 100);
+                    updateProgress(progress, uploadedChunks, totalChunks, file.size);
+                    
+                    console.log(`Chunk ${i + 1}/${totalChunks} uploaded (${progress}%)`);
+                    
+                    // If this is the last chunk and we have URL, we're done
+                    if (i === totalChunks - 1 && result.url) {
+                        console.log('✅ Upload completed with final URL:', result.url);
+                        
+                        updateFileStatus(currentFileId, 'completed', 'Upload Complete!');
+                        addFileActions(currentFileId, result);
+                        showToast(`${file.name} uploaded successfully!`, 'success');
+                        
+                        // Hide progress
+                        setTimeout(() => {
+                            progressElement.classList.remove('show');
+                        }, 2000);
+                        
+                        return; // Exit successfully
+                    }
                 }
 
-                // Wait for final response
-                const finalResult = uploadPromises[uploadPromises.length - 1];
-                
-                if (finalResult && finalResult.url) {
-                    // Upload completed successfully
-                    updateFileStatus(fileId, 'completed', 'Upload Complete!');
-                    addFileActions(fileId, finalResult);
-                    showToast(`${file.name} uploaded successfully! URL ready instantly.`, 'success');
-                    
-                    // Hide progress
-                    setTimeout(() => {
-                        progressElement.classList.remove('show');
-                    }, 2000);
-                } else {
-                    throw new Error('No final URL received');
-                }
+                // If we reach here without URL, it's an error
+                throw new Error('Upload completed but no final URL received');
 
             } catch (error) {
-                console.error('Upload error:', error);
-                updateFileStatus(fileId, 'failed', `Failed: ${error.message}`);
-                showToast(`Upload failed: ${file.name}`, 'error');
+                console.error('❌ Upload error:', error);
+                updateFileStatus(currentFileId, 'failed', `Failed: ${error.message}`);
+                showToast(`Upload failed: ${file.name} - ${error.message}`, 'error');
+                progressElement.classList.remove('show');
             }
         }
 
@@ -870,8 +876,6 @@ body {
             formData.append('originalSize', originalFile.size.toString());
             formData.append('fileId', fileId);
 
-            const startTime = Date.now();
-            
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
@@ -886,13 +890,6 @@ body {
             if (!result.success) {
                 throw new Error(`Chunk ${chunkIndex + 1} failed: ${result.error}`);
             }
-
-            // Update statistics
-            const uploadTime = (Date.now() - startTime) / 1000;
-            const chunkSpeed = (chunk.size / uploadTime) / 1024 / 1024; // MB/s
-            totalBytesUploaded += chunk.size;
-            
-            console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded at ${chunkSpeed.toFixed(1)} MB/s`);
 
             return result;
         }
@@ -965,7 +962,7 @@ body {
                     document.getElementById('filesList').appendChild(fileItem);
                     
                     addFileActions(fileId, result);
-                    showToast('File imported from URL successfully with permanent lifetime!', 'success');
+                    showToast('File imported from URL successfully!', 'success');
                     urlInput.value = '';
                 } else {
                     throw new Error(result.error || 'Import failed');
@@ -1121,7 +1118,7 @@ body {
             }, 5000);
         }
 
-        console.log('✅ Marya Vault Ultimate - Ready!');
+        console.log('✅ Marya Vault RED THEME - Ready!');
     </script>
 </body>
 </html>
