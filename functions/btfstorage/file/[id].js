@@ -19,12 +19,18 @@ export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
 
-  console.log('=== MULTI-KV KEYS FILE SERVE ===');
-  console.log('File ID:', fileId);
+  console.log('=== ULTRA-FAST MICRO-CHUNK SERVE ===');
+  console.log('Custom File ID:', fileId);
 
   try {
+    // Extract actual ID (MSM format) and extension
     const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
     const extension = fileId.includes('.') ? fileId.substring(fileId.lastIndexOf('.')) : '';
+
+    // Validate MSM ID format
+    if (!actualId.startsWith('MSM')) {
+      return new Response('Invalid file ID format', { status: 404 });
+    }
 
     // All KV namespaces
     const kvNamespaces = {
@@ -45,11 +51,11 @@ export async function onRequest(context) {
     }
 
     const masterMetadata = JSON.parse(masterMetadataString);
-    console.log(`File found: ${masterMetadata.filename} (${masterMetadata.totalChunks} chunk keys)`);
+    console.log(`File found: ${masterMetadata.filename} (${masterMetadata.totalChunks} micro-chunks)`);
 
-    // Handle chunked files with KV keys
-    if (masterMetadata.type === 'multi_kv_chunked_keys') {
-      return await handleChunkedKeysFile(request, kvNamespaces, masterMetadata, extension, env);
+    // Handle micro-chunked files
+    if (masterMetadata.type === 'micro_chunked_keys') {
+      return await handleMicroChunkedFile(request, kvNamespaces, masterMetadata, extension, env);
     } else {
       // Legacy support
       return await handleLegacyFile(request, kvNamespaces, masterMetadata, extension, env);
@@ -61,39 +67,52 @@ export async function onRequest(context) {
   }
 }
 
-// Handle files stored as multiple KV keys
-async function handleChunkedKeysFile(request, kvNamespaces, masterMetadata, extension, env) {
-  const { totalChunks, chunks, filename, size } = masterMetadata;
-  console.log(`Serving chunked keys file: ${filename} (${totalChunks} keys)`);
+// Handle micro-chunked files (YouTube/Instagram style)
+async function handleMicroChunkedFile(request, kvNamespaces, masterMetadata, extension, env) {
+  const { totalChunks, chunks, filename, size, chunkSize } = masterMetadata;
+  console.log(`Serving micro-chunked file: ${filename} (${totalChunks} chunks × ${Math.round(chunkSize/1024)}KB)`);
 
-  // Handle Range requests for video streaming
+  // Handle Range requests for ultra-smooth streaming
   const range = request.headers.get('Range');
   if (range) {
-    return await handleRangeRequestKeys(request, kvNamespaces, masterMetadata, extension, range, env);
+    return await handleRangeRequestMicro(request, kvNamespaces, masterMetadata, extension, range, env);
   }
 
-  // Get all chunks from KV keys with auto-refresh
-  const chunkPromises = chunks.map(async (chunkInfo, index) => {
-    const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
-    const keyName = chunkInfo.keyName;
-    return await getChunkFromKey(kvNamespace, keyName, chunkInfo, env);
-  });
+  // Get all micro-chunks in parallel batches (like YouTube)
+  const batchSize = 10; // Process 10 chunks simultaneously
+  const allChunkData = new Array(totalChunks);
 
-  console.log(`Fetching ${chunks.length} chunks from KV keys...`);
-  const chunkResults = await Promise.all(chunkPromises);
+  for (let batchStart = 0; batchStart < totalChunks; batchStart += batchSize) {
+    const batchEnd = Math.min(batchStart + batchSize, totalChunks);
+    const batchPromises = [];
 
-  // Sort and combine chunks
-  chunkResults.sort((a, b) => a.index - b.index);
-  const totalSize = chunkResults.reduce((sum, chunk) => sum + chunk.data.byteLength, 0);
+    for (let i = batchStart; i < batchEnd; i++) {
+      const chunkInfo = chunks[i];
+      const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
+      const keyName = chunkInfo.keyName;
+      batchPromises.push(getMicroChunkFromKey(kvNamespace, keyName, chunkInfo, env, i));
+    }
+
+    console.log(`Fetching batch ${Math.floor(batchStart/batchSize) + 1}/${Math.ceil(totalChunks/batchSize)}`);
+    const batchResults = await Promise.all(batchPromises);
+    
+    // Store results in correct order
+    batchResults.forEach(result => {
+      allChunkData[result.index] = result.data;
+    });
+  }
+
+  // Combine all micro-chunks
+  const totalSize = allChunkData.reduce((sum, chunk) => sum + chunk.byteLength, 0);
   const combinedBuffer = new Uint8Array(totalSize);
 
   let offset = 0;
-  for (const chunk of chunkResults) {
-    combinedBuffer.set(new Uint8Array(chunk.data), offset);
-    offset += chunk.data.byteLength;
+  for (const chunkData of allChunkData) {
+    combinedBuffer.set(new Uint8Array(chunkData), offset);
+    offset += chunkData.byteLength;
   }
 
-  // Response headers
+  // Response headers for optimal streaming
   const headers = new Headers();
   const mimeType = getMimeType(extension);
   headers.set('Content-Type', mimeType);
@@ -108,36 +127,33 @@ async function handleChunkedKeysFile(request, kvNamespaces, masterMetadata, exte
   if (isDownload) {
     headers.set('Content-Disposition', `attachment; filename="${filename}"`);
   } else {
-    if (mimeType.startsWith('image/') || mimeType.startsWith('video/') ||
-        mimeType.startsWith('audio/') || mimeType === 'application/pdf') {
+    if (mimeType.startsWith('video/') || mimeType.startsWith('audio/')) {
       headers.set('Content-Disposition', 'inline');
     } else {
       headers.set('Content-Disposition', `attachment; filename="${filename}"`);
     }
   }
 
-  console.log('✅ Multi-KV keys file served successfully');
+  console.log('✅ Ultra-fast micro-chunked file served successfully');
   return new Response(combinedBuffer, { status: 200, headers });
 }
 
-// Get chunk from KV key with auto-refresh
-async function getChunkFromKey(kvNamespace, keyName, chunkInfo, env) {
-  console.log(`Getting chunk from key: ${keyName}`);
-
+// Get micro-chunk from KV key with auto-refresh
+async function getMicroChunkFromKey(kvNamespace, keyName, chunkInfo, env, index) {
   const chunkMetadataString = await kvNamespace.get(keyName);
   if (!chunkMetadataString) {
-    throw new Error(`Chunk key ${keyName} not found`);
+    throw new Error(`Micro-chunk key ${keyName} not found`);
   }
 
   const chunkMetadata = JSON.parse(chunkMetadataString);
   let directUrl = chunkMetadata.directUrl;
 
-  // Try to fetch chunk
+  // Try to fetch micro-chunk
   let response = await fetch(directUrl);
 
-  // If URL expired, refresh it
+  // If URL expired, refresh it (faster than before)
   if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log(`🔄 URL expired for key ${keyName}, refreshing...`);
+    console.log(`🔄 URL expired for micro-chunk ${index}, refreshing...`);
 
     const botTokens = [
       env.BOT_TOKEN,
@@ -146,11 +162,7 @@ async function getChunkFromKey(kvNamespace, keyName, chunkInfo, env) {
       env.BOT_TOKEN4
     ].filter(token => token);
 
-    if (botTokens.length === 0) {
-      throw new Error('No bot tokens available for URL refresh');
-    }
-
-    // Try each bot token until one works
+    // Try refresh with first available bot token
     for (const BOT_TOKEN of botTokens) {
       try {
         const getFileResponse = await fetch(
@@ -169,39 +181,37 @@ async function getChunkFromKey(kvNamespace, keyName, chunkInfo, env) {
         const updatedMetadata = {
           ...chunkMetadata,
           directUrl: freshUrl,
-          lastRefreshed: Date.now(),
-          refreshCount: (chunkMetadata.refreshCount || 0) + 1
+          lastRefreshed: Date.now()
         };
 
         await kvNamespace.put(keyName, JSON.stringify(updatedMetadata));
-        console.log(`✅ URL refreshed for key ${keyName}`);
 
         // Try with fresh URL
         response = await fetch(freshUrl);
         if (response.ok) break;
 
       } catch (refreshError) {
-        console.error(`Failed to refresh with bot token ending in ${BOT_TOKEN.slice(-5)}:`, refreshError);
+        console.error(`Failed to refresh micro-chunk ${index}:`, refreshError);
         continue;
       }
     }
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch chunk from key ${keyName}: ${response.status}`);
+    throw new Error(`Failed to fetch micro-chunk ${index}: ${response.status}`);
   }
 
   return {
-    index: chunkInfo.index,
+    index: index,
     data: await response.arrayBuffer()
   };
 }
 
-// Handle Range requests for video streaming with KV keys
-async function handleRangeRequestKeys(request, kvNamespaces, masterMetadata, extension, range, env) {
-  console.log('Handling Range request for KV keys:', range);
+// Handle Range requests for ultra-smooth video streaming
+async function handleRangeRequestMicro(request, kvNamespaces, masterMetadata, extension, range, env) {
+  console.log('Handling Range request for micro-chunks:', range);
 
-  const { size, chunkSize } = masterMetadata;
+  const { size, chunkSize, chunks } = masterMetadata;
   const ranges = parseRange(range, size);
 
   if (!ranges || ranges.length !== 1) {
@@ -211,16 +221,16 @@ async function handleRangeRequestKeys(request, kvNamespaces, masterMetadata, ext
   const { start, end } = ranges[0];
   const requestedSize = end - start + 1;
 
-  // Determine which chunks are needed
+  // Determine which micro-chunks are needed
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
-  const neededChunks = masterMetadata.chunks.slice(startChunk, endChunk + 1);
+  const neededChunks = chunks.slice(startChunk, endChunk + 1);
 
-  // Get needed chunks from KV keys
+  // Get needed micro-chunks in parallel
   const chunkPromises = neededChunks.map(async (chunkInfo) => {
     const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
     const keyName = chunkInfo.keyName;
-    return await getChunkFromKey(kvNamespace, keyName, chunkInfo, env);
+    return await getMicroChunkFromKey(kvNamespace, keyName, chunkInfo, env, chunkInfo.index);
   });
 
   const chunkResults = await Promise.all(chunkPromises);
@@ -262,9 +272,8 @@ function parseRange(range, size) {
   return [{ start, end }];
 }
 
-// Legacy file support
+// Legacy support
 async function handleLegacyFile(request, kvNamespaces, metadata, extension, env) {
-  console.log('Serving legacy file');
-  // Your existing legacy file handling code
-  return new Response('Legacy file support - implement as needed', { status: 501 });
+  console.log('Serving legacy file format');
+  return new Response('Legacy format - please re-upload', { status: 501 });
 }
