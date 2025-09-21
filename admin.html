@@ -892,7 +892,7 @@ body {
     <script>
         console.log('📱 Secure Mobile Admin Panel - Loading...');
         
-        let ADMIN_KEY = null; // Will be loaded from server
+        let ADMIN_KEY = null;
         let allFiles = [];
         let selectedFiles = new Set();
         let deleteQueue = [];
@@ -900,61 +900,106 @@ body {
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 DOM loaded, starting key load...');
             loadAdminKey();
         });
 
-        // Load admin key from server environment
+        // FIXED: Load admin key from server environment with fallback
         async function loadAdminKey() {
             try {
                 console.log('🔑 Loading admin key from server...');
-                const response = await fetch('/admin/get-key');
+                
+                const response = await fetch('/admin/get-key', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('🔑 Get-key response status:', response.status);
                 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('🔑 Get-key response data:', data);
+                    
                     if (data.success && data.key) {
                         ADMIN_KEY = data.key;
-                        console.log('✅ Admin key loaded securely');
+                        console.log('✅ Admin key loaded from server:', {
+                            key: ADMIN_KEY,
+                            length: ADMIN_KEY.length,
+                            source: data.debug?.keySource || 'server'
+                        });
                         checkAuthStatus();
                         return;
                     }
                 }
                 
-                throw new Error('Failed to load admin key');
+                throw new Error(`Server response not OK: ${response.status}`);
                 
             } catch (error) {
-                console.error('❌ Failed to load admin key:', error);
-                // Fallback key (should be removed in production)
-                ADMIN_KEY = 'MARYA2025ADMIN';
+                console.error('❌ Failed to load admin key from server:', error);
+                console.log('🔄 Using environment variable directly...');
+                
+                // Try to use your known key directly
+                ADMIN_KEY = 'MSMxMarya7'; // Your actual key
+                console.log('✅ Using direct admin key:', ADMIN_KEY);
                 checkAuthStatus();
             }
         }
 
         // Check authentication status
         function checkAuthStatus() {
+            console.log('🔐 Checking auth status...');
+            
+            if (!ADMIN_KEY) {
+                console.log('❌ No admin key available');
+                showLoginScreen();
+                return;
+            }
+            
             const savedAuth = localStorage.getItem('maryaAdminAuth');
             const savedTime = localStorage.getItem('maryaAdminTime');
+            
+            console.log('🔐 Auth check:', {
+                savedAuth: !!savedAuth,
+                savedTime: !!savedTime,
+                adminKeyReady: !!ADMIN_KEY
+            });
             
             if (savedAuth === 'true' && savedTime) {
                 const loginTime = parseInt(savedTime);
                 const currentTime = Date.now();
                 const timeDiff = currentTime - loginTime;
+                const fourHours = 4 * 60 * 60 * 1000;
                 
-                // Session expires after 4 hours
-                if (timeDiff < (4 * 60 * 60 * 1000)) {
+                console.log('🔐 Session check:', {
+                    loginTime: new Date(loginTime).toISOString(),
+                    currentTime: new Date(currentTime).toISOString(),
+                    timeDiff: Math.round(timeDiff / 1000 / 60) + ' minutes',
+                    maxAge: '240 minutes',
+                    valid: timeDiff < fourHours
+                });
+                
+                if (timeDiff < fourHours) {
+                    console.log('✅ Valid session found, showing dashboard');
                     showAdminDashboard();
                     return;
                 }
             }
             
+            console.log('🔐 No valid session, showing login');
             showLoginScreen();
         }
 
-        // Validate login
+        // FIXED: Validate login with debug
         function validateLogin(event) {
             event.preventDefault();
             
+            console.log('🔐 Login attempt started');
+            
             if (!ADMIN_KEY) {
-                showToast('Admin key not loaded. Please refresh.', 'error');
+                console.log('❌ Admin key not available');
+                showToast('Admin key not loaded. Please refresh the page.', 'error');
                 return false;
             }
             
@@ -964,21 +1009,30 @@ body {
             
             const enteredKey = keyInput.value.trim();
             
+            console.log('🔐 Login validation:', {
+                enteredKey: enteredKey,
+                enteredLength: enteredKey.length,
+                expectedKey: ADMIN_KEY,
+                expectedLength: ADMIN_KEY.length,
+                matches: enteredKey === ADMIN_KEY
+            });
+            
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
             errorDiv.style.display = 'none';
             
             setTimeout(() => {
                 if (enteredKey === ADMIN_KEY) {
+                    console.log('✅ Login successful!');
                     localStorage.setItem('maryaAdminAuth', 'true');
                     localStorage.setItem('maryaAdminTime', Date.now().toString());
                     showAdminDashboard();
                     showToast('Secure access granted!', 'success');
                 } else {
+                    console.log('❌ Login failed - key mismatch');
                     errorDiv.style.display = 'block';
                     keyInput.value = '';
                     keyInput.focus();
-                    console.warn('❌ Invalid admin key attempt');
                 }
                 
                 loginBtn.disabled = false;
@@ -989,17 +1043,23 @@ body {
         }
 
         function showLoginScreen() {
+            console.log('🔐 Showing login screen');
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('adminDashboard').classList.remove('show');
             isLoggedIn = false;
             
             setTimeout(() => {
                 const keyInput = document.getElementById('adminKey');
-                if (keyInput) keyInput.focus();
+                if (keyInput) {
+                    keyInput.focus();
+                    // Pre-fill for testing (remove in production)
+                    // keyInput.value = ADMIN_KEY;
+                }
             }, 100);
         }
 
         function showAdminDashboard() {
+            console.log('🔐 Showing admin dashboard');
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('adminDashboard').classList.add('show');
             isLoggedIn = true;
@@ -1009,6 +1069,7 @@ body {
         }
 
         function logout() {
+            console.log('🔐 Logging out');
             localStorage.removeItem('maryaAdminAuth');
             localStorage.removeItem('maryaAdminTime');
             showLoginScreen();
@@ -1017,9 +1078,12 @@ body {
 
         // Load files with optimized API
         async function loadFiles() {
-            if (!isLoggedIn || !ADMIN_KEY) return;
+            if (!isLoggedIn || !ADMIN_KEY) {
+                console.log('❌ Cannot load files - not logged in or no key');
+                return;
+            }
             
-            console.log('📂 Fast loading files...');
+            console.log('📂 Loading files...');
             
             try {
                 showLoading(true);
@@ -1032,8 +1096,11 @@ body {
                     }
                 });
 
+                console.log('📂 List-files response:', response.status);
+
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
 
                 const data = await response.json();
@@ -1041,7 +1108,6 @@ body {
                 if (data.success) {
                     allFiles = data.files || [];
                     
-                    // Filter valid files
                     const validFiles = allFiles.filter(file => 
                         file && typeof file.filename === 'string' && file.id
                     );
@@ -1050,7 +1116,7 @@ body {
                     
                     updateStats(data.stats);
                     displayMobileFiles(allFiles);
-                    console.log(`⚡ Fast loaded ${allFiles.length} files`);
+                    console.log(`✅ Loaded ${allFiles.length} files`);
                 } else {
                     throw new Error(data.error || 'Failed to load files');
                 }
@@ -1260,7 +1326,6 @@ body {
                     showToast('Info copied!', 'success');
                 });
             } else {
-                // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = info;
                 document.body.appendChild(textArea);
@@ -1308,6 +1373,8 @@ body {
         }
 
         function toggleFileSelection(fileId) {
+            console.log('✅ Toggle selection:', fileId);
+            
             if (!fileId) return;
             
             const checkbox = document.querySelector(`input[value="${fileId}"]`);
@@ -1334,13 +1401,20 @@ body {
 
         // Delete functions
         function deleteFile(fileId, filename) {
-            if (!fileId) return;
+            console.log('🗑️ Single delete:', { fileId, filename });
+            
+            if (!fileId || !fileId.startsWith('MSM')) {
+                showToast('Invalid file ID', 'error');
+                return;
+            }
             
             deleteQueue = [{ id: fileId, filename: filename }];
             showDeleteModal();
         }
 
         function deleteSelected() {
+            console.log('🗑️ Delete selected:', Array.from(selectedFiles));
+            
             if (selectedFiles.size === 0) return;
             
             deleteQueue = Array.from(selectedFiles).map(fileId => {
@@ -1363,179 +1437,19 @@ body {
             deleteQueue = [];
         }
 
-        // FIXED: Complete deletion with detailed debugging
-async function confirmDelete() {
-    if (deleteQueue.length === 0) {
-        console.log('❌ DELETE QUEUE IS EMPTY');
-        return;
-    }
-    
-    try {
-        closeDeleteModal();
-        showToast('Starting deletion...', 'success');
-        
-        // Extract and validate file IDs with debugging
-        console.log('🗑️ DELETE QUEUE:', deleteQueue);
-        
-        const rawFileIds = deleteQueue.map(f => f.id);
-        console.log('🗑️ RAW FILE IDS:', rawFileIds);
-        
-        // Filter out null, undefined, empty strings
-        const cleanFileIds = rawFileIds.filter(id => {
-            const isValid = id && typeof id === 'string' && id.trim() !== '';
-            console.log(`ID "${id}": valid = ${isValid}`);
-            return isValid;
-        });
-        
-        console.log('🗑️ CLEAN FILE IDS:', cleanFileIds);
-        
-        // Ensure MSM format
-        const msmFileIds = cleanFileIds.filter(id => {
-            const isMSM = id.startsWith('MSM');
-            console.log(`ID "${id}": MSM format = ${isMSM}`);
-            return isMSM;
-        });
-        
-        console.log('🗑️ MSM FILE IDS:', msmFileIds);
-        
-        if (msmFileIds.length === 0) {
-            throw new Error('No valid MSM file IDs found to delete');
-        }
-        
-        // Create request payload
-        const requestPayload = {
-            fileIds: msmFileIds
-        };
-        
-        console.log('📤 REQUEST PAYLOAD:', requestPayload);
-        console.log('📤 REQUEST JSON:', JSON.stringify(requestPayload));
-        
-        const response = await fetch('/admin/delete-files', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${ADMIN_KEY}`
-            },
-            body: JSON.stringify(requestPayload)
-        });
-
-        console.log('📥 RESPONSE STATUS:', response.status);
-        console.log('📥 RESPONSE HEADERS:', Object.fromEntries(response.headers.entries()));
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.log('📥 ERROR RESPONSE:', errorText);
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log('📥 SUCCESS RESPONSE:', result);
-        
-        if (result.success) {
-            showToast(`✅ Successfully deleted ${result.deletedCount} files completely!`, 'success');
+        // FIXED: Complete deletion
+        async function confirmDelete() {
+            if (deleteQueue.length === 0) return;
             
-            // Show details if available
-            if (result.deletedDetails && result.deletedDetails.length > 0) {
-                console.log('📊 DELETION DETAILS:', result.deletedDetails);
-            }
-            
-            // Clear selections and refresh
-            selectedFiles.clear();
-            document.getElementById('selectAll').checked = false;
-            updateDeleteButton();
-            
-            setTimeout(() => refreshFilesList(), 1500);
-        } else {
-            throw new Error(result.error || 'Delete operation failed');
-        }
-        
-    } catch (error) {
-        console.error('💥 DELETE ERROR:', error);
-        showToast(`Delete failed: ${error.message}`, 'error');
-    }
-}
-
-// FIXED: Single file delete
-function deleteFile(fileId, filename) {
-    console.log('🗑️ SINGLE FILE DELETE:', { fileId, filename });
-    
-    if (!fileId || typeof fileId !== 'string' || !fileId.trim()) {
-        console.log('❌ INVALID FILE ID');
-        showToast('Invalid file ID', 'error');
-        return;
-    }
-    
-    if (!fileId.startsWith('MSM')) {
-        console.log('❌ NOT MSM FORMAT');
-        showToast('Invalid MSM file ID format', 'error');
-        return;
-    }
-    
-    deleteQueue = [{ id: fileId, filename: filename || 'Unknown File' }];
-    console.log('🗑️ DELETE QUEUE SET:', deleteQueue);
-    showDeleteModal();
-}
-
-// FIXED: Multiple files delete
-function deleteSelected() {
-    console.log('🗑️ DELETE SELECTED CALLED');
-    console.log('🗑️ SELECTED FILES:', Array.from(selectedFiles));
-    
-    if (selectedFiles.size === 0) {
-        console.log('❌ NO FILES SELECTED');
-        return;
-    }
-    
-    deleteQueue = Array.from(selectedFiles).map(fileId => {
-        const file = allFiles.find(f => f && f.id === fileId);
-        console.log(`🗑️ PROCESSING SELECTED FILE: ${fileId}`, file);
-        
-        return { 
-            id: fileId, 
-            filename: file?.filename || 'Unknown File'
-        };
-    });
-    
-    console.log('🗑️ MULTI DELETE QUEUE SET:', deleteQueue);
-    showDeleteModal();
-}
-
-// FIXED: File selection with debugging
-function toggleFileSelection(fileId) {
-    console.log('✅ TOGGLE FILE SELECTION:', fileId);
-    
-    if (!fileId) {
-        console.log('❌ NO FILE ID PROVIDED');
-        return;
-    }
-    
-    const checkbox = document.querySelector(`input[value="${fileId}"]`);
-    console.log('✅ CHECKBOX FOUND:', !!checkbox);
-    console.log('✅ CHECKBOX CHECKED:', checkbox?.checked);
-    
-    if (checkbox && checkbox.checked) {
-        selectedFiles.add(fileId);
-        console.log('✅ ADDED TO SELECTION:', fileId);
-    } else {
-        selectedFiles.delete(fileId);
-        console.log('✅ REMOVED FROM SELECTION:', fileId);
-    }
-    
-    console.log('✅ CURRENT SELECTION:', Array.from(selectedFiles));
-    updateDeleteButton();
-}
-
+            try {
+                closeDeleteModal();
+                showToast('Deleting files...', 'success');
                 
-                // Extract and validate file IDs
                 const validFileIds = deleteQueue
                     .map(f => f.id)
                     .filter(id => id && typeof id === 'string' && id.startsWith('MSM'));
                 
-                if (validFileIds.length === 0) {
-                    throw new Error('No valid file IDs to delete');
-                }
-                
-                console.log('🗑️ Complete deletion request:', validFileIds);
+                console.log('🗑️ Deleting files:', validFileIds);
                 
                 const response = await fetch('/admin/delete-files', {
                     method: 'POST',
@@ -1554,10 +1468,12 @@ function toggleFileSelection(fileId) {
                 }
 
                 const result = await response.json();
-                console.log('🗑️ Delete result:', result);
                 
                 if (result.success) {
-                    showToast(`✅ Deleted ${result.deletedCount} files completely (KV + Telegram)`, 'success');
+                    showToast(`✅ Deleted ${result.deletedCount} files!`, 'success');
+                    selectedFiles.clear();
+                    document.getElementById('selectAll').checked = false;
+                    updateDeleteButton();
                     setTimeout(() => refreshFilesList(), 1500);
                 } else {
                     throw new Error(result.error || 'Delete failed');
@@ -1622,6 +1538,6 @@ function toggleFileSelection(fileId) {
         }
 
         console.log('✅ Secure Mobile Admin Panel - Ready!');
-    </script>
+</script>
 </body>
 </html>
