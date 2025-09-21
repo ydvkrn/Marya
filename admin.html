@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marya Vault - Admin Panel</title>
+<title>Marya Vault - Advanced Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -27,6 +27,8 @@
     --error-light: #fee2e2;
     --warning: #f59e0b;
     --warning-light: #fef3c7;
+    --blue: #3b82f6;
+    --blue-light: #dbeafe;
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
 }
 
@@ -323,6 +325,16 @@ body {
     transform: translateY(-2px);
 }
 
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #047857;
+    transform: translateY(-2px);
+}
+
 .btn-danger {
     background: var(--error);
     color: white;
@@ -330,6 +342,26 @@ body {
 
 .btn-danger:hover {
     background: #dc2626;
+    transform: translateY(-2px);
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+}
+
+.btn-blue {
+    background: var(--blue);
+    color: white;
+}
+
+.btn-blue:hover {
+    background: #2563eb;
     transform: translateY(-2px);
 }
 
@@ -424,11 +456,17 @@ body {
 .file-actions {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .btn-sm {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
+}
+
+.btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
 }
 
 .status-badge {
@@ -437,16 +475,84 @@ body {
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
-.status-active {
+.status-permanent {
+    background: var(--blue-light);
+    color: var(--blue);
+}
+
+.status-expiring {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.status-expired {
+    background: var(--error-light);
+    color: var(--error);
+}
+
+/* Quick Links */
+.quick-links {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.quick-link {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.quick-link.stream {
+    background: var(--blue-light);
+    color: var(--blue);
+}
+
+.quick-link.stream:hover {
+    background: var(--blue);
+    color: white;
+}
+
+.quick-link.download {
     background: var(--success-light);
     color: var(--success);
 }
 
-.status-permanent {
-    background: #dbeafe;
-    color: #1d4ed8;
+.quick-link.download:hover {
+    background: var(--success);
+    color: white;
+}
+
+/* Expiry Control */
+.expiry-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.expiry-input {
+    width: 60px;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.expiry-select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 0.8rem;
 }
 
 /* Loading */
@@ -556,8 +662,8 @@ body {
             <div class="login-icon">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1 class="login-title">Admin Access</h1>
-            <p class="login-subtitle">Enter your admin key to access the file management panel</p>
+            <h1 class="login-title">Advanced Admin</h1>
+            <p class="login-subtitle">Enter your admin key to access the advanced file management panel</p>
             
             <form onsubmit="return validateLogin(event)">
                 <input type="password" id="adminKey" class="key-input" placeholder="Enter Admin Key" required>
@@ -573,7 +679,7 @@ body {
             <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
                 <p style="font-size: 0.8rem; color: var(--gray-500);">
                     <i class="fas fa-info-circle"></i>
-                    Secure access to file management system
+                    Advanced file management with expiry control
                 </p>
             </div>
         </div>
@@ -585,8 +691,8 @@ body {
             <!-- Header -->
             <header class="header">
                 <div class="header-left">
-                    <h1><i class="fas fa-database"></i> Marya Vault Admin</h1>
-                    <p>File Management Dashboard</p>
+                    <h1><i class="fas fa-database"></i> Marya Vault Pro</h1>
+                    <p>Advanced File Management Dashboard</p>
                 </div>
                 <div class="header-right">
                     <div class="admin-info">
@@ -611,8 +717,8 @@ body {
                     <div class="stat-label">Total Size</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="activeFiles">0</div>
-                    <div class="stat-label">Active Files</div>
+                    <div class="stat-value" id="permanentFiles">0</div>
+                    <div class="stat-label">Permanent Files</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="kvNamespaces">0</div>
@@ -636,7 +742,7 @@ body {
             <!-- Files Section -->
             <div class="files-section">
                 <div class="section-header">
-                    <h2 class="section-title">All Files</h2>
+                    <h2 class="section-title">Advanced File Management</h2>
                     <div>
                         <button class="btn btn-danger btn-sm" onclick="deleteSelected()" id="deleteSelectedBtn" style="display: none;">
                             <i class="fas fa-trash"></i> Delete Selected
@@ -656,11 +762,12 @@ body {
                                 <th>
                                     <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                                 </th>
-                                <th>File</th>
+                                <th>File Details</th>
                                 <th>Size</th>
                                 <th>Type</th>
                                 <th>Upload Date</th>
-                                <th>Status</th>
+                                <th>Status & Links</th>
+                                <th>Expiry Control</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -683,12 +790,18 @@ body {
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Confirm Deletion</h3>
+                <h3 class="modal-title">Confirm Complete Deletion</h3>
                 <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to permanently delete the selected file(s)?</p>
-                <p><strong>This action cannot be undone and will also delete all associated chunks.</strong></p>
+                <p><strong>This will completely remove:</strong></p>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li>File metadata from KV storage</li>
+                    <li>All file chunks from KV storage</li>
+                    <li>All associated data</li>
+                </ul>
+                <p style="color: var(--error); font-weight: 600;">⚠️ This action cannot be undone!</p>
             </div>
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                 <button class="btn btn-danger" onclick="confirmDelete()">
@@ -703,7 +816,7 @@ body {
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🔐 Secure Admin Panel - Loading...');
+        console.log('🔐 Advanced Admin Panel - Loading...');
         
         // Admin configuration
         const ADMIN_KEY = 'MARYA2025ADMIN'; // Change this to your desired admin key
@@ -756,7 +869,7 @@ body {
                     localStorage.setItem('maryaAdminAuth', 'true');
                     localStorage.setItem('maryaAdminTime', Date.now().toString());
                     showAdminDashboard();
-                    showToast('Admin access granted!', 'success');
+                    showToast('Advanced admin access granted!', 'success');
                 } else {
                     // Failed login
                     errorDiv.style.display = 'block';
@@ -805,7 +918,7 @@ body {
             showToast('Logged out successfully', 'success');
         }
 
-        // FIXED: Load all files from KV with better error handling
+        // FIXED: Load all files from KV
         async function loadFiles() {
             if (!isLoggedIn) return;
             
@@ -814,7 +927,6 @@ body {
             try {
                 showLoading(true);
                 
-                console.log('🌐 Fetching /admin/list-files...');
                 const response = await fetch('/admin/list-files', {
                     method: 'GET',
                     headers: {
@@ -823,29 +935,23 @@ body {
                     }
                 });
 
-                console.log('📡 Response status:', response.status);
-
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('❌ Response not OK:', response.status, errorText);
                     throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 200)}`);
                 }
 
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     const responseText = await response.text();
-                    console.error('❌ Invalid content type:', contentType);
                     throw new Error(`Expected JSON, got: ${contentType}. Response starts with: ${responseText.substring(0, 100)}`);
                 }
 
                 const data = await response.json();
-                console.log('📊 API Response:', data);
                 
                 if (data.success) {
                     allFiles = data.files || [];
-                    console.log('📁 Raw files data:', allFiles);
                     
-                    // Validate files data
+                    // Validate and fix files data
                     const validFiles = allFiles.filter(file => {
                         const isValid = file && typeof file.filename === 'string';
                         if (!isValid) {
@@ -859,10 +965,6 @@ body {
                     updateStats(data.stats);
                     displayFiles(allFiles);
                     console.log(`✅ Loaded ${allFiles.length} valid files`);
-                    
-                    if (data.debug) {
-                        console.log('🐛 Debug info:', data.debug);
-                    }
                 } else {
                     throw new Error(data.error || 'Failed to load files');
                 }
@@ -878,21 +980,16 @@ body {
 
         // Update statistics
         function updateStats(stats) {
-            if (!stats) {
-                console.warn('⚠️ No stats provided');
-                return;
-            }
+            if (!stats) return;
             
             document.getElementById('totalFiles').textContent = stats.totalFiles || 0;
             document.getElementById('totalSize').textContent = formatBytes(stats.totalSize || 0);
-            document.getElementById('activeFiles').textContent = stats.activeFiles || 0;
+            document.getElementById('permanentFiles').textContent = stats.activeFiles || 0;
             document.getElementById('kvNamespaces').textContent = stats.kvNamespaces || 0;
         }
 
-        // Display files in table
+        // Display files in advanced table
         function displayFiles(files) {
-            console.log('🖼️ Displaying files:', files);
-            
             const tbody = document.getElementById('filesTableBody');
             
             if (!files || files.length === 0) {
@@ -905,7 +1002,7 @@ body {
 
             files.forEach((file, index) => {
                 try {
-                    const row = createFileRow(file, index);
+                    const row = createAdvancedFileRow(file, index);
                     tbody.appendChild(row);
                 } catch (rowError) {
                     console.error('❌ Failed to create row for file:', file, rowError);
@@ -913,8 +1010,8 @@ body {
             });
         }
 
-        // FIXED: Create file table row with better error handling
-        function createFileRow(file, index) {
+        // Create advanced file table row
+        function createAdvancedFileRow(file, index) {
             if (!file) {
                 throw new Error('File object is null or undefined');
             }
@@ -922,18 +1019,10 @@ body {
             const row = document.createElement('tr');
             row.dataset.fileId = file.id || `unknown_${index}`;
             
-            // Safe filename handling
             const safeFilename = file.filename || 'Unknown File';
             const fileIcon = getFileIcon(safeFilename);
             const uploadDate = file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'Unknown';
-            const status = getFileStatus(file);
-            
-            console.log('🔧 Creating row for file:', {
-                id: file.id,
-                filename: safeFilename,
-                size: file.size,
-                uploadDate: uploadDate
-            });
+            const status = getAdvancedFileStatus(file);
             
             row.innerHTML = `
                 <td>
@@ -945,25 +1034,51 @@ body {
                             <i class="${fileIcon.icon}"></i>
                         </div>
                         <div class="file-details">
-                            <h4>${truncateText(safeFilename, 40)}</h4>
+                            <h4>${truncateText(safeFilename, 35)}</h4>
                             <p>ID: ${file.id || 'Unknown'}</p>
-                            <p>Type: ${file.type || 'Unknown'}</p>
+                            <p>Chunks: ${file.totalChunks || 0}</p>
                         </div>
                     </div>
                 </td>
                 <td class="file-size">${formatBytes(file.size || 0)}</td>
-                <td>${file.contentType || 'Unknown'}</td>
-                <td>${uploadDate}</td>
-                <td><span class="status-badge ${status.class}">${status.text}</span></td>
                 <td>
-                    <div class="file-actions">
-                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}" target="_blank" class="btn btn-primary btn-sm">
-                            <i class="fas fa-eye"></i> View
+                    <div style="font-size: 0.8rem;">
+                        ${file.contentType || 'Unknown'}
+                    </div>
+                </td>
+                <td>${uploadDate}</td>
+                <td>
+                    <span class="status-badge ${status.class}">
+                        <i class="${status.icon}"></i>
+                        ${status.text}
+                    </span>
+                    <div class="quick-links">
+                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}" target="_blank" class="quick-link stream">
+                            <i class="fas fa-play"></i> Stream
                         </a>
-                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}?dl=1" class="btn btn-success btn-sm">
+                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}?dl=1" class="quick-link download">
                             <i class="fas fa-download"></i> Download
                         </a>
-                        <button onclick="deleteFile('${file.id || ''}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn btn-danger btn-sm">
+                    </div>
+                </td>
+                <td>
+                    <div class="expiry-control">
+                        <select class="expiry-select" onchange="updateExpiry('${file.id || ''}', this.value)">
+                            <option value="permanent" ${file.neverExpires ? 'selected' : ''}>Permanent</option>
+                            <option value="7" ${file.expiryDays === 7 ? 'selected' : ''}>7 days</option>
+                            <option value="30" ${file.expiryDays === 30 ? 'selected' : ''}>30 days</option>
+                            <option value="90" ${file.expiryDays === 90 ? 'selected' : ''}>90 days</option>
+                            <option value="365" ${file.expiryDays === 365 ? 'selected' : ''}>1 year</option>
+                        </select>
+                    </div>
+                    ${getExpiryInfo(file)}
+                </td>
+                <td>
+                    <div class="file-actions">
+                        <button onclick="copyFileInfo('${file.id || ''}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn btn-blue btn-xs">
+                            <i class="fas fa-copy"></i> Copy Info
+                        </button>
+                        <button onclick="deleteFile('${file.id || ''}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn btn-danger btn-xs">
                             <i class="fas fa-trash"></i> Delete
                         </button>
                     </div>
@@ -973,7 +1088,109 @@ body {
             return row;
         }
 
-        // FIXED: Get file icon with safe handling
+        // Get advanced file status
+        function getAdvancedFileStatus(file) {
+            if (!file) {
+                return { class: 'status-expired', text: 'Unknown', icon: 'fas fa-question' };
+            }
+            
+            if (file.neverExpires) {
+                return { class: 'status-permanent', text: 'Permanent', icon: 'fas fa-infinity' };
+            }
+            
+            if (file.expiresAt) {
+                const now = Date.now();
+                const expiresAt = file.expiresAt;
+                const timeLeft = expiresAt - now;
+                
+                if (timeLeft <= 0) {
+                    return { class: 'status-expired', text: 'Expired', icon: 'fas fa-times' };
+                } else if (timeLeft <= 7 * 24 * 60 * 60 * 1000) {
+                    return { class: 'status-expiring', text: 'Expiring Soon', icon: 'fas fa-exclamation' };
+                } else {
+                    const days = Math.ceil(timeLeft / (24 * 60 * 60 * 1000));
+                    return { class: 'status-expiring', text: `${days} days left`, icon: 'fas fa-clock' };
+                }
+            }
+            
+            return { class: 'status-permanent', text: 'Active', icon: 'fas fa-check' };
+        }
+
+        // Get expiry info
+        function getExpiryInfo(file) {
+            if (file.neverExpires) {
+                return '<div style="font-size: 0.7rem; color: var(--blue);">Never expires</div>';
+            }
+            
+            if (file.expiresAt) {
+                const expiryDate = new Date(file.expiresAt).toLocaleDateString();
+                return `<div style="font-size: 0.7rem; color: var(--gray-600);">Expires: ${expiryDate}</div>`;
+            }
+            
+            return '<div style="font-size: 0.7rem; color: var(--gray-600);">No expiry set</div>';
+        }
+
+        // Update expiry
+        async function updateExpiry(fileId, expiryValue) {
+            if (!fileId) return;
+            
+            try {
+                showToast('Updating expiry...', 'success');
+                
+                const response = await fetch('/admin/update-expiry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ADMIN_KEY}`
+                    },
+                    body: JSON.stringify({
+                        fileId: fileId,
+                        expiryDays: expiryValue === 'permanent' ? null : parseInt(expiryValue)
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`Expiry updated: ${expiryValue === 'permanent' ? 'Permanent' : expiryValue + ' days'}`, 'success');
+                    await refreshFilesList();
+                } else {
+                    throw new Error(result.error || 'Update failed');
+                }
+                
+            } catch (error) {
+                console.error('Update expiry error:', error);
+                showToast(`Update failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Copy file info
+        function copyFileInfo(fileId, filename) {
+            const baseUrl = window.location.origin;
+            const streamUrl = `${baseUrl}/btfstorage/file/${fileId}`;
+            const downloadUrl = `${baseUrl}/btfstorage/file/${fileId}?dl=1`;
+            
+            const info = `File: ${filename}\nID: ${fileId}\nStream: ${streamUrl}\nDownload: ${downloadUrl}`;
+            
+            navigator.clipboard.writeText(info).then(() => {
+                showToast('File info copied to clipboard!', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = info;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('File info copied to clipboard!', 'success');
+            });
+        }
+
+        // Get file icon (same as before)
         function getFileIcon(filename) {
             if (!filename || typeof filename !== 'string') {
                 return { type: 'other', icon: 'fas fa-file' };
@@ -995,23 +1212,6 @@ body {
             }
             
             return { type: 'other', icon: 'fas fa-file' };
-        }
-
-        // Get file status
-        function getFileStatus(file) {
-            if (!file) {
-                return { class: 'status-active', text: 'Unknown' };
-            }
-            
-            if (file.neverExpires) {
-                return { class: 'status-permanent', text: 'Permanent' };
-            }
-            
-            if (file.type === 'corrupted') {
-                return { class: 'status-error', text: 'Corrupted' };
-            }
-            
-            return { class: 'status-active', text: 'Active' };
         }
 
         // Search and filter
@@ -1123,6 +1323,7 @@ body {
             deleteQueue = [];
         }
 
+        // FIXED: Confirm delete with proper error handling
         async function confirmDelete() {
             if (deleteQueue.length === 0) return;
             
@@ -1130,7 +1331,16 @@ body {
                 closeDeleteModal();
                 showToast('Deleting files...', 'success');
                 
-                console.log('🗑️ Deleting files:', deleteQueue.map(f => f.id));
+                // Filter out empty/invalid file IDs
+                const validFileIds = deleteQueue
+                    .map(f => f.id)
+                    .filter(id => id && typeof id === 'string' && id.trim() !== '');
+                
+                if (validFileIds.length === 0) {
+                    throw new Error('No valid file IDs to delete');
+                }
+                
+                console.log('🗑️ Deleting files:', validFileIds);
                 
                 const response = await fetch('/admin/delete-files', {
                     method: 'POST',
@@ -1139,7 +1349,7 @@ body {
                         'Authorization': `Bearer ${ADMIN_KEY}`
                     },
                     body: JSON.stringify({
-                        fileIds: deleteQueue.map(f => f.id).filter(id => id)
+                        fileIds: validFileIds
                     })
                 });
 
@@ -1152,7 +1362,12 @@ body {
                 console.log('🗑️ Delete result:', result);
                 
                 if (result.success) {
-                    showToast(`Successfully deleted ${result.deletedCount} files`, 'success');
+                    showToast(`Successfully deleted ${result.deletedCount} files with all chunks`, 'success');
+                    
+                    if (result.deletedDetails) {
+                        console.log('📊 Delete details:', result.deletedDetails);
+                    }
+                    
                     await refreshFilesList();
                 } else {
                     throw new Error(result.error || 'Delete failed');
@@ -1212,7 +1427,7 @@ body {
             }, 5000);
         }
 
-        console.log('✅ Secure Admin Panel - Ready!');
-</script>
+        console.log('✅ Advanced Admin Panel - Ready!');
+    </script>
 </body>
 </html>
