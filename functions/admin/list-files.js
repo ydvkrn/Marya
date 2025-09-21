@@ -1,9 +1,10 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
+  // CORS Headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
   };
 
@@ -11,22 +12,23 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Simple auth check (you can make this more secure)
-  const authHeader = request.headers.get('Authorization');
-  const adminKey = env.ADMIN_KEY || 'MARYA2025ADMIN'; // Set this in environment variables
-  
-  if (!authHeader || !authHeader.includes(adminKey)) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Unauthorized access'
-    }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
-  }
-
   try {
-    console.log('📂 Loading all files from KV namespaces...');
+    console.log('🔍 Admin list-files API called');
+
+    // Simple auth check
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.includes('MARYA2025ADMIN')) {
+      console.log('❌ Unauthorized access attempt');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Unauthorized access'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    console.log('✅ Auth successful, scanning KV namespaces...');
 
     // All KV namespaces
     const kvNamespaces = [
@@ -43,6 +45,8 @@ export async function onRequest(context) {
     let totalSize = 0;
     let activeFiles = 0;
 
+    console.log(`📂 Scanning ${kvNamespaces.length} KV namespaces...`);
+
     // Scan each KV namespace
     for (const kvNamespace of kvNamespaces) {
       try {
@@ -50,6 +54,7 @@ export async function onRequest(context) {
 
         // List all keys in this namespace
         const listResponse = await kvNamespace.kv.list();
+        console.log(`📊 Found ${listResponse.keys.length} keys in ${kvNamespace.name}`);
         
         for (const key of listResponse.keys) {
           // Only process MSM format files (skip chunks and progress)
@@ -59,7 +64,7 @@ export async function onRequest(context) {
               if (metadata) {
                 const fileData = JSON.parse(metadata);
                 
-                // Add namespace info
+                // Add required fields
                 fileData.id = key.name;
                 fileData.kvNamespace = kvNamespace.name;
                 
@@ -69,14 +74,16 @@ export async function onRequest(context) {
                 if (fileData.neverExpires) {
                   activeFiles++;
                 }
+                
+                console.log(`📁 File found: ${fileData.filename} (${Math.round((fileData.size || 0)/1024/1024)}MB)`);
               }
             } catch (parseError) {
-              console.error(`❌ Failed to parse ${key.name}:`, parseError);
+              console.error(`❌ Failed to parse ${key.name}:`, parseError.message);
             }
           }
         }
       } catch (kvError) {
-        console.error(`❌ Failed to scan ${kvNamespace.name}:`, kvError);
+        console.error(`❌ Failed to scan ${kvNamespace.name}:`, kvError.message);
       }
     }
 
@@ -90,21 +97,23 @@ export async function onRequest(context) {
       kvNamespaces: kvNamespaces.length
     };
 
-    console.log(`✅ Found ${allFiles.length} files across ${kvNamespaces.length} namespaces`);
+    console.log(`✅ Admin scan complete: ${allFiles.length} files, ${Math.round(totalSize/1024/1024)}MB total`);
 
     return new Response(JSON.stringify({
       success: true,
       files: allFiles,
-      stats: stats
+      stats: stats,
+      timestamp: Date.now()
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('💥 List files error:', error);
+    console.error('💥 Admin list-files error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error.message,
+      timestamp: Date.now()
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
