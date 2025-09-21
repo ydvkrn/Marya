@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marya Vault - Advanced Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Marya Vault - Mobile Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -30,9 +30,16 @@
     --blue: #3b82f6;
     --blue-light: #dbeafe;
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -40,49 +47,50 @@ body {
     min-height: 100vh;
     color: var(--gray-900);
     line-height: 1.5;
+    font-size: 14px;
 }
 
 .container { 
-    max-width: 1400px; 
+    max-width: 100%;
     margin: 0 auto; 
-    padding: 2rem; 
+    padding: 1rem;
 }
 
-/* Login Screen */
+/* Mobile Login Screen */
 .login-screen {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 2rem;
+    padding: 1rem;
 }
 
 .login-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    border-radius: 24px;
+    border-radius: 20px;
     box-shadow: var(--shadow-xl);
-    padding: 3rem;
-    max-width: 450px;
+    padding: 2rem 1.5rem;
     width: 100%;
+    max-width: 400px;
     text-align: center;
 }
 
 .login-icon {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     background: var(--primary-red);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 2rem;
-    font-size: 2rem;
+    margin: 0 auto 1.5rem;
+    font-size: 1.5rem;
     color: white;
 }
 
 .login-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: var(--gray-900);
     margin-bottom: 0.5rem;
@@ -90,19 +98,20 @@ body {
 
 .login-subtitle {
     color: var(--gray-600);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
 }
 
 .key-input {
     width: 100%;
-    padding: 1rem 1.5rem;
+    padding: 1rem;
     border: 2px solid var(--gray-200);
     border-radius: 12px;
     font-size: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     transition: all 0.3s;
     text-align: center;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     font-family: 'Courier New', monospace;
 }
 
@@ -114,7 +123,7 @@ body {
 
 .login-btn {
     width: 100%;
-    padding: 1rem 2rem;
+    padding: 1rem;
     background: var(--primary-red);
     color: white;
     border: none;
@@ -131,18 +140,16 @@ body {
 
 .login-btn:hover {
     background: var(--primary-red-dark);
-    transform: translateY(-2px);
 }
 
 .login-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
 }
 
 .login-error {
     color: var(--error);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     margin-top: 1rem;
     padding: 0.75rem;
     background: var(--error-light);
@@ -150,7 +157,7 @@ body {
     display: none;
 }
 
-/* Admin Dashboard */
+/* Mobile Admin Dashboard */
 .admin-dashboard {
     display: none;
 }
@@ -159,59 +166,43 @@ body {
     display: block;
 }
 
-/* Header */
+/* Mobile Header */
 .header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    border-radius: 24px;
-    box-shadow: var(--shadow-xl);
-    padding: 2rem;
-    margin-bottom: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .header-left h1 {
-    font-size: 2.5rem;
-    font-weight: 900;
+    font-size: 1.5rem;
+    font-weight: 800;
     color: var(--primary-red);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .header-left p {
     color: var(--gray-600);
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.admin-info {
-    text-align: right;
-    margin-right: 1rem;
-}
-
-.admin-info h3 {
-    font-size: 0.9rem;
-    color: var(--gray-600);
-    font-weight: 500;
-}
-
-.admin-info p {
     font-size: 0.8rem;
-    color: var(--gray-500);
 }
 
 .logout-btn {
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1rem;
     background: var(--error);
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
@@ -220,209 +211,158 @@ body {
     gap: 0.5rem;
 }
 
-.logout-btn:hover {
-    background: #dc2626;
-    transform: translateY(-2px);
-}
-
-/* Stats Cards */
+/* Mobile Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .stat-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: var(--shadow-xl);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    box-shadow: var(--shadow-lg);
     text-align: center;
-    border-left: 4px solid var(--primary-red);
+    border-left: 3px solid var(--primary-red);
 }
 
 .stat-value {
-    font-size: 2.5rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: var(--primary-red);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .stat-label {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     color: var(--gray-600);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Controls */
+/* Mobile Controls */
 .controls {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-xl);
-}
-
-.controls-grid {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 1rem;
-    align-items: center;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-lg);
 }
 
 .search-box {
     position: relative;
+    margin-bottom: 1rem;
 }
 
 .search-input {
     width: 100%;
-    padding: 1rem 1rem 1rem 3rem;
+    padding: 0.75rem 0.75rem 0.75rem 2.5rem;
     border: 2px solid var(--gray-200);
-    border-radius: 12px;
-    font-size: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
     transition: all 0.3s;
 }
 
 .search-input:focus {
     outline: none;
     border-color: var(--primary-red);
-    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .search-icon {
     position: absolute;
-    left: 1rem;
+    left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
     color: var(--gray-600);
 }
 
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 2rem;
+.refresh-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--primary-red);
+    color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
-.btn-primary {
-    background: var(--primary-red);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: var(--primary-red-dark);
-    transform: translateY(-2px);
-}
-
-.btn-success {
-    background: var(--success);
-    color: white;
-}
-
-.btn-success:hover {
-    background: #047857;
-    transform: translateY(-2px);
-}
-
-.btn-danger {
-    background: var(--error);
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #dc2626;
-    transform: translateY(-2px);
-}
-
-.btn-warning {
-    background: var(--warning);
-    color: white;
-}
-
-.btn-warning:hover {
-    background: #d97706;
-    transform: translateY(-2px);
-}
-
-.btn-blue {
-    background: var(--blue);
-    color: white;
-}
-
-.btn-blue:hover {
-    background: #2563eb;
-    transform: translateY(-2px);
-}
-
-/* Files Table */
+/* Mobile Files Section */
 .files-section {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    border-radius: 16px;
-    box-shadow: var(--shadow-xl);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
 }
 
 .section-header {
-    padding: 2rem;
+    padding: 1rem;
     border-bottom: 1px solid var(--gray-200);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .section-title {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--gray-900);
 }
 
-.files-table {
-    width: 100%;
-    border-collapse: collapse;
+/* Mobile File Cards */
+.files-container {
+    padding: 0;
 }
 
-.files-table th,
-.files-table td {
-    padding: 1rem;
-    text-align: left;
+.file-card {
     border-bottom: 1px solid var(--gray-200);
+    padding: 1rem;
+    transition: all 0.3s;
 }
 
-.files-table th {
+.file-card:hover {
     background: var(--gray-50);
-    font-weight: 600;
-    color: var(--gray-700);
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.5px;
 }
 
-.files-table tbody tr:hover {
-    background: var(--gray-50);
+.file-card:last-child {
+    border-bottom: none;
+}
+
+.file-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    gap: 0.75rem;
+}
+
+.file-checkbox {
+    transform: scale(1.2);
 }
 
 .file-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: white;
-    margin-right: 1rem;
+    flex-shrink: 0;
 }
 
 .file-icon.video { background: linear-gradient(135deg, #dc2626, #b91c1c); }
@@ -432,20 +372,25 @@ body {
 .file-icon.archive { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 .file-icon.other { background: linear-gradient(135deg, #6b7280, #4b5563); }
 
-.file-info {
-    display: flex;
-    align-items: center;
+.file-details {
+    flex: 1;
+    min-width: 0;
 }
 
-.file-details h4 {
+.file-name {
     font-weight: 600;
-    margin-bottom: 0.25rem;
     color: var(--gray-900);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    word-break: break-word;
 }
 
-.file-details p {
-    font-size: 0.8rem;
+.file-meta {
+    font-size: 0.7rem;
     color: var(--gray-600);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .file-size {
@@ -453,31 +398,20 @@ body {
     color: var(--primary-red);
 }
 
-.file-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-}
-
-.btn-xs {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.7rem;
+.file-body {
+    margin-bottom: 0.75rem;
 }
 
 .status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.6rem;
     font-weight: 600;
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+    margin-bottom: 0.5rem;
 }
 
 .status-permanent {
@@ -490,25 +424,28 @@ body {
     color: var(--warning);
 }
 
-.status-expired {
-    background: var(--error-light);
-    color: var(--error);
-}
-
-/* Quick Links */
+/* Mobile Quick Links */
 .quick-links {
     display: flex;
-    gap: 0.25rem;
-    margin-top: 0.5rem;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .quick-link {
-    padding: 0.25rem 0.5rem;
+    flex: 1;
+    min-width: 80px;
+    padding: 0.5rem 0.75rem;
     font-size: 0.7rem;
-    border-radius: 6px;
+    border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
     transition: all 0.2s;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
 }
 
 .quick-link.stream {
@@ -531,47 +468,123 @@ body {
     color: white;
 }
 
-/* Expiry Control */
+/* Mobile Expiry Control */
+.expiry-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
 .expiry-control {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.expiry-input {
-    width: 60px;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--gray-300);
-    border-radius: 6px;
-    font-size: 0.8rem;
-    text-align: center;
 }
 
 .expiry-select {
     padding: 0.25rem 0.5rem;
     border: 1px solid var(--gray-300);
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
+    min-width: 80px;
+}
+
+.expiry-info {
+    font-size: 0.6rem;
+    color: var(--gray-600);
+}
+
+/* Mobile Actions */
+.file-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-xs {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 70px;
+}
+
+.btn-blue {
+    background: var(--blue);
+    color: white;
+}
+
+.btn-blue:hover {
+    background: #2563eb;
+}
+
+.btn-danger {
+    background: var(--error);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.delete-selected-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--error);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
 }
 
 /* Loading */
 .loading {
     text-align: center;
-    padding: 4rem;
+    padding: 3rem 1rem;
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--gray-200);
-    border-top: 4px solid var(--primary-red);
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--gray-200);
+    border-top: 3px solid var(--primary-red);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    display: none;
+}
+
+.empty-state.show {
+    display: block;
+}
 
 /* Modal */
 .modal {
@@ -580,21 +593,22 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 1rem;
 }
 
 .modal.show { display: flex; }
 
 .modal-content {
     background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
     max-height: 80vh;
     overflow-y: auto;
 }
@@ -609,8 +623,9 @@ body {
 }
 
 .modal-title {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 600;
+    color: var(--gray-900);
 }
 
 .modal-close {
@@ -619,39 +634,112 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
     color: var(--gray-600);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 /* Toast */
 .toast {
     position: fixed;
-    top: 2rem;
-    right: 2rem;
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: var(--shadow-xl);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: var(--shadow-lg);
     z-index: 1001;
-    transform: translateX(400px);
+    transform: translateY(-100px);
     transition: all 0.3s;
-    max-width: 400px;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
-.toast.show { transform: translateX(0); }
+.toast.show { transform: translateY(0); }
 .toast.success { border-left: 4px solid var(--success); }
 .toast.error { border-left: 4px solid var(--error); }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .header { flex-direction: column; gap: 1rem; text-align: center; }
-    .controls-grid { grid-template-columns: 1fr; }
-    .files-table { font-size: 0.8rem; }
-    .files-table th, .files-table td { padding: 0.5rem; }
-    .file-actions { flex-direction: column; }
-    .login-card { padding: 2rem 1.5rem; }
+/* Select All */
+.select-all-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 320px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .file-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .file-actions {
+        flex-direction: column;
+    }
+    
+    .quick-links {
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 800px;
+        padding: 2rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    body {
+        font-size: 16px;
+    }
+    
+    .login-card {
+        padding: 3rem 2rem;
+    }
+    
+    .header {
+        padding: 2rem;
+    }
+    
+    .controls {
+        padding: 1.5rem;
+    }
 }
 </style>
 </head>
@@ -662,24 +750,24 @@ body {
             <div class="login-icon">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1 class="login-title">Advanced Admin</h1>
-            <p class="login-subtitle">Enter your admin key to access the advanced file management panel</p>
+            <h1 class="login-title">Secure Admin</h1>
+            <p class="login-subtitle">Enter your admin key for secure access</p>
             
             <form onsubmit="return validateLogin(event)">
-                <input type="password" id="adminKey" class="key-input" placeholder="Enter Admin Key" required>
+                <input type="password" id="adminKey" class="key-input" placeholder="Admin Key" required>
                 <button type="submit" class="login-btn" id="loginBtn">
                     <i class="fas fa-key"></i>
-                    Access Admin Panel
+                    Access Panel
                 </button>
                 <div id="loginError" class="login-error">
                     Invalid admin key. Please try again.
                 </div>
             </form>
             
-            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
-                <p style="font-size: 0.8rem; color: var(--gray-500);">
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                <p style="font-size: 0.7rem; color: var(--gray-500);">
                     <i class="fas fa-info-circle"></i>
-                    Advanced file management with expiry control
+                    Secure mobile-optimized admin panel
                 </p>
             </div>
         </div>
@@ -690,14 +778,10 @@ body {
         <div class="container">
             <!-- Header -->
             <header class="header">
-                <div class="header-left">
-                    <h1><i class="fas fa-database"></i> Marya Vault Pro</h1>
-                    <p>Advanced File Management Dashboard</p>
-                </div>
-                <div class="header-right">
-                    <div class="admin-info">
-                        <h3>Admin Panel</h3>
-                        <p>Logged in at <span id="loginTime"></span></p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1><i class="fas fa-database"></i> Marya Admin</h1>
+                        <p>Mobile File Management</p>
                     </div>
                     <button class="logout-btn" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i>
@@ -710,104 +794,94 @@ body {
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="totalFiles">0</div>
-                    <div class="stat-label">Total Files</div>
+                    <div class="stat-label">Files</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="totalSize">0 GB</div>
-                    <div class="stat-label">Total Size</div>
+                    <div class="stat-value" id="totalSize">0</div>
+                    <div class="stat-label">Size</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="permanentFiles">0</div>
-                    <div class="stat-label">Permanent Files</div>
+                    <div class="stat-label">Permanent</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="kvNamespaces">0</div>
-                    <div class="stat-label">KV Namespaces</div>
+                    <div class="stat-label">Namespaces</div>
                 </div>
             </div>
 
             <!-- Controls -->
             <div class="controls">
-                <div class="controls-grid">
-                    <div class="search-box">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="searchInput" class="search-input" placeholder="Search files by name, type, or ID...">
-                    </div>
-                    <button class="btn btn-primary" onclick="refreshFilesList()">
-                        <i class="fas fa-sync-alt"></i> Refresh Files
-                    </button>
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search files...">
                 </div>
+                <button class="refresh-btn" onclick="refreshFilesList()">
+                    <i class="fas fa-sync-alt"></i> Refresh Files
+                </button>
             </div>
 
             <!-- Files Section -->
             <div class="files-section">
                 <div class="section-header">
-                    <h2 class="section-title">Advanced File Management</h2>
-                    <div>
-                        <button class="btn btn-danger btn-sm" onclick="deleteSelected()" id="deleteSelectedBtn" style="display: none;">
-                            <i class="fas fa-trash"></i> Delete Selected
-                        </button>
-                    </div>
+                    <h2 class="section-title">File Management</h2>
                 </div>
 
                 <div id="loadingSection" class="loading">
                     <div class="spinner"></div>
-                    <p>Loading files from KV namespaces...</p>
+                    <p>Loading files...</p>
                 </div>
 
-                <div id="filesTableContainer" style="display: none;">
-                    <table class="files-table">
-                        <thead>
-                            <tr>
-                                <th>
-                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                                </th>
-                                <th>File Details</th>
-                                <th>Size</th>
-                                <th>Type</th>
-                                <th>Upload Date</th>
-                                <th>Status & Links</th>
-                                <th>Expiry Control</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="filesTableBody">
-                            <!-- Files will be populated here -->
-                        </tbody>
-                    </table>
+                <div id="filesContainer" class="files-container" style="display: none;">
+                    <div class="select-all-container">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        <label for="selectAll" style="font-size: 0.8rem; color: var(--gray-600);">Select All</label>
+                    </div>
+                    
+                    <div id="filesList">
+                        <!-- File cards will be populated here -->
+                    </div>
+                    
+                    <button class="delete-selected-btn" onclick="deleteSelected()" id="deleteSelectedBtn">
+                        <i class="fas fa-trash"></i> Delete Selected
+                    </button>
                 </div>
 
-                <div id="emptyState" style="display: none; text-align: center; padding: 4rem;">
-                    <i class="fas fa-folder-open" style="font-size: 4rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
-                    <h3 style="color: var(--gray-600);">No files found</h3>
-                    <p style="color: var(--gray-600);">Upload some files to get started</p>
+                <div id="emptyState" class="empty-state">
+                    <i class="fas fa-folder-open" style="font-size: 3rem; color: var(--gray-300); margin-bottom: 1rem;"></i>
+                    <h3 style="color: var(--gray-600); margin-bottom: 0.5rem;">No files found</h3>
+                    <p style="color: var(--gray-600); font-size: 0.8rem;">Upload some files to get started</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Modal -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Confirm Complete Deletion</h3>
+                <h3 class="modal-title">Confirm Deletion</h3>
                 <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to permanently delete the selected file(s)?</p>
-                <p><strong>This will completely remove:</strong></p>
-                <ul style="margin: 1rem 0; padding-left: 2rem;">
-                    <li>File metadata from KV storage</li>
-                    <li>All file chunks from KV storage</li>
-                    <li>All associated data</li>
-                </ul>
-                <p style="color: var(--error); font-weight: 600;">⚠️ This action cannot be undone!</p>
+                <p style="margin-bottom: 1rem; font-size: 0.9rem;">Are you sure you want to permanently delete the selected file(s)?</p>
+                <div style="background: var(--error-light); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <p style="color: var(--error); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.5rem;">⚠️ Complete Removal:</p>
+                    <ul style="color: var(--error); font-size: 0.8rem; padding-left: 1rem; margin: 0;">
+                        <li>All file chunks from KV storage</li>
+                        <li>Telegram file references</li>
+                        <li>File metadata</li>
+                    </ul>
+                </div>
+                <p style="color: var(--error); font-weight: 600; font-size: 0.8rem;">This action cannot be undone!</p>
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn btn-danger" onclick="confirmDelete()">
-                    <i class="fas fa-trash"></i> Delete Permanently
+            <div class="modal-actions">
+                <button class="modal-btn" style="background: var(--gray-200); color: var(--gray-700);" onclick="closeDeleteModal()">
+                    Cancel
                 </button>
-                <button class="btn" style="background: var(--gray-200);" onclick="closeDeleteModal()">Cancel</button>
+                <button class="modal-btn" style="background: var(--error); color: white;" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
             </div>
         </div>
     </div>
@@ -816,10 +890,9 @@ body {
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🔐 Advanced Admin Panel - Loading...');
+        console.log('📱 Secure Mobile Admin Panel - Loading...');
         
-        // Admin configuration
-        const ADMIN_KEY = 'MARYA2025ADMIN'; // Change this to your desired admin key
+        let ADMIN_KEY = null; // Will be loaded from server
         let allFiles = [];
         let selectedFiles = new Set();
         let deleteQueue = [];
@@ -827,10 +900,36 @@ body {
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            checkAuthStatus();
+            loadAdminKey();
         });
 
-        // Authentication functions
+        // Load admin key from server environment
+        async function loadAdminKey() {
+            try {
+                console.log('🔑 Loading admin key from server...');
+                const response = await fetch('/admin/get-key');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.key) {
+                        ADMIN_KEY = data.key;
+                        console.log('✅ Admin key loaded securely');
+                        checkAuthStatus();
+                        return;
+                    }
+                }
+                
+                throw new Error('Failed to load admin key');
+                
+            } catch (error) {
+                console.error('❌ Failed to load admin key:', error);
+                // Fallback key (should be removed in production)
+                ADMIN_KEY = 'MARYA2025ADMIN';
+                checkAuthStatus();
+            }
+        }
+
+        // Check authentication status
         function checkAuthStatus() {
             const savedAuth = localStorage.getItem('maryaAdminAuth');
             const savedTime = localStorage.getItem('maryaAdminTime');
@@ -850,8 +949,14 @@ body {
             showLoginScreen();
         }
 
+        // Validate login
         function validateLogin(event) {
             event.preventDefault();
+            
+            if (!ADMIN_KEY) {
+                showToast('Admin key not loaded. Please refresh.', 'error');
+                return false;
+            }
             
             const keyInput = document.getElementById('adminKey');
             const loginBtn = document.getElementById('loginBtn');
@@ -865,23 +970,19 @@ body {
             
             setTimeout(() => {
                 if (enteredKey === ADMIN_KEY) {
-                    // Successful login
                     localStorage.setItem('maryaAdminAuth', 'true');
                     localStorage.setItem('maryaAdminTime', Date.now().toString());
                     showAdminDashboard();
-                    showToast('Advanced admin access granted!', 'success');
+                    showToast('Secure access granted!', 'success');
                 } else {
-                    // Failed login
                     errorDiv.style.display = 'block';
                     keyInput.value = '';
                     keyInput.focus();
-                    
-                    // Log failed attempt
-                    console.warn('❌ Invalid admin key attempt:', enteredKey);
+                    console.warn('❌ Invalid admin key attempt');
                 }
                 
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-key"></i> Access Admin Panel';
+                loginBtn.innerHTML = '<i class="fas fa-key"></i> Access Panel';
             }, 1000);
             
             return false;
@@ -892,9 +993,9 @@ body {
             document.getElementById('adminDashboard').classList.remove('show');
             isLoggedIn = false;
             
-            // Focus on key input
             setTimeout(() => {
-                document.getElementById('adminKey').focus();
+                const keyInput = document.getElementById('adminKey');
+                if (keyInput) keyInput.focus();
             }, 100);
         }
 
@@ -903,10 +1004,6 @@ body {
             document.getElementById('adminDashboard').classList.add('show');
             isLoggedIn = true;
             
-            // Set login time display
-            document.getElementById('loginTime').textContent = new Date().toLocaleTimeString();
-            
-            // Load files and setup dashboard
             loadFiles();
             setupSearchFilter();
         }
@@ -918,11 +1015,11 @@ body {
             showToast('Logged out successfully', 'success');
         }
 
-        // FIXED: Load all files from KV
+        // Load files with optimized API
         async function loadFiles() {
-            if (!isLoggedIn) return;
+            if (!isLoggedIn || !ADMIN_KEY) return;
             
-            console.log('📂 Loading files from KV namespaces...');
+            console.log('📂 Fast loading files...');
             
             try {
                 showLoading(true);
@@ -936,14 +1033,7 @@ body {
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 200)}`);
-                }
-
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const responseText = await response.text();
-                    throw new Error(`Expected JSON, got: ${contentType}. Response starts with: ${responseText.substring(0, 100)}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -951,20 +1041,16 @@ body {
                 if (data.success) {
                     allFiles = data.files || [];
                     
-                    // Validate and fix files data
-                    const validFiles = allFiles.filter(file => {
-                        const isValid = file && typeof file.filename === 'string';
-                        if (!isValid) {
-                            console.warn('⚠️ Invalid file object:', file);
-                        }
-                        return isValid;
-                    });
+                    // Filter valid files
+                    const validFiles = allFiles.filter(file => 
+                        file && typeof file.filename === 'string' && file.id
+                    );
                     
                     allFiles = validFiles;
                     
                     updateStats(data.stats);
-                    displayFiles(allFiles);
-                    console.log(`✅ Loaded ${allFiles.length} valid files`);
+                    displayMobileFiles(allFiles);
+                    console.log(`⚡ Fast loaded ${allFiles.length} files`);
                 } else {
                     throw new Error(data.error || 'Failed to load files');
                 }
@@ -983,133 +1069,139 @@ body {
             if (!stats) return;
             
             document.getElementById('totalFiles').textContent = stats.totalFiles || 0;
-            document.getElementById('totalSize').textContent = formatBytes(stats.totalSize || 0);
+            document.getElementById('totalSize').textContent = formatBytesShort(stats.totalSize || 0);
             document.getElementById('permanentFiles').textContent = stats.activeFiles || 0;
             document.getElementById('kvNamespaces').textContent = stats.kvNamespaces || 0;
         }
 
-        // Display files in advanced table
-        function displayFiles(files) {
-            const tbody = document.getElementById('filesTableBody');
+        // Display files in mobile-friendly cards
+        function displayMobileFiles(files) {
+            const filesList = document.getElementById('filesList');
+            const filesContainer = document.getElementById('filesContainer');
+            const emptyState = document.getElementById('emptyState');
             
             if (!files || files.length === 0) {
                 showEmptyState();
                 return;
             }
 
-            tbody.innerHTML = '';
-            showFilesTable();
+            filesList.innerHTML = '';
+            filesContainer.style.display = 'block';
+            emptyState.classList.remove('show');
 
             files.forEach((file, index) => {
                 try {
-                    const row = createAdvancedFileRow(file, index);
-                    tbody.appendChild(row);
-                } catch (rowError) {
-                    console.error('❌ Failed to create row for file:', file, rowError);
+                    const card = createMobileFileCard(file, index);
+                    filesList.appendChild(card);
+                } catch (cardError) {
+                    console.error('❌ Failed to create card for file:', file, cardError);
                 }
             });
         }
 
-        // Create advanced file table row
-        function createAdvancedFileRow(file, index) {
-            if (!file) {
-                throw new Error('File object is null or undefined');
-            }
-            
-            const row = document.createElement('tr');
-            row.dataset.fileId = file.id || `unknown_${index}`;
+        // Create mobile file card
+        function createMobileFileCard(file, index) {
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            card.dataset.fileId = file.id;
             
             const safeFilename = file.filename || 'Unknown File';
             const fileIcon = getFileIcon(safeFilename);
             const uploadDate = file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'Unknown';
-            const status = getAdvancedFileStatus(file);
+            const status = getFileStatus(file);
             
-            row.innerHTML = `
-                <td>
-                    <input type="checkbox" class="file-checkbox" value="${file.id || ''}" onchange="toggleFileSelection('${file.id || ''}')">
-                </td>
-                <td>
-                    <div class="file-info">
-                        <div class="file-icon ${fileIcon.type}">
-                            <i class="${fileIcon.icon}"></i>
-                        </div>
-                        <div class="file-details">
-                            <h4>${truncateText(safeFilename, 35)}</h4>
-                            <p>ID: ${file.id || 'Unknown'}</p>
-                            <p>Chunks: ${file.totalChunks || 0}</p>
+            card.innerHTML = `
+                <div class="file-header">
+                    <input type="checkbox" class="file-checkbox" value="${file.id}" onchange="toggleFileSelection('${file.id}')">
+                    <div class="file-icon ${fileIcon.type}">
+                        <i class="${fileIcon.icon}"></i>
+                    </div>
+                    <div class="file-details">
+                        <div class="file-name">${truncateText(safeFilename, 30)}</div>
+                        <div class="file-meta">
+                            <span class="file-size">${formatBytesShort(file.size || 0)}</span>
+                            <span>${uploadDate}</span>
+                            <span>ID: ${truncateText(file.id, 8)}</span>
                         </div>
                     </div>
-                </td>
-                <td class="file-size">${formatBytes(file.size || 0)}</td>
-                <td>
-                    <div style="font-size: 0.8rem;">
-                        ${file.contentType || 'Unknown'}
-                    </div>
-                </td>
-                <td>${uploadDate}</td>
-                <td>
+                </div>
+                
+                <div class="file-body">
                     <span class="status-badge ${status.class}">
                         <i class="${status.icon}"></i>
                         ${status.text}
                     </span>
+                    
                     <div class="quick-links">
-                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}" target="_blank" class="quick-link stream">
+                        <a href="/btfstorage/file/${file.id}${file.extension || ''}" target="_blank" class="quick-link stream">
                             <i class="fas fa-play"></i> Stream
                         </a>
-                        <a href="/btfstorage/file/${file.id || ''}${file.extension || ''}?dl=1" class="quick-link download">
+                        <a href="/btfstorage/file/${file.id}${file.extension || ''}?dl=1" class="quick-link download">
                             <i class="fas fa-download"></i> Download
                         </a>
                     </div>
-                </td>
-                <td>
-                    <div class="expiry-control">
-                        <select class="expiry-select" onchange="updateExpiry('${file.id || ''}', this.value)">
-                            <option value="permanent" ${file.neverExpires ? 'selected' : ''}>Permanent</option>
-                            <option value="7" ${file.expiryDays === 7 ? 'selected' : ''}>7 days</option>
-                            <option value="30" ${file.expiryDays === 30 ? 'selected' : ''}>30 days</option>
-                            <option value="90" ${file.expiryDays === 90 ? 'selected' : ''}>90 days</option>
-                            <option value="365" ${file.expiryDays === 365 ? 'selected' : ''}>1 year</option>
-                        </select>
+                    
+                    <div class="expiry-section">
+                        <div class="expiry-control">
+                            <select class="expiry-select" onchange="updateExpiry('${file.id}', this.value)">
+                                <option value="permanent" ${file.neverExpires ? 'selected' : ''}>Permanent</option>
+                                <option value="7" ${file.expiryDays === 7 ? 'selected' : ''}>7 days</option>
+                                <option value="30" ${file.expiryDays === 30 ? 'selected' : ''}>30 days</option>
+                                <option value="90" ${file.expiryDays === 90 ? 'selected' : ''}>90 days</option>
+                                <option value="365" ${file.expiryDays === 365 ? 'selected' : ''}>1 year</option>
+                            </select>
+                        </div>
+                        <div class="expiry-info">${getExpiryInfo(file)}</div>
                     </div>
-                    ${getExpiryInfo(file)}
-                </td>
-                <td>
-                    <div class="file-actions">
-                        <button onclick="copyFileInfo('${file.id || ''}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn btn-blue btn-xs">
-                            <i class="fas fa-copy"></i> Copy Info
-                        </button>
-                        <button onclick="deleteFile('${file.id || ''}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn btn-danger btn-xs">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
-                </td>
+                </div>
+                
+                <div class="file-actions">
+                    <button onclick="copyFileInfo('${file.id}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn-xs btn-blue">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button onclick="deleteFile('${file.id}', '${safeFilename.replace(/'/g, '\\\'')}')" class="btn-xs btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
             `;
             
-            return row;
+            return card;
         }
 
-        // Get advanced file status
-        function getAdvancedFileStatus(file) {
-            if (!file) {
-                return { class: 'status-expired', text: 'Unknown', icon: 'fas fa-question' };
+        // Get file icon
+        function getFileIcon(filename) {
+            if (!filename) return { type: 'other', icon: 'fas fa-file' };
+            
+            const ext = filename.split('.').pop()?.toLowerCase() || '';
+            
+            if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) {
+                return { type: 'video', icon: 'fas fa-video' };
+            } else if (['mp3', 'wav', 'flac', 'aac', 'm4a'].includes(ext)) {
+                return { type: 'audio', icon: 'fas fa-music' };
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                return { type: 'image', icon: 'fas fa-image' };
+            } else if (['pdf', 'doc', 'txt'].includes(ext)) {
+                return { type: 'document', icon: 'fas fa-file-alt' };
+            } else if (['zip', 'rar', '7z'].includes(ext)) {
+                return { type: 'archive', icon: 'fas fa-archive' };
             }
             
+            return { type: 'other', icon: 'fas fa-file' };
+        }
+
+        // Get file status
+        function getFileStatus(file) {
             if (file.neverExpires) {
                 return { class: 'status-permanent', text: 'Permanent', icon: 'fas fa-infinity' };
             }
             
             if (file.expiresAt) {
-                const now = Date.now();
-                const expiresAt = file.expiresAt;
-                const timeLeft = expiresAt - now;
-                
+                const timeLeft = file.expiresAt - Date.now();
                 if (timeLeft <= 0) {
-                    return { class: 'status-expired', text: 'Expired', icon: 'fas fa-times' };
-                } else if (timeLeft <= 7 * 24 * 60 * 60 * 1000) {
-                    return { class: 'status-expiring', text: 'Expiring Soon', icon: 'fas fa-exclamation' };
+                    return { class: 'status-expiring', text: 'Expired', icon: 'fas fa-times' };
                 } else {
                     const days = Math.ceil(timeLeft / (24 * 60 * 60 * 1000));
-                    return { class: 'status-expiring', text: `${days} days left`, icon: 'fas fa-clock' };
+                    return { class: 'status-expiring', text: `${days}d left`, icon: 'fas fa-clock' };
                 }
             }
             
@@ -1118,16 +1210,11 @@ body {
 
         // Get expiry info
         function getExpiryInfo(file) {
-            if (file.neverExpires) {
-                return '<div style="font-size: 0.7rem; color: var(--blue);">Never expires</div>';
-            }
-            
+            if (file.neverExpires) return 'Never expires';
             if (file.expiresAt) {
-                const expiryDate = new Date(file.expiresAt).toLocaleDateString();
-                return `<div style="font-size: 0.7rem; color: var(--gray-600);">Expires: ${expiryDate}</div>`;
+                return new Date(file.expiresAt).toLocaleDateString();
             }
-            
-            return '<div style="font-size: 0.7rem; color: var(--gray-600);">No expiry set</div>';
+            return 'No expiry';
         }
 
         // Update expiry
@@ -1135,7 +1222,7 @@ body {
             if (!fileId) return;
             
             try {
-                showToast('Updating expiry...', 'success');
+                showToast('Updating...', 'success');
                 
                 const response = await fetch('/admin/update-expiry', {
                     method: 'POST',
@@ -1149,21 +1236,16 @@ body {
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
                 const result = await response.json();
                 
                 if (result.success) {
                     showToast(`Expiry updated: ${expiryValue === 'permanent' ? 'Permanent' : expiryValue + ' days'}`, 'success');
-                    await refreshFilesList();
+                    setTimeout(() => refreshFilesList(), 1000);
                 } else {
                     throw new Error(result.error || 'Update failed');
                 }
                 
             } catch (error) {
-                console.error('Update expiry error:', error);
                 showToast(`Update failed: ${error.message}`, 'error');
             }
         }
@@ -1171,50 +1253,25 @@ body {
         // Copy file info
         function copyFileInfo(fileId, filename) {
             const baseUrl = window.location.origin;
-            const streamUrl = `${baseUrl}/btfstorage/file/${fileId}`;
-            const downloadUrl = `${baseUrl}/btfstorage/file/${fileId}?dl=1`;
+            const info = `${filename}\nStream: ${baseUrl}/btfstorage/file/${fileId}\nDownload: ${baseUrl}/btfstorage/file/${fileId}?dl=1`;
             
-            const info = `File: ${filename}\nID: ${fileId}\nStream: ${streamUrl}\nDownload: ${downloadUrl}`;
-            
-            navigator.clipboard.writeText(info).then(() => {
-                showToast('File info copied to clipboard!', 'success');
-            }).catch(() => {
-                // Fallback for older browsers
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(info).then(() => {
+                    showToast('Info copied!', 'success');
+                });
+            } else {
+                // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = info;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showToast('File info copied to clipboard!', 'success');
-            });
+                showToast('Info copied!', 'success');
+            }
         }
 
-        // Get file icon (same as before)
-        function getFileIcon(filename) {
-            if (!filename || typeof filename !== 'string') {
-                return { type: 'other', icon: 'fas fa-file' };
-            }
-            
-            const parts = filename.split('.');
-            const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
-            
-            if (['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', '3gp'].includes(ext)) {
-                return { type: 'video', icon: 'fas fa-video' };
-            } else if (['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'].includes(ext)) {
-                return { type: 'audio', icon: 'fas fa-music' };
-            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
-                return { type: 'image', icon: 'fas fa-image' };
-            } else if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) {
-                return { type: 'document', icon: 'fas fa-file-alt' };
-            } else if (['zip', 'rar', '7z', 'tar'].includes(ext)) {
-                return { type: 'archive', icon: 'fas fa-archive' };
-            }
-            
-            return { type: 'other', icon: 'fas fa-file' };
-        }
-
-        // Search and filter
+        // Search functionality
         function setupSearchFilter() {
             const searchInput = document.getElementById('searchInput');
             
@@ -1222,23 +1279,18 @@ body {
                 const query = e.target.value.toLowerCase();
                 
                 if (query === '') {
-                    displayFiles(allFiles);
+                    displayMobileFiles(allFiles);
                     return;
                 }
                 
                 const filtered = allFiles.filter(file => {
-                    if (!file) return false;
-                    
                     const filename = (file.filename || '').toLowerCase();
                     const id = (file.id || '').toLowerCase();
-                    const contentType = (file.contentType || '').toLowerCase();
                     
-                    return filename.includes(query) || 
-                           id.includes(query) || 
-                           contentType.includes(query);
+                    return filename.includes(query) || id.includes(query);
                 });
                 
-                displayFiles(filtered);
+                displayMobileFiles(filtered);
             });
         }
 
@@ -1273,30 +1325,18 @@ body {
             const deleteBtn = document.getElementById('deleteSelectedBtn');
             
             if (selectedFiles.size > 0) {
-                deleteBtn.style.display = 'inline-flex';
+                deleteBtn.style.display = 'flex';
                 deleteBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedFiles.size} Selected`;
             } else {
                 deleteBtn.style.display = 'none';
             }
         }
 
-        // Refresh files list
-        async function refreshFilesList() {
-            selectedFiles.clear();
-            document.getElementById('selectAll').checked = false;
-            updateDeleteButton();
-            await loadFiles();
-            showToast('Files list refreshed', 'success');
-        }
-
         // Delete functions
         function deleteFile(fileId, filename) {
-            if (!fileId) {
-                showToast('Invalid file ID', 'error');
-                return;
-            }
+            if (!fileId) return;
             
-            deleteQueue = [{ id: fileId, filename: filename || 'Unknown File' }];
+            deleteQueue = [{ id: fileId, filename: filename }];
             showDeleteModal();
         }
 
@@ -1307,7 +1347,7 @@ body {
                 const file = allFiles.find(f => f && f.id === fileId);
                 return { 
                     id: fileId, 
-                    filename: file && file.filename ? file.filename : 'Unknown File' 
+                    filename: file?.filename || 'Unknown File'
                 };
             });
             
@@ -1323,24 +1363,24 @@ body {
             deleteQueue = [];
         }
 
-        // FIXED: Confirm delete with proper error handling
+        // FIXED: Complete deletion with proper validation
         async function confirmDelete() {
             if (deleteQueue.length === 0) return;
             
             try {
                 closeDeleteModal();
-                showToast('Deleting files...', 'success');
+                showToast('Deleting completely...', 'success');
                 
-                // Filter out empty/invalid file IDs
+                // Extract and validate file IDs
                 const validFileIds = deleteQueue
                     .map(f => f.id)
-                    .filter(id => id && typeof id === 'string' && id.trim() !== '');
+                    .filter(id => id && typeof id === 'string' && id.startsWith('MSM'));
                 
                 if (validFileIds.length === 0) {
                     throw new Error('No valid file IDs to delete');
                 }
                 
-                console.log('🗑️ Deleting files:', validFileIds);
+                console.log('🗑️ Complete deletion request:', validFileIds);
                 
                 const response = await fetch('/admin/delete-files', {
                     method: 'POST',
@@ -1362,13 +1402,8 @@ body {
                 console.log('🗑️ Delete result:', result);
                 
                 if (result.success) {
-                    showToast(`Successfully deleted ${result.deletedCount} files with all chunks`, 'success');
-                    
-                    if (result.deletedDetails) {
-                        console.log('📊 Delete details:', result.deletedDetails);
-                    }
-                    
-                    await refreshFilesList();
+                    showToast(`✅ Deleted ${result.deletedCount} files completely (KV + Telegram)`, 'success');
+                    setTimeout(() => refreshFilesList(), 1500);
                 } else {
                     throw new Error(result.error || 'Delete failed');
                 }
@@ -1379,31 +1414,35 @@ body {
             }
         }
 
+        // Refresh files list
+        async function refreshFilesList() {
+            selectedFiles.clear();
+            document.getElementById('selectAll').checked = false;
+            updateDeleteButton();
+            await loadFiles();
+            showToast('Files refreshed', 'success');
+        }
+
         // Utility functions
         function showLoading(show) {
             document.getElementById('loadingSection').style.display = show ? 'block' : 'none';
         }
 
-        function showFilesTable() {
-            document.getElementById('filesTableContainer').style.display = 'block';
-            document.getElementById('emptyState').style.display = 'none';
-        }
-
         function showEmptyState() {
-            document.getElementById('filesTableContainer').style.display = 'none';
-            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('filesContainer').style.display = 'none';
+            document.getElementById('emptyState').classList.add('show');
         }
 
-        function formatBytes(bytes) {
-            if (!bytes || bytes === 0) return '0 Bytes';
+        function formatBytesShort(bytes) {
+            if (!bytes) return '0';
             const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const sizes = ['B', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + sizes[i];
         }
 
         function truncateText(text, maxLength) {
-            if (!text || typeof text !== 'string') return 'Unknown';
+            if (!text) return 'Unknown';
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
         }
@@ -1415,8 +1454,8 @@ body {
             toast.innerHTML = `
                 ${icon}
                 <div>
-                    <div style="font-weight: 600;">${type === 'success' ? 'Success' : 'Error'}</div>
-                    <div style="font-size: 0.9rem; opacity: 0.8;">${message}</div>
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">${type === 'success' ? 'Success' : 'Error'}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.9;">${message}</div>
                 </div>
             `;
 
@@ -1424,10 +1463,10 @@ body {
 
             setTimeout(() => {
                 toast.classList.remove('show');
-            }, 5000);
+            }, 4000);
         }
 
-        console.log('✅ Advanced Admin Panel - Ready!');
+        console.log('✅ Secure Mobile Admin Panel - Ready!');
     </script>
 </body>
 </html>
