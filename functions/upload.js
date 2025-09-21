@@ -85,15 +85,12 @@ export async function onRequest(context) {
 
     // ✅ Upload chunks to different KV namespaces
     const chunkPromises = [];
-    
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
-      
       const chunkFile = new File([chunk], `${file.name}.part${i}`, { type: file.type });
       const targetKV = kvNamespaces[i % kvNamespaces.length]; // Round-robin distribution
-      
       const chunkPromise = uploadChunkToKV(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV);
       chunkPromises.push(chunkPromise);
     }
@@ -158,7 +155,7 @@ export async function onRequest(context) {
 // ✅ Upload chunk to specific KV namespace
 async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
   console.log(`Uploading chunk ${chunkIndex} to ${kvNamespace.name}...`);
-  
+
   // Upload to Telegram
   const telegramForm = new FormData();
   telegramForm.append('chat_id', channelId);
@@ -174,6 +171,7 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   }
 
   const telegramData = await telegramResponse.json();
+
   if (!telegramData.ok || !telegramData.result?.document?.file_id) {
     throw new Error(`Invalid Telegram response for chunk ${chunkIndex}`);
   }
@@ -182,18 +180,19 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
 
   // Get file URL
   const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
-  
+
   if (!getFileResponse.ok) {
     throw new Error(`GetFile API failed for chunk ${chunkIndex}`);
   }
 
   const getFileData = await getFileResponse.json();
+
   if (!getFileData.ok || !getFileData.result?.file_path) {
     throw new Error(`No file_path for chunk ${chunkIndex}`);
   }
 
   const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-  
+
   // ✅ Store chunk with auto-refresh metadata
   const chunkKey = `${fileId}_chunk_${chunkIndex}`;
   const chunkMetadata = {
@@ -208,9 +207,8 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   };
 
   await kvNamespace.kv.put(chunkKey, JSON.stringify(chunkMetadata));
-  
   console.log(`Chunk ${chunkIndex} stored in ${kvNamespace.name}`);
-  
+
   return {
     telegramFileId: telegramFileId,
     size: chunkFile.size,
