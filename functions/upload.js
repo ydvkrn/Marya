@@ -1,7 +1,7 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
-  console.log('=== MARYA VAULT MICRO-CHUNK UPLOAD START ===');
+  console.log('=== LIGHTNING FAST UPLOAD START ===');
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -24,7 +24,7 @@ export async function onRequest(context) {
   }
 
   try {
-    // Multiple bot tokens for ultra-fast parallel upload
+    // Multiple bot tokens for parallel speed
     const botTokens = [
       env.BOT_TOKEN,
       env.BOT_TOKEN2,
@@ -38,9 +38,7 @@ export async function onRequest(context) {
       throw new Error('Missing bot credentials');
     }
 
-    console.log(`Available bot tokens: ${botTokens.length}`);
-
-    // All KV namespaces
+    // KV namespaces
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
       { kv: env.FILES_KV2, name: 'FILES_KV2' },
@@ -50,10 +48,6 @@ export async function onRequest(context) {
       { kv: env.FILES_KV6, name: 'FILES_KV6' },
       { kv: env.FILES_KV7, name: 'FILES_KV7' }
     ].filter(item => item.kv);
-
-    if (kvNamespaces.length === 0) {
-      throw new Error('No KV namespaces available');
-    }
 
     const formData = await request.formData();
     const file = formData.get('file');
@@ -68,142 +62,36 @@ export async function onRequest(context) {
       type: file.type
     });
 
-    // Generate custom file ID (MSM format)
-    const customFileId = generateCustomId();
+    // Generate custom MSM ID
+    const customFileId = generateMSMId();
     const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
 
-    // Smart chunking strategy (like YouTube/Instagram)
-    const KEYS_PER_KV = 40;
-    const totalKeys = kvNamespaces.length * KEYS_PER_KV; // 7 * 40 = 280 keys max
+    // SMART CHUNKING STRATEGY (Super Fast)
+    let chunkSize, strategy;
 
-    // Calculate micro-chunk size dynamically
-    let chunkSize;
-    if (file.size <= 5 * 1024 * 1024) {
-      // Small files: divide into 40 keys in first KV
-      chunkSize = Math.ceil(file.size / KEYS_PER_KV);
+    if (file.size <= 1 * 1024 * 1024) {
+      // Small files (< 1MB): Direct upload, no chunking
+      strategy = 'direct';
+      chunkSize = file.size;
+    } else if (file.size <= 20 * 1024 * 1024) {
+      // Medium files (1-20MB): 1MB chunks for speed
+      strategy = 'fast_chunks';
+      chunkSize = 1 * 1024 * 1024; // 1MB chunks
     } else {
-      // Large files: use all KVs, micro-chunks for fast fetch
-      chunkSize = Math.ceil(file.size / totalKeys);
-      if (chunkSize > 20 * 1024 * 1024) {
-        chunkSize = 20 * 1024 * 1024; // Max 20MB per chunk
-      }
-      if (chunkSize < 100 * 1024) {
-        chunkSize = 100 * 1024; // Min 100KB per chunk for efficiency
-      }
+      // Large files (> 20MB): 5MB chunks for efficiency
+      strategy = 'large_chunks';
+      chunkSize = 5 * 1024 * 1024; // 5MB chunks
     }
 
-    const totalChunks = Math.ceil(file.size / chunkSize);
-    console.log(`File will be split into ${totalChunks} micro-chunks (${Math.round(chunkSize/1024)}KB each)`);
+    console.log(`Using strategy: ${strategy}, chunk size: ${Math.round(chunkSize/1024/1024)}MB`);
 
-    if (totalChunks > totalKeys) {
-      throw new Error(`File too large: needs ${totalChunks} chunks but only ${totalKeys} keys available`);
+    if (strategy === 'direct') {
+      // Direct upload for small files
+      return await handleDirectUpload(file, customFileId, extension, botTokens[0], CHANNEL_ID, kvNamespaces[0], request, corsHeaders);
+    } else {
+      // Chunked upload for larger files
+      return await handleChunkedUpload(file, customFileId, extension, strategy, chunkSize, botTokens, CHANNEL_ID, kvNamespaces, request, corsHeaders);
     }
-
-    // Upload micro-chunks in parallel batches
-    const batchSize = 20; // Process 20 chunks at a time
-    const allChunkResults = [];
-
-    for (let batchStart = 0; batchStart < totalChunks; batchStart += batchSize) {
-      const batchEnd = Math.min(batchStart + batchSize, totalChunks);
-      const batchPromises = [];
-
-      for (let i = batchStart; i < batchEnd; i++) {
-        const start = i * chunkSize;
-        const end = Math.min(start + chunkSize, file.size);
-        const chunk = file.slice(start, end);
-        
-        // Determine KV and key position
-        const kvIndex = Math.floor(i / KEYS_PER_KV);
-        const keyIndex = i % KEYS_PER_KV;
-        
-        if (kvIndex >= kvNamespaces.length) {
-          throw new Error(`Not enough KV namespaces`);
-        }
-
-        const targetKV = kvNamespaces[kvIndex];
-        const botToken = botTokens[i % botTokens.length];
-        
-        const chunkPromise = uploadMicroChunk(
-          chunk,
-          customFileId,
-          i,
-          kvIndex,
-          keyIndex,
-          botToken,
-          CHANNEL_ID,
-          targetKV,
-          file.name
-        );
-        
-        batchPromises.push(chunkPromise);
-      }
-
-      console.log(`Uploading batch ${Math.floor(batchStart/batchSize) + 1}/${Math.ceil(totalChunks/batchSize)} (${batchPromises.length} chunks)`);
-      const batchResults = await Promise.all(batchPromises);
-      allChunkResults.push(...batchResults);
-
-      // Small delay between batches to avoid rate limits
-      if (batchEnd < totalChunks) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-
-    console.log(`All ${totalChunks} micro-chunks uploaded successfully`);
-
-    // Store master metadata
-    const masterMetadata = {
-      filename: file.name,
-      size: file.size,
-      contentType: file.type,
-      extension: extension,
-      uploadedAt: Date.now(),
-      type: 'micro_chunked_keys',
-      totalChunks: totalChunks,
-      chunkSize: chunkSize,
-      keysPerKV: KEYS_PER_KV,
-      kvDistribution: {},
-      chunks: allChunkResults.map((result, index) => ({
-        index: index,
-        kvNamespace: result.kvNamespace,
-        keyName: result.keyName,
-        telegramFileId: result.telegramFileId,
-        size: result.size,
-        kvIndex: result.kvIndex,
-        keyIndex: result.keyIndex
-      }))
-    };
-
-    // Count chunks per KV
-    allChunkResults.forEach(result => {
-      const kvName = result.kvNamespace;
-      masterMetadata.kvDistribution[kvName] = (masterMetadata.kvDistribution[kvName] || 0) + 1;
-    });
-
-    await kvNamespaces[0].kv.put(customFileId, JSON.stringify(masterMetadata));
-
-    const baseUrl = new URL(request.url).origin;
-    const customUrl = `${baseUrl}/btfstorage/file/${customFileId}${extension}`;
-    const downloadUrl = `${baseUrl}/btfstorage/file/${customFileId}${extension}?dl=1`;
-
-    const result = {
-      success: true,
-      filename: file.name,
-      size: file.size,
-      contentType: file.type,
-      url: customUrl,
-      download: downloadUrl,
-      id: customFileId,
-      strategy: 'micro_chunked_keys',
-      chunks: totalChunks,
-      chunkSize: `${Math.round(chunkSize/1024)}KB`,
-      kvDistribution: masterMetadata.kvDistribution,
-      botsUsed: botTokens.length
-    };
-
-    console.log('Micro-chunk upload completed:', result);
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
 
   } catch (error) {
     console.error('Upload error:', error);
@@ -217,31 +105,174 @@ export async function onRequest(context) {
   }
 }
 
-// Generate custom ID format: MSM000-999X99X00-99
-function generateCustomId() {
-  const timestamp = Date.now();
-  const random1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // 000-999
-  const random2 = Math.floor(Math.random() * 100).toString().padStart(2, '0');  // 00-99
-  const random3 = Math.floor(Math.random() * 100).toString().padStart(2, '0');  // 00-99
-  const random4 = Math.floor(Math.random() * 100).toString().padStart(2, '0');  // 00-99
-  const randomChar1 = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
-  const randomChar2 = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
-  
-  return `MSM${random1}-${random2}${randomChar1}${random3}${randomChar2}${random4}-${timestamp.toString(36).slice(-2)}`;
-}
-
-// Upload single micro-chunk
-async function uploadMicroChunk(chunk, fileId, chunkIndex, kvIndex, keyIndex, botToken, channelId, kvNamespace, originalFilename) {
-  console.log(`Uploading micro-chunk ${chunkIndex} (${Math.round(chunk.size/1024)}KB) to ${kvNamespace.name}[${keyIndex}]...`);
+// Direct upload for small files (< 1MB) - Super Fast
+async function handleDirectUpload(file, fileId, extension, botToken, channelId, kvNamespace, request, corsHeaders) {
+  console.log('Using direct upload strategy');
 
   try {
-    // Create micro-chunk file
-    const chunkFile = new File([chunk], `${originalFilename}.micro${chunkIndex}`, { type: 'application/octet-stream' });
+    // Upload directly to Telegram
+    const telegramForm = new FormData();
+    telegramForm.append('chat_id', channelId);
+    telegramForm.append('document', file);
 
-    // Upload to Telegram with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+      method: 'POST',
+      body: telegramForm,
+      signal: AbortSignal.timeout(15000) // 15 second timeout
+    });
 
+    if (!telegramResponse.ok) {
+      throw new Error(`Telegram upload failed: ${telegramResponse.status}`);
+    }
+
+    const telegramData = await telegramResponse.json();
+    if (!telegramData.ok || !telegramData.result?.document?.file_id) {
+      throw new Error('Invalid Telegram response');
+    }
+
+    const telegramFileId = telegramData.result.document.file_id;
+
+    // Get direct URL
+    const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${telegramFileId}`);
+    const getFileData = await getFileResponse.json();
+    const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+
+    // Store metadata
+    const metadata = {
+      filename: file.name,
+      size: file.size,
+      contentType: file.type,
+      extension: extension,
+      uploadedAt: Date.now(),
+      type: 'direct_upload',
+      telegramFileId: telegramFileId,
+      directUrl: directUrl,
+      strategy: 'direct'
+    };
+
+    await kvNamespace.kv.put(fileId, JSON.stringify(metadata));
+
+    const baseUrl = new URL(request.url).origin;
+    const result = {
+      success: true,
+      filename: file.name,
+      size: file.size,
+      url: `${baseUrl}/btfstorage/file/${fileId}${extension}`,
+      download: `${baseUrl}/btfstorage/file/${fileId}${extension}?dl=1`,
+      id: fileId,
+      strategy: 'direct'
+    };
+
+    return new Response(JSON.stringify(result), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+
+  } catch (error) {
+    throw new Error(`Direct upload failed: ${error.message}`);
+  }
+}
+
+// Chunked upload for larger files
+async function handleChunkedUpload(file, fileId, extension, strategy, chunkSize, botTokens, channelId, kvNamespaces, request, corsHeaders) {
+  console.log(`Using chunked upload strategy: ${strategy}`);
+
+  const totalChunks = Math.ceil(file.size / chunkSize);
+  const maxChunks = 280; // 7 KV × 40 keys
+
+  if (totalChunks > maxChunks) {
+    throw new Error(`File too large: ${totalChunks} chunks needed, max ${maxChunks} supported`);
+  }
+
+  console.log(`File will be split into ${totalChunks} chunks`);
+
+  // Upload chunks in SMALL BATCHES to avoid timeout
+  const BATCH_SIZE = 5; // Process only 5 chunks at a time
+  const allChunkResults = [];
+
+  for (let batchStart = 0; batchStart < totalChunks; batchStart += BATCH_SIZE) {
+    const batchEnd = Math.min(batchStart + BATCH_SIZE, totalChunks);
+    const batchPromises = [];
+
+    for (let i = batchStart; i < batchEnd; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunk = file.slice(start, end);
+      
+      const kvIndex = Math.floor(i / 40); // 40 keys per KV
+      const keyIndex = i % 40;
+      const targetKV = kvNamespaces[kvIndex];
+      const botToken = botTokens[i % botTokens.length];
+      
+      const chunkPromise = uploadChunkFast(
+        chunk, fileId, i, kvIndex, keyIndex, botToken, channelId, targetKV, file.name
+      );
+      
+      batchPromises.push(chunkPromise);
+    }
+
+    console.log(`Uploading batch ${Math.floor(batchStart/BATCH_SIZE) + 1}/${Math.ceil(totalChunks/BATCH_SIZE)}`);
+    
+    try {
+      const batchResults = await Promise.all(batchPromises);
+      allChunkResults.push(...batchResults);
+    } catch (batchError) {
+      console.error(`Batch ${Math.floor(batchStart/BATCH_SIZE) + 1} failed:`, batchError);
+      throw new Error(`Upload failed at batch ${Math.floor(batchStart/BATCH_SIZE) + 1}: ${batchError.message}`);
+    }
+
+    // Small delay between batches to avoid rate limits
+    if (batchEnd < totalChunks) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  // Store master metadata
+  const masterMetadata = {
+    filename: file.name,
+    size: file.size,
+    contentType: file.type,
+    extension: extension,
+    uploadedAt: Date.now(),
+    type: 'chunked_upload',
+    totalChunks: totalChunks,
+    chunkSize: chunkSize,
+    strategy: strategy,
+    chunks: allChunkResults.map((result, index) => ({
+      index: index,
+      kvNamespace: result.kvNamespace,
+      keyName: result.keyName,
+      telegramFileId: result.telegramFileId,
+      size: result.size
+    }))
+  };
+
+  await kvNamespaces[0].kv.put(fileId, JSON.stringify(masterMetadata));
+
+  const baseUrl = new URL(request.url).origin;
+  const result = {
+    success: true,
+    filename: file.name,
+    size: file.size,
+    url: `${baseUrl}/btfstorage/file/${fileId}${extension}`,
+    download: `${baseUrl}/btfstorage/file/${fileId}${extension}?dl=1`,
+    id: fileId,
+    strategy: strategy,
+    chunks: totalChunks
+  };
+
+  return new Response(JSON.stringify(result), {
+    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+  });
+}
+
+// Fast chunk upload with timeout protection
+async function uploadChunkFast(chunk, fileId, chunkIndex, kvIndex, keyIndex, botToken, channelId, kvNamespace, originalFilename) {
+  try {
+    const chunkFile = new File([chunk], `${originalFilename}.part${chunkIndex}`, { 
+      type: 'application/octet-stream' 
+    });
+
+    // Upload to Telegram with strict timeout
     const telegramForm = new FormData();
     telegramForm.append('chat_id', channelId);
     telegramForm.append('document', chunkFile);
@@ -249,78 +280,64 @@ async function uploadMicroChunk(chunk, fileId, chunkIndex, kvIndex, keyIndex, bo
     const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
       method: 'POST',
       body: telegramForm,
-      signal: controller.signal
+      signal: AbortSignal.timeout(10000) // 10 second timeout per chunk
     });
 
-    clearTimeout(timeoutId);
-
     if (!telegramResponse.ok) {
-      throw new Error(`Telegram upload failed: ${telegramResponse.status}`);
+      throw new Error(`Telegram failed: ${telegramResponse.status}`);
     }
 
     const telegramData = await telegramResponse.json();
-
     if (!telegramData.ok || !telegramData.result?.document?.file_id) {
-      throw new Error(`Invalid Telegram response`);
+      throw new Error('Invalid Telegram response');
     }
 
     const telegramFileId = telegramData.result.document.file_id;
 
-    // Get file URL
-    const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
-
-    if (!getFileResponse.ok) {
-      throw new Error(`GetFile API failed: ${getFileResponse.status}`);
-    }
-
+    // Get file URL quickly
+    const getFileResponse = await fetch(
+      `https://api.telegram.org/bot${botToken}/getFile?file_id=${telegramFileId}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    
     const getFileData = await getFileResponse.json();
-
-    if (!getFileData.ok || !getFileData.result?.file_path) {
-      throw new Error(`No file_path in response`);
-    }
-
     const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
 
-    // Store micro-chunk metadata as KV key
-    const keyName = `${fileId}_micro_${chunkIndex}_kv${kvIndex}_key${keyIndex}`;
+    // Store in KV quickly
+    const keyName = `${fileId}_chunk_${chunkIndex}_kv${kvIndex}_key${keyIndex}`;
     const chunkMetadata = {
       telegramFileId: telegramFileId,
       directUrl: directUrl,
       size: chunk.size,
       chunkIndex: chunkIndex,
-      kvIndex: kvIndex,
-      keyIndex: keyIndex,
-      parentFileId: fileId,
-      kvNamespace: kvNamespace.name,
-      uploadedAt: Date.now(),
-      lastRefreshed: Date.now()
+      uploadedAt: Date.now()
     };
 
     await kvNamespace.kv.put(keyName, JSON.stringify(chunkMetadata));
-    console.log(`✅ Micro-chunk ${chunkIndex} stored as key: ${keyName}`);
 
     return {
       telegramFileId: telegramFileId,
       size: chunk.size,
       directUrl: directUrl,
       kvNamespace: kvNamespace.name,
-      keyName: keyName,
-      kvIndex: kvIndex,
-      keyIndex: keyIndex
+      keyName: keyName
     };
 
   } catch (error) {
-    console.error(`❌ Failed to upload micro-chunk ${chunkIndex}:`, error);
-    
-    // Retry with exponential backoff
-    const retryDelay = 1000 + Math.random() * 2000;
-    await new Promise(resolve => setTimeout(resolve, retryDelay));
-    
-    try {
-      console.log(`🔄 Retrying micro-chunk ${chunkIndex}...`);
-      return await uploadMicroChunk(chunk, fileId, chunkIndex, kvIndex, keyIndex, botToken, channelId, kvNamespace, originalFilename);
-    } catch (retryError) {
-      throw new Error(`Micro-chunk ${chunkIndex} failed after retry: ${retryError.message}`);
-    }
+    console.error(`Chunk ${chunkIndex} failed:`, error);
+    throw new Error(`Chunk ${chunkIndex} failed: ${error.message}`);
   }
+}
+
+// Generate MSM format ID
+function generateMSMId() {
+  const timestamp = Date.now();
+  const r1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const r2 = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  const r3 = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  const r4 = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  const c1 = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+  const c2 = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+  
+  return `MSM${r1}-${r2}${c1}${r3}${c2}${r4}-${timestamp.toString(36).slice(-2)}`;
 }
