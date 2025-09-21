@@ -5,7 +5,8 @@
     "/upload-from-url",
     "/telegram-import",
     "/admin/list-files",
-    "/admin/delete-files", 
+    "/admin/delete-files",
+    "/admin/update-expiry",
     "/btfstorage/file/*"
   ],
   "exclude": [
