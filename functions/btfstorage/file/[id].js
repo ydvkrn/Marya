@@ -1,373 +1,368 @@
-// Simple MIME types (purana system jaisa)
-const MIME_TYPES = {
-  'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
-  'gif': 'image/gif', 'webp': 'image/webp', 'svg': 'image/svg+xml',
-  'mp4': 'video/mp4', 'webm': 'video/webm', 'mkv': 'video/mp4', // MKV ko MP4 serve karte hain
-  'mov': 'video/mp4', 'avi': 'video/mp4', 'm4v': 'video/mp4',
-  'mp3': 'audio/mpeg', 'wav': 'audio/wav', 'flac': 'audio/flac',
-  'pdf': 'application/pdf', 'txt': 'text/plain', 'json': 'application/json',
-  'zip': 'application/zip', 'rar': 'application/vnd.rar'
-};
+// ULTIMATE SIMPLE - NO CPU/MEMORY LIMITS
+// Direct Telegram URL serve (like a CDN redirect)
 
-function getMimeType(extension) {
-  const ext = extension.toLowerCase().replace('.', '');
-  return MIME_TYPES[ext] || 'application/octet-stream';
-}
+const MIME_TYPES = {
+  'mp4': 'video/mp4',
+  'mkv': 'video/mp4', 
+  'avi': 'video/mp4',
+  'mov': 'video/mp4',
+  'm4v': 'video/mp4',
+  'wmv': 'video/mp4',
+  'flv': 'video/mp4',
+  '3gp': 'video/mp4',
+  'webm': 'video/webm',
+  'mp3': 'audio/mpeg',
+  'wav': 'audio/wav',
+  'aac': 'audio/mp4',
+  'm4a': 'audio/mp4',
+  'ogg': 'audio/ogg'
+};
 
 export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
 
-  console.log('=== SIMPLE FILE SERVE ===');
-  console.log('File ID:', fileId);
+  console.log('🔥 ULTIMATE SIMPLE:', fileId);
 
   try {
     const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
     const extension = fileId.includes('.') ? fileId.substring(fileId.lastIndexOf('.')) : '';
 
-    // KV namespaces (purane system jaisa)
-    const kvNamespaces = {
-      FILES_KV: env.FILES_KV,
-      FILES_KV2: env.FILES_KV2,
-      FILES_KV3: env.FILES_KV3,
-      FILES_KV4: env.FILES_KV4,
-      FILES_KV5: env.FILES_KV5,
-      FILES_KV6: env.FILES_KV6,
-      FILES_KV7: env.FILES_KV7
-    };
+    if (!actualId.startsWith('MSM')) {
+      return new Response('Not found', { status: 404 });
+    }
 
-    // Get master metadata (purane system jaisa)
-    const masterMetadataString = await kvNamespaces.FILES_KV.get(actualId);
-    if (!masterMetadataString) {
+    // Get metadata
+    const metadataString = await env.FILES_KV.get(actualId);
+    if (!metadataString) {
       return new Response('File not found', { status: 404 });
     }
 
-    const masterMetadata = JSON.parse(masterMetadataString);
-    console.log(`File found: ${masterMetadata.filename} (${masterMetadata.totalChunks || masterMetadata.chunks?.length || 0} chunks)`);
+    const metadata = JSON.parse(metadataString);
+    const mimeType = MIME_TYPES[extension.toLowerCase().replace('.', '')] || 'application/octet-stream';
 
-    // Handle chunked files (purane system se inspired but fixed)
-    if (masterMetadata.type === 'multi_kv_chunked' || masterMetadata.chunks) {
-      return await handleChunkedFile(request, kvNamespaces, masterMetadata, extension, env);
-    } else {
-      // Single file support
-      return await handleSingleFile(request, kvNamespaces.FILES_KV, actualId, extension, masterMetadata, env);
+    console.log(`File: ${metadata.filename} (${Math.round(metadata.size/1024/1024)}MB)`);
+
+    // Check if it's a single Telegram file (best case)
+    if (metadata.telegramFileId && !metadata.chunks) {
+      console.log('🚀 Single file - Direct serve');
+      return await serveSingleTelegramFile(request, env, metadata.telegramFileId, mimeType, metadata.filename);
     }
 
+    // Handle chunked files with streaming
+    if (metadata.chunks && metadata.chunks.length > 0) {
+      console.log(`📦 Chunked file: ${metadata.chunks.length} chunks`);
+      return await serveChunkedFile(request, env, metadata, mimeType);
+    }
+
+    return new Response('Invalid file format', { status: 400 });
+
   } catch (error) {
-    console.error('File serve error:', error);
+    console.error('Error:', error);
     return new Response(`Server error: ${error.message}`, { status: 500 });
   }
 }
 
-// Handle chunked files (FIXED - no Promise.all overload)
-async function handleChunkedFile(request, kvNamespaces, masterMetadata, extension, env) {
-  const chunks = masterMetadata.chunks || [];
-  const filename = masterMetadata.filename;
-  const size = masterMetadata.size;
+// Single Telegram file - ZERO CPU usage (direct proxy)
+async function serveSingleTelegramFile(request, env, telegramFileId, mimeType, filename) {
+  console.log('🚀 Serving single Telegram file directly');
+  
+  const botToken = env.BOT_TOKEN || env.BOT_TOKEN2 || env.BOT_TOKEN3 || env.BOT_TOKEN4;
+  if (!botToken) {
+    return new Response('No bot token available', { status: 500 });
+  }
 
-  console.log(`Serving chunked file: ${filename} (${chunks.length} chunks)`);
+  try {
+    // Get fresh Telegram URL
+    const getFileResponse = await fetch(
+      `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`,
+      { signal: AbortSignal.timeout(10000) }
+    );
+
+    if (!getFileResponse.ok) {
+      throw new Error(`Telegram API error: ${getFileResponse.status}`);
+    }
+
+    const getFileData = await getFileResponse.json();
+    if (!getFileData.ok || !getFileData.result?.file_path) {
+      throw new Error('Invalid Telegram response');
+    }
+
+    const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+    
+    // Option 1: Direct redirect (ZERO CPU usage)
+    const url = new URL(request.url);
+    if (!url.searchParams.has('proxy')) {
+      console.log('↗️ Direct redirect to Telegram');
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': directUrl,
+          'Cache-Control': 'no-cache'
+        }
+      });
+    }
+
+    // Option 2: Proxy with headers (minimal CPU)
+    console.log('🔄 Proxying with proper headers');
+    const telegramResponse = await fetch(directUrl, {
+      headers: request.headers.get('Range') ? { 'Range': request.headers.get('Range') } : {}
+    });
+
+    const headers = new Headers(telegramResponse.headers);
+    headers.set('Content-Type', mimeType);
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.set('Accept-Ranges', 'bytes');
+    
+    const url2 = new URL(request.url);
+    if (url2.searchParams.has('dl')) {
+      headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+    } else {
+      headers.set('Content-Disposition', 'inline');
+    }
+
+    return new Response(telegramResponse.body, {
+      status: telegramResponse.status,
+      headers: headers
+    });
+
+  } catch (error) {
+    console.error('Single file serve error:', error);
+    return new Response(`File serve error: ${error.message}`, { status: 500 });
+  }
+}
+
+// Chunked files - Smart streaming
+async function serveChunkedFile(request, env, metadata, mimeType) {
+  const chunks = metadata.chunks;
+  const size = metadata.size;
+  const filename = metadata.filename;
+
+  console.log(`📦 Serving chunked file: ${chunks.length} chunks`);
 
   // Handle Range requests (for video seeking)
   const range = request.headers.get('Range');
   if (range) {
-    return await handleRangeRequest(request, kvNamespaces, masterMetadata, extension, range, env);
+    return await handleChunkedRange(request, env, metadata, range, mimeType);
   }
 
-  // Stream all chunks SEQUENTIALLY (no Promise.all overload)
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        console.log('Starting sequential chunk streaming...');
-        
-        // Load chunks ONE BY ONE (no memory overload)
-        for (let i = 0; i < chunks.length; i++) {
-          const chunkInfo = chunks[i];
-          const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
-          const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey || `${masterMetadata.id || actualId}_chunk_${i}`;
-          
-          console.log(`Loading chunk ${i + 1}/${chunks.length}: ${chunkKey}`);
-          
-          try {
-            const chunkData = await getChunkWithRefresh(kvNamespace, chunkKey, chunkInfo, env);
-            controller.enqueue(new Uint8Array(chunkData));
-            
-            console.log(`✅ Chunk ${i + 1} streamed: ${Math.round(chunkData.byteLength/1024)}KB`);
-            
-            // Small delay to prevent overload
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
-          } catch (chunkError) {
-            console.error(`❌ Chunk ${i + 1} failed:`, chunkError);
-            // Continue with next chunk instead of failing completely
-            continue;
-          }
-        }
-        
-        console.log('✅ Sequential streaming completed');
-        controller.close();
-        
-      } catch (error) {
-        console.error('Streaming error:', error);
-        controller.error(error);
-      }
-    }
-  });
+  // For non-range requests, send first chunk only to force Range mode
+  console.log('🎯 Sending first chunk to force Range mode');
+  return await serveFirstChunkOnly(request, env, metadata, mimeType);
+}
 
-  // Response headers (purane system jaisa)
-  const headers = new Headers();
-  const mimeType = getMimeType(extension);
-  headers.set('Content-Type', mimeType);
-  headers.set('Content-Length', size.toString());
-  headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Accept-Ranges', 'bytes');
-  headers.set('Cache-Control', 'public, max-age=3600');
-
-  const url = new URL(request.url);
-  const isDownload = url.searchParams.has('dl');
+// Serve only first chunk to force browser into Range mode
+async function serveFirstChunkOnly(request, env, metadata, mimeType) {
+  const chunks = metadata.chunks;
+  const size = metadata.size;
+  const filename = metadata.filename;
   
-  if (isDownload) {
-    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-  } else {
-    if (mimeType.startsWith('video/') || mimeType.startsWith('audio/') || mimeType.startsWith('image/')) {
-      headers.set('Content-Disposition', 'inline');
-    } else {
+  if (chunks.length === 0) {
+    return new Response('No chunks available', { status: 404 });
+  }
+
+  const firstChunk = chunks[0];
+  const kvNamespace = env[firstChunk.kvNamespace] || env.FILES_KV;
+
+  try {
+    console.log('📦 Loading first chunk only...');
+    const chunkData = await loadSingleChunk(kvNamespace, firstChunk, env);
+    
+    const headers = new Headers();
+    headers.set('Content-Type', mimeType);
+    headers.set('Content-Length', chunkData.byteLength.toString());
+    headers.set('Content-Range', `bytes 0-${chunkData.byteLength - 1}/${size}`);
+    headers.set('Accept-Ranges', 'bytes');
+    headers.set('Access-Control-Allow-Origin', '*');
+    
+    const url = new URL(request.url);
+    if (url.searchParams.has('dl')) {
       headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+    } else {
+      headers.set('Content-Disposition', 'inline');
     }
-  }
 
-  console.log('✅ Chunked file streaming response ready');
-  return new Response(readable, { status: 200, headers });
+    console.log(`✅ First chunk served: ${Math.round(chunkData.byteLength/1024)}KB`);
+    return new Response(chunkData, { status: 206, headers });
+
+  } catch (error) {
+    console.error('First chunk error:', error);
+    return new Response(`First chunk error: ${error.message}`, { status: 500 });
+  }
 }
 
-// Get chunk with URL refresh (purane system jaisa but better error handling)
-async function getChunkWithRefresh(kvNamespace, chunkKey, chunkInfo, env) {
-  console.log(`Getting chunk: ${chunkKey}`);
+// Handle Range for chunked files (load only needed chunks)
+async function handleChunkedRange(request, env, metadata, rangeHeader, mimeType) {
+  console.log('📺 Chunked Range request:', rangeHeader);
   
-  const chunkMetadataString = await kvNamespace.get(chunkKey);
-  if (!chunkMetadataString) {
-    throw new Error(`Chunk ${chunkKey} not found`);
+  const size = metadata.size;
+  const chunks = metadata.chunks;
+  const chunkSize = metadata.chunkSize || Math.ceil(size / chunks.length);
+
+  // Parse range
+  const rangeMatch = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+  if (!rangeMatch) {
+    return new Response('Invalid range', { status: 416 });
   }
 
-  const chunkMetadata = JSON.parse(chunkMetadataString);
-  let directUrl = chunkMetadata.directUrl;
-
-  // Try to fetch chunk
-  let response = await fetch(directUrl, { signal: AbortSignal.timeout(30000) });
-
-  // If URL expired, refresh it (purane system jaisa)
-  if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log(`🔄 URL expired for chunk ${chunkKey}, refreshing...`);
-    
-    // Try all available bot tokens
-    const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(token => token);
-    
-    if (botTokens.length === 0) {
-      throw new Error('No BOT_TOKEN available for URL refresh');
-    }
-
-    let refreshed = false;
-    
-    for (const BOT_TOKEN of botTokens) {
-      try {
-        // Get fresh URL from Telegram
-        const getFileResponse = await fetch(
-          `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
-          { signal: AbortSignal.timeout(15000) }
-        );
-
-        if (!getFileResponse.ok) {
-          console.log(`Bot token failed: ${BOT_TOKEN.slice(-4)}`);
-          continue;
-        }
-
-        const getFileData = await getFileResponse.json();
-        if (!getFileData.ok || !getFileData.result?.file_path) {
-          console.log(`Invalid response from bot: ${BOT_TOKEN.slice(-4)}`);
-          continue;
-        }
-
-        // Create fresh URL
-        const freshUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
-
-        // Update KV with fresh URL (purane system jaisa)
-        const updatedMetadata = {
-          ...chunkMetadata,
-          directUrl: freshUrl,
-          lastRefreshed: Date.now(),
-          refreshCount: (chunkMetadata.refreshCount || 0) + 1
-        };
-
-        await kvNamespace.put(chunkKey, JSON.stringify(updatedMetadata));
-        console.log(`✅ URL refreshed for chunk ${chunkKey}`);
-
-        // Try with fresh URL
-        response = await fetch(freshUrl, { signal: AbortSignal.timeout(30000) });
-        
-        if (response.ok) {
-          refreshed = true;
-          break;
-        }
-        
-      } catch (refreshError) {
-        console.error(`❌ Failed to refresh with bot ${BOT_TOKEN.slice(-4)}:`, refreshError);
-        continue;
-      }
-    }
-
-    if (!refreshed) {
-      throw new Error(`Failed to refresh expired URL for chunk ${chunkKey}`);
-    }
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch chunk ${chunkKey}: ${response.status}`);
-  }
-
-  return await response.arrayBuffer();
-}
-
-// Handle Range requests (purane system se inspired)
-async function handleRangeRequest(request, kvNamespaces, masterMetadata, extension, range, env) {
-  console.log('Handling Range request:', range);
+  const start = parseInt(rangeMatch[1], 10);
+  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : size - 1;
   
-  const { size } = masterMetadata;
-  const ranges = parseRange(range, size);
-  
-  if (!ranges || ranges.length !== 1) {
-    return new Response('Range Not Satisfiable', { 
+  if (start >= size || end >= size || start > end) {
+    return new Response('Range not satisfiable', { 
       status: 416,
       headers: { 'Content-Range': `bytes */${size}` }
     });
   }
 
-  const { start, end } = ranges[0];
-  const chunkSize = end - start + 1;
-  console.log(`Range: ${start}-${end} (${Math.round(chunkSize/1024)}KB)`);
+  const requestedSize = end - start + 1;
+  console.log(`📺 Range: ${start}-${end} (${Math.round(requestedSize/1024)}KB)`);
 
-  // Determine which chunks are needed (purane system jaisa)
-  const CHUNK_SIZE = masterMetadata.chunkSize || (20 * 1024 * 1024); // 20MB default
-  const startChunk = Math.floor(start / CHUNK_SIZE);
-  const endChunk = Math.floor(end / CHUNK_SIZE);
-  const neededChunks = masterMetadata.chunks.slice(startChunk, endChunk + 1);
+  // Find needed chunks
+  const startChunk = Math.floor(start / chunkSize);
+  const endChunk = Math.floor(end / chunkSize);
+  const neededChunks = chunks.slice(startChunk, endChunk + 1);
 
-  console.log(`Need chunks: ${startChunk}-${endChunk} (${neededChunks.length} chunks)`);
+  console.log(`📦 Need chunks: ${startChunk}-${endChunk} (${neededChunks.length})`);
 
-  // Load needed chunks SEQUENTIALLY (no Promise.all)
-  const chunkResults = [];
+  // Limit to maximum 5 chunks to avoid CPU limits
+  if (neededChunks.length > 5) {
+    console.log('⚠️ Too many chunks, reducing range');
+    const limitedChunks = neededChunks.slice(0, 5);
+    const limitedEndChunk = startChunk + 4;
+    const limitedEnd = Math.min(end, (limitedEndChunk + 1) * chunkSize - 1);
+    
+    const chunkData = await loadAndCombineChunks(env, limitedChunks, startChunk);
+    const rangeData = extractRange(chunkData, start, limitedEnd, startChunk, chunkSize);
+
+    return createRangeResponse(rangeData, start, limitedEnd, size, mimeType);
+  }
+
+  // Load needed chunks
+  const chunkData = await loadAndCombineChunks(env, neededChunks, startChunk);
+  const rangeData = extractRange(chunkData, start, end, startChunk, chunkSize);
+
+  return createRangeResponse(rangeData, start, end, size, mimeType);
+}
+
+// Load and combine chunks efficiently
+async function loadAndCombineChunks(env, chunkInfos, startIndex) {
+  console.log(`📥 Loading ${chunkInfos.length} chunks...`);
   
-  for (let i = 0; i < neededChunks.length; i++) {
-    const chunkInfo = neededChunks[i];
-    const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
-    const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
+  const parts = [];
+  let totalSize = 0;
+
+  // Load chunks sequentially to avoid overload
+  for (let i = 0; i < chunkInfos.length; i++) {
+    const chunkInfo = chunkInfos[i];
+    const actualIndex = startIndex + i;
+    const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
     
     try {
-      const chunkData = await getChunkWithRefresh(kvNamespace, chunkKey, chunkInfo, env);
-      chunkResults.push({
-        index: startChunk + i,
-        data: chunkData
-      });
+      const data = await loadSingleChunk(kvNamespace, chunkInfo, env);
+      parts.push(new Uint8Array(data));
+      totalSize += data.byteLength;
       
-      console.log(`✅ Range chunk ${startChunk + i} loaded`);
-      
-    } catch (chunkError) {
-      console.error(`❌ Range chunk ${startChunk + i} failed:`, chunkError);
-      return new Response(`Range chunk ${startChunk + i} failed: ${chunkError.message}`, { status: 500 });
+      console.log(`✅ Chunk ${actualIndex} loaded: ${Math.round(data.byteLength/1024)}KB`);
+    } catch (err) {
+      console.error(`❌ Chunk ${actualIndex} failed:`, err);
+      throw new Error(`Chunk ${actualIndex} load failed`);
     }
   }
 
-  // Combine and extract range (purane system jaisa)
-  const combinedSize = chunkResults.reduce((sum, chunk) => sum + chunk.data.byteLength, 0);
-  const combinedBuffer = new Uint8Array(combinedSize);
-  
+  // Combine efficiently
+  const combined = new Uint8Array(totalSize);
   let offset = 0;
-  for (const chunk of chunkResults) {
-    combinedBuffer.set(new Uint8Array(chunk.data), offset);
-    offset += chunk.data.byteLength;
+  
+  for (const part of parts) {
+    combined.set(part, offset);
+    offset += part.byteLength;
   }
 
-  const rangeStart = start - (startChunk * CHUNK_SIZE);
-  const rangeBuffer = combinedBuffer.slice(rangeStart, rangeStart + chunkSize);
+  console.log(`🔗 Combined: ${Math.round(totalSize/1024)}KB`);
+  return combined;
+}
 
-  // Range response headers
+// Extract exact range from combined data
+function extractRange(combinedData, start, end, startChunk, chunkSize) {
+  const rangeStartInData = start - (startChunk * chunkSize);
+  const requestedSize = end - start + 1;
+  
+  return combinedData.slice(rangeStartInData, rangeStartInData + requestedSize);
+}
+
+// Create Range response
+function createRangeResponse(data, start, end, totalSize, mimeType) {
   const headers = new Headers();
-  headers.set('Content-Type', getMimeType(extension));
-  headers.set('Content-Length', chunkSize.toString());
-  headers.set('Content-Range', `bytes ${start}-${end}/${size}`);
+  headers.set('Content-Type', mimeType);
+  headers.set('Content-Length', data.byteLength.toString());
+  headers.set('Content-Range', `bytes ${start}-${end}/${totalSize}`);
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Content-Disposition', 'inline');
 
-  console.log(`✅ Range response ready: ${rangeBuffer.byteLength} bytes`);
-  return new Response(rangeBuffer, { status: 206, headers });
+  console.log(`✅ Range response: ${data.byteLength} bytes`);
+  return new Response(data, { status: 206, headers });
 }
 
-// Single file support (purane system jaisa)
-async function handleSingleFile(request, kvNamespace, actualId, extension, metadata, env) {
-  console.log('Serving single file (legacy)');
+// Load single chunk with refresh
+async function loadSingleChunk(kvNamespace, chunkInfo, env) {
+  const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
   
-  const directUrl = await kvNamespace.get(actualId);
-  if (!directUrl) {
-    return new Response('File not found', { status: 404 });
+  console.log(`📥 Loading: ${chunkKey}`);
+  
+  const metadataString = await kvNamespace.get(chunkKey);
+  if (!metadataString) {
+    throw new Error(`Chunk metadata not found: ${chunkKey}`);
   }
 
-  let response = await fetch(directUrl);
+  const chunkMetadata = JSON.parse(metadataString);
   
-  // Auto-refresh single file URL if expired
-  if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
-    console.log('🔄 Single file URL expired, refreshing...');
-    
-    const BOT_TOKEN = env.BOT_TOKEN;
-    const telegramFileId = metadata?.telegramFileId;
-    
-    if (BOT_TOKEN && telegramFileId) {
-      try {
-        const getFileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
-        if (getFileResponse.ok) {
-          const getFileData = await getFileResponse.json();
-          if (getFileData.ok && getFileData.result?.file_path) {
-            const freshUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${getFileData.result.file_path}`;
-            await kvNamespace.put(actualId, freshUrl);
-            console.log('✅ Single file URL refreshed');
-            response = await fetch(freshUrl);
-          }
-        }
-      } catch (refreshError) {
-        console.error('Failed to refresh single file URL:', refreshError);
-      }
+  // Try direct URL
+  let response = await fetch(chunkMetadata.directUrl, { signal: AbortSignal.timeout(30000) });
+  
+  if (response.ok) {
+    return response.arrayBuffer();
+  }
+
+  // Refresh URL
+  console.log(`🔄 Refreshing URL for: ${chunkKey}`);
+  
+  const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
+  if (botTokens.length === 0) {
+    throw new Error('No bot tokens available');
+  }
+
+  const botToken = botTokens[0]; // Use first available
+  
+  try {
+    const getFileResponse = await fetch(
+      `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
+      { signal: AbortSignal.timeout(15000) }
+    );
+
+    const getFileData = await getFileResponse.json();
+    if (!getFileData.ok || !getFileData.result?.file_path) {
+      throw new Error('Telegram getFile failed');
     }
+
+    const freshUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+    response = await fetch(freshUrl, { signal: AbortSignal.timeout(30000) });
+    
+    if (!response.ok) {
+      throw new Error(`Fresh URL failed: ${response.status}`);
+    }
+
+    // Update KV async
+    kvNamespace.put(chunkKey, JSON.stringify({
+      ...chunkMetadata,
+      directUrl: freshUrl,
+      refreshed: Date.now()
+    })).catch(() => {});
+
+    return response.arrayBuffer();
+
+  } catch (refreshError) {
+    throw new Error(`URL refresh failed: ${refreshError.message}`);
   }
-
-  if (!response.ok) {
-    return new Response(`File not accessible: ${response.status}`, { status: response.status });
-  }
-
-  const headers = new Headers();
-  const mimeType = getMimeType(extension);
-  headers.set('Content-Type', mimeType);
-  headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Cache-Control', 'public, max-age=3600');
-
-  const url = new URL(request.url);
-  const isDownload = url.searchParams.has('dl');
-  const filename = metadata?.filename || 'download';
-
-  if (isDownload) {
-    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-  } else {
-    headers.set('Content-Disposition', 'inline');
-  }
-
-  return new Response(response.body, { status: response.status, headers });
-}
-
-// Parse Range header (purane system jaisa)
-function parseRange(range, size) {
-  const rangeMatch = range.match(/bytes=(\d+)-(\d*)/);
-  if (!rangeMatch) return null;
-  
-  const start = parseInt(rangeMatch[1], 10);
-  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : size - 1;
-  
-  if (start >= size || end >= size || start > end) return null;
-  
-  return [{ start, end }];
 }
