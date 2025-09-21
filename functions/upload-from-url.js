@@ -158,7 +158,7 @@ async function handleChunkedUpload(formData, env, corsHeaders) {
     // Clean up temp metadata
     await kvNamespaces[0].kv.delete(`temp_${fileId}`);
 
-    const baseUrl = 'https://marya-vault.pages.dev'; // Replace with your actual domain
+    const baseUrl = 'https://marya-hosting.pages.dev'; // Replace with your actual domain
     
     return new Response(JSON.stringify({
       success: true,
