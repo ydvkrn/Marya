@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "include": [
+    "/btfstorage/file/*"
+  ],
+  "exclude": [
+    "/static/*",
+    "/assets/*",
+    "/*.css",
+    "/*.js",
+    "/*.png", 
+    "/*.jpg",
+    "/*.jpeg",
+    "/*.gif",
+    "/*.ico",
+    "/*.svg",
+    "/*.webp",
+    "/favicon.ico",
+    "/robots.txt",
+    "/sitemap.xml"
+  ]
+}
