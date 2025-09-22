@@ -12,264 +12,111 @@ export async function onRequest(context) {
   }
 
   try {
-    console.log('🗑️ DELETE API CALLED - Starting debug...');
-
-    // Get admin key from environment
-    const adminKey = env.KEYMSM || 'MARYA2025ADMIN';
+    // Quick auth check
     const authHeader = request.headers.get('Authorization');
-    
-    console.log('🔑 Auth check:', {
-      hasAuthHeader: !!authHeader,
-      adminKeyExists: !!adminKey,
-      authHeaderSample: authHeader ? authHeader.substring(0, 20) + '...' : 'none'
-    });
+    const adminKey = env.KEYMSM || 'MSMxMarya7';
     
     if (!authHeader || !authHeader.includes(adminKey)) {
-      console.log('❌ AUTH FAILED');
       return new Response(JSON.stringify({
         success: false,
-        error: 'Unauthorized access'
+        error: 'Unauthorized'
       }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    console.log('✅ AUTH SUCCESS');
-
-    // Debug request body parsing
-    const requestText = await request.text();
-    console.log('📝 RAW REQUEST BODY:', {
-      length: requestText.length,
-      content: requestText,
-      isEmpty: !requestText || requestText.trim() === ''
-    });
-
-    if (!requestText || requestText.trim() === '') {
-      console.log('❌ EMPTY REQUEST BODY');
+    const { fileIds } = await request.json();
+    
+    if (!Array.isArray(fileIds) || fileIds.length === 0) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Empty request body received'
+        error: 'No file IDs provided'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    let requestData;
-    try {
-      requestData = JSON.parse(requestText);
-      console.log('📊 PARSED REQUEST DATA:', requestData);
-    } catch (parseError) {
-      console.log('❌ JSON PARSE ERROR:', parseError.message);
-      return new Response(JSON.stringify({
-        success: false,
-        error: `JSON parse error: ${parseError.message}`
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
+    console.log(`🗑️ Deleting ${fileIds.length} files:`, fileIds);
 
-    const { fileIds } = requestData;
-    console.log('🔍 EXTRACTED FILE IDS:', {
-      fileIds: fileIds,
-      isArray: Array.isArray(fileIds),
-      length: fileIds ? fileIds.length : 'undefined'
-    });
+    // Get KV namespaces
+    const kvs = [
+      env.FILES_KV, env.FILES_KV2, env.FILES_KV3, env.FILES_KV4,
+      env.FILES_KV5, env.FILES_KV6, env.FILES_KV7
+    ].filter(kv => kv);
 
-    if (!fileIds) {
-      console.log('❌ NO FILE IDS FIELD');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'fileIds field not found in request'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    if (!Array.isArray(fileIds)) {
-      console.log('❌ FILE IDS NOT ARRAY');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'fileIds must be an array'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    if (fileIds.length === 0) {
-      console.log('❌ EMPTY FILE IDS ARRAY');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'fileIds array is empty'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    // Debug each file ID
-    console.log('🔍 VALIDATING FILE IDS:');
-    fileIds.forEach((id, index) => {
-      console.log(`  [${index}] ID: "${id}" | Type: ${typeof id} | Valid: ${!!(id && typeof id === 'string' && id.trim().startsWith('MSM'))}`);
-    });
-
-    // Filter valid MSM IDs with detailed logging
-    const validFileIds = fileIds.filter(id => {
-      const isString = typeof id === 'string';
-      const isNotEmpty = id && id.trim();
-      const isMSM = isNotEmpty && id.trim().startsWith('MSM');
-      const isValid = isString && isNotEmpty && isMSM;
-      
-      if (!isValid) {
-        console.log(`❌ INVALID ID REJECTED: "${id}" (string: ${isString}, notEmpty: ${!!isNotEmpty}, MSM: ${isMSM})`);
-      } else {
-        console.log(`✅ VALID ID ACCEPTED: "${id}"`);
-      }
-      
-      return isValid;
-    });
-
-    console.log('📊 VALIDATION RESULT:', {
-      originalCount: fileIds.length,
-      validCount: validFileIds.length,
-      validIds: validFileIds
-    });
-
-    if (validFileIds.length === 0) {
-      console.log('❌ NO VALID MSM FILE IDS FOUND');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No valid MSM file IDs found',
-        debug: {
-          originalFileIds: fileIds,
-          validationResults: fileIds.map(id => ({
-            id: id,
-            type: typeof id,
-            isString: typeof id === 'string',
-            hasContent: !!(id && id.trim()),
-            startsMSM: !!(id && id.trim && id.trim().startsWith('MSM'))
-          }))
-        }
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-
-    console.log(`🗑️ PROCEEDING WITH DELETION OF ${validFileIds.length} FILES:`, validFileIds);
-
-    const kvNamespaces = [
-      { kv: env.FILES_KV, name: 'FILES_KV' },
-      { kv: env.FILES_KV2, name: 'FILES_KV2' },
-      { kv: env.FILES_KV3, name: 'FILES_KV3' },
-      { kv: env.FILES_KV4, name: 'FILES_KV4' },
-      { kv: env.FILES_KV5, name: 'FILES_KV5' },
-      { kv: env.FILES_KV6, name: 'FILES_KV6' },
-      { kv: env.FILES_KV7, name: 'FILES_KV7' }
-    ].filter(item => item.kv);
-
-    let deletedCount = 0;
+    let deleted = 0;
     let errors = [];
-    let deletedDetails = [];
 
-    for (const fileId of validFileIds) {
+    // Process each file
+    for (const fileId of fileIds) {
+      if (!fileId || typeof fileId !== 'string') {
+        errors.push(`Invalid file ID: ${fileId}`);
+        continue;
+      }
+
       try {
-        console.log(`🗑️ PROCESSING DELETION: ${fileId}`);
+        let found = false;
+        let fileData = null;
 
-        // Find file metadata
-        let fileMetadata = null;
-        let sourceKV = null;
-
-        for (const kvNamespace of kvNamespaces) {
+        // Find file in KVs
+        for (const kv of kvs) {
           try {
-            const metadata = await kvNamespace.kv.get(fileId);
-            if (metadata) {
-              fileMetadata = JSON.parse(metadata);
-              sourceKV = kvNamespace;
-              console.log(`📁 FOUND ${fileId} in ${kvNamespace.name}`);
+            const data = await kv.get(fileId);
+            if (data) {
+              fileData = JSON.parse(data);
+              found = true;
+              
+              // Delete all chunks
+              if (fileData.chunks && Array.isArray(fileData.chunks)) {
+                for (const chunk of fileData.chunks) {
+                  if (chunk.keyName) {
+                    const chunkKV = kvs.find((_, i) => `FILES_KV${i === 0 ? '' : i + 1}` === chunk.kvNamespace);
+                    if (chunkKV) {
+                      await chunkKV.delete(chunk.keyName);
+                    }
+                  }
+                }
+              }
+              
+              // Delete main file
+              await kv.delete(fileId);
+              deleted++;
+              console.log(`✅ Deleted: ${fileId}`);
               break;
             }
-          } catch (e) {
-            console.log(`❌ Error checking ${fileId} in ${kvNamespace.name}:`, e.message);
-            continue;
+          } catch (kvError) {
+            console.error(`KV error for ${fileId}:`, kvError.message);
           }
         }
 
-        if (!fileMetadata) {
-          console.log(`⚠️ FILE ${fileId} NOT FOUND in any KV namespace`);
-          errors.push(`File ${fileId} not found in KV`);
-          continue;
+        if (!found) {
+          errors.push(`File not found: ${fileId}`);
         }
-
-        let chunksDeletedFromKV = 0;
-
-        // Delete all chunks
-        if (fileMetadata.chunks && Array.isArray(fileMetadata.chunks)) {
-          console.log(`🗑️ DELETING ${fileMetadata.chunks.length} chunks for ${fileId}...`);
-
-          for (const chunkInfo of fileMetadata.chunks) {
-            try {
-              const chunkKV = kvNamespaces.find(ns => ns.name === chunkInfo.kvNamespace);
-              if (chunkKV && chunkInfo.keyName) {
-                await chunkKV.kv.delete(chunkInfo.keyName);
-                chunksDeletedFromKV++;
-                console.log(`✅ DELETED KV chunk: ${chunkInfo.keyName}`);
-              }
-            } catch (chunkError) {
-              console.error(`❌ Failed to delete chunk ${chunkInfo.keyName}:`, chunkError.message);
-              errors.push(`Failed to delete chunk ${chunkInfo.keyName}: ${chunkError.message}`);
-            }
-          }
-        }
-
-        // Delete main file metadata from KV
-        await sourceKV.kv.delete(fileId);
-        deletedCount++;
-
-        deletedDetails.push({
-          fileId: fileId,
-          filename: fileMetadata.filename || 'Unknown',
-          kvChunksDeleted: chunksDeletedFromKV,
-          kvNamespace: sourceKV.name
-        });
-
-        console.log(`✅ DELETION SUCCESSFUL: ${fileId} (${chunksDeletedFromKV} chunks deleted)`);
 
       } catch (fileError) {
-        console.error(`❌ Failed to delete file ${fileId}:`, fileError.message);
+        console.error(`File error for ${fileId}:`, fileError.message);
         errors.push(`Failed to delete ${fileId}: ${fileError.message}`);
       }
     }
 
-    console.log(`✅ DELETION SUMMARY: ${deletedCount}/${validFileIds.length} files deleted`);
+    console.log(`✅ Deletion complete: ${deleted}/${fileIds.length} deleted`);
 
     return new Response(JSON.stringify({
       success: true,
-      deletedCount: deletedCount,
-      totalRequested: validFileIds.length,
-      deletedDetails: deletedDetails,
-      errors: errors.length > 0 ? errors : undefined,
-      debug: {
-        originalFileIds: fileIds,
-        validFileIds: validFileIds,
-        requestBodyLength: requestText.length
-      },
-      timestamp: Date.now()
+      deletedCount: deleted,
+      totalRequested: fileIds.length,
+      errors: errors.length > 0 ? errors : undefined
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('💥 COMPLETE DELETE ERROR:', error);
+    console.error('💥 Delete API error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
-      stack: error.stack,
-      timestamp: Date.now()
+      error: error.message
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
