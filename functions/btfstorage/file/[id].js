@@ -52,7 +52,7 @@ export async function onRequest(context) {
     }
 
     const metadata = JSON.parse(metadataString);
-    // Validate metadata
+    // Validate metadata0
     if (!metadata.filename || !metadata.size || (!metadata.telegramFileId && (!metadata.chunks || metadata.chunks.length === 0))) {
       console.error('Invalid metadata:', metadata);
       return new Response('Invalid file metadata', { status: 400 });
