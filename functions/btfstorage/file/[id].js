@@ -42,7 +42,6 @@ export async function onRequest(context) {
   }
 
   try {
-    // Parse fileId for extension and actualId
     let actualId = fileId;
     let extension = '';
     let isHlsPlaylist = false;
@@ -54,13 +53,11 @@ export async function onRequest(context) {
       extension = parts.pop().toLowerCase();
       actualId = parts.join('.');
 
-      // Check for HLS playlist request
       if (extension === 'm3u8') {
         isHlsPlaylist = true;
       } else if (extension === 'ts' && actualId.includes('-')) {
-        // Check for segment like id-0.ts
         const segParts = actualId.split('-');
-        if (segParts.length > 1 && !isNaN(parseInt(segParts.pop()))) {
+        if (segParts.length > 1 && !isNaN(parseInt(segParts[segParts.length - 1]))) {
           segmentIndex = parseInt(segParts.pop(), 10);
           actualId = segParts.join('-');
           isHlsSegment = true;
@@ -71,7 +68,6 @@ export async function onRequest(context) {
       }
     }
 
-    // Get metadata
     const metadataString = await env.FILES_KV.get(actualId);
     if (!metadataString) {
       console.error('File not found in KV:', actualId);
@@ -87,17 +83,14 @@ export async function onRequest(context) {
     const mimeType = MIME_TYPES[extension] || 'application/octet-stream';
     console.log(`📁 ${metadata.filename} | Size: ${Math.round(metadata.size/1024/1024)}MB | MIME: ${mimeType} | Chunks: ${metadata.chunks?.length || 0} | HLS Playlist: ${isHlsPlaylist} | HLS Segment: ${isHlsSegment} Index: ${segmentIndex}`);
 
-    // Handle HLS playlist request
     if (isHlsPlaylist) {
-      return await handleHlsPlaylist(request, env, metadata, actualId, mimeType);
+      return await handleHlsPlaylist(request, env, metadata, actualId);
     }
 
-    // Handle HLS segment request
     if (isHlsSegment && segmentIndex >= 0) {
-      return await handleHlsSegment(request, env, metadata, segmentIndex, mimeType);
+      return await handleHlsSegment(request, env, metadata, segmentIndex);
     }
 
-    // Standard handling
     if (metadata.telegramFileId && !metadata.chunks) {
       return await handleSingleFile(request, env, metadata, mimeType);
     }
@@ -114,8 +107,7 @@ export async function onRequest(context) {
   }
 }
 
-// Generate HLS playlist for large videos
-async function handleHlsPlaylist(request, env, metadata, actualId, mimeType) {
+async function handleHlsPlaylist(request, env, metadata, actualId) {
   console.log('📼 Generating HLS playlist for:', actualId);
 
   if (!metadata.chunks || metadata.chunks.length === 0) {
@@ -123,17 +115,18 @@ async function handleHlsPlaylist(request, env, metadata, actualId, mimeType) {
   }
 
   const chunks = metadata.chunks;
-  const segmentDuration = 5; // Assume 5 seconds per segment (adjust based on your chunking)
+  const segmentDuration = 5; // 5 seconds per segment
+  const baseUrl = new URL(request.url).origin;
 
   let playlist = '#EXTM3U\n';
   playlist += '#EXT-X-VERSION:3\n';
   playlist += `#EXT-X-TARGETDURATION:${segmentDuration}\n`;
   playlist += '#EXT-X-MEDIA-SEQUENCE:0\n';
+  playlist += '#EXT-X-PLAYLIST-TYPE:VOD\n';
 
   for (let i = 0; i < chunks.length; i++) {
-    const duration = (i === chunks.length - 1) ? segmentDuration : segmentDuration; // Last segment same for simplicity
-    playlist += `#EXTINF:${duration.toFixed(1)},\n`;
-    playlist += `${actualId}-${i}.ts\n`;
+    playlist += `#EXTINF:${segmentDuration.toFixed(1)},\n`;
+    playlist += `${baseUrl}/btfstorage/file/${actualId}-${i}.ts\n`;
   }
 
   playlist += '#EXT-X-ENDLIST\n';
@@ -148,8 +141,7 @@ async function handleHlsPlaylist(request, env, metadata, actualId, mimeType) {
   return new Response(playlist, { status: 200, headers });
 }
 
-// Serve HLS segment (chunk as .ts)
-async function handleHlsSegment(request, env, metadata, segmentIndex, mimeType) {
+async function handleHlsSegment(request, env, metadata, segmentIndex) {
   console.log('📼 Serving HLS segment:', segmentIndex);
 
   if (!metadata.chunks || segmentIndex >= metadata.chunks.length || segmentIndex < 0) {
@@ -164,7 +156,7 @@ async function handleHlsSegment(request, env, metadata, segmentIndex, mimeType) 
     headers.set('Content-Type', 'video/mp2t');
     headers.set('Content-Length', chunkData.byteLength.toString());
     headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Cache-Control', 'public, max-age=3600');
+    headers.set('Cache-Control', 'public, max-age=31536000');
     headers.set('Content-Disposition', 'inline');
 
     console.log('📼 HLS segment served:', segmentIndex, 'Size:', Math.round(chunkData.byteLength/1024/1024), 'MB');
@@ -176,7 +168,6 @@ async function handleHlsSegment(request, env, metadata, segmentIndex, mimeType) 
   }
 }
 
-// Handle single files (Direct proxy - fastest)
 async function handleSingleFile(request, env, metadata, mimeType) {
   console.log('🚀 Single file streaming');
 
@@ -216,7 +207,7 @@ async function handleSingleFile(request, env, metadata, mimeType) {
       headers.set('Content-Type', mimeType);
       headers.set('Accept-Ranges', 'bytes');
       headers.set('Access-Control-Allow-Origin', '*');
-      headers.set('Cache-Control', 'public, max-age=3600');
+      headers.set('Cache-Control', 'public, max-age=31536000');
 
       const url = new URL(request.url);
       if (url.searchParams.has('dl')) {
@@ -241,7 +232,6 @@ async function handleSingleFile(request, env, metadata, mimeType) {
   return new Response('All streaming servers failed', { status: 503 });
 }
 
-// Handle chunked files (Smart streaming - Netflix style)
 async function handleChunkedFile(request, env, metadata, mimeType, extension) {
   const chunks = metadata.chunks;
   const size = metadata.size;
@@ -265,14 +255,13 @@ async function handleChunkedFile(request, env, metadata, mimeType, extension) {
   return await handleInstantPlay(request, env, metadata, mimeType, size);
 }
 
-// Instant play strategy (Netflix/YouTube approach)
 async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
   const chunks = metadata.chunks;
   
   console.log('⚡ INSTANT PLAY: Streaming initial chunks...');
 
   try {
-    const maxInitialBytes = 100 * 1024 * 1024;
+    const maxInitialBytes = 50 * 1024 * 1024; // Reduced to 50MB to avoid memory issues
     let loadedBytes = 0;
     let chunkIndex = 0;
 
@@ -293,20 +282,23 @@ async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
           }
         }
         controller.close();
+      },
+      cancel() {
+        console.log('⚡ Stream cancelled');
       }
     });
 
     const headers = new Headers();
     headers.set('Content-Type', mimeType);
-    headers.set('Content-Length', Math.min(loadedBytes, totalSize).toString());
-    headers.set('Content-Range', `bytes 0-${Math.min(loadedBytes, totalSize) - 1}/${totalSize}`);
+    headers.set('Content-Length', Math.min(loadedBytes || maxInitialBytes, totalSize).toString());
+    headers.set('Content-Range', `bytes 0-${Math.min(loadedBytes || maxInitialBytes, totalSize) - 1}/${totalSize}`);
     headers.set('Accept-Ranges', 'bytes');
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Content-Disposition', 'inline');
-    headers.set('Cache-Control', 'public, max-age=3600');
+    headers.set('Cache-Control', 'public, max-age=31536000');
     headers.set('X-Streaming-Mode', 'instant-play');
 
-    console.log(`⚡ INSTANT PLAY READY: ${Math.round(loadedBytes/1024/1024)}MB streamed`);
+    console.log(`⚡ INSTANT PLAY READY: ${Math.round((loadedBytes || maxInitialBytes)/1024/1024)}MB streamed`);
 
     return new Response(stream, { status: 206, headers });
 
@@ -316,7 +308,6 @@ async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
   }
 }
 
-// Smart Range handling (for video seeking)
 async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, chunkSize, isDownload = false) {
   const size = metadata.size;
   const chunks = metadata.chunks;
@@ -375,6 +366,9 @@ async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, c
         }
       }
       controller.close();
+    },
+    cancel() {
+      console.log('🎯 Range stream cancelled');
     }
   });
 
@@ -385,13 +379,13 @@ async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, c
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Content-Disposition', isDownload ? `attachment; filename="${metadata.filename}"` : 'inline');
+  headers.set('Cache-Control', 'public, max-age=31536000');
 
   console.log(`✅ RANGE RESPONSE: ${requestedSize} bytes streamed`);
 
   return new Response(stream, { status: 206, headers });
 }
 
-// Smart download (Progressive download like IDM)
 async function handleFullStreamDownload(request, env, metadata, mimeType) {
   const chunks = metadata.chunks;
   const filename = metadata.filename;
@@ -417,23 +411,26 @@ async function handleFullStreamDownload(request, env, metadata, mimeType) {
         }
       }
       controller.close();
+    },
+    cancel() {
+      console.log('📥 Download stream cancelled');
     }
   });
 
   const headers = new Headers();
-  headers.set('Content-Type', 'application/octet-stream');
+  headers.set('Content-Type', mimeType);
   headers.set('Content-Length', totalSize.toString());
   headers.set('Content-Disposition', `attachment; filename="${filename}"`);
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('X-Download-Mode', 'full-stream');
+  headers.set('Cache-Control', 'public, max-age=31536000');
 
   console.log(`📥 Full download stream started: Total ${Math.round(totalSize/1024/1024)}MB`);
 
   return new Response(stream, { status: 200, headers });
 }
 
-// Load single chunk with 4-bot fallback + auto-refresh
 async function loadSingleChunk(env, chunkInfo) {
   const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
   const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
@@ -500,7 +497,6 @@ async function loadSingleChunk(env, chunkInfo) {
   throw new Error(`All refresh attempts failed: ${chunkKey}`);
 }
 
-// Fetch with retry logic, increased retries for stability
 async function fetchWithRetry(url, options, retries = 5) {
   for (let i = 0; i < retries; i++) {
     try {
