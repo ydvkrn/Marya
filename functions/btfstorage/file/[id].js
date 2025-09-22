@@ -21,7 +21,9 @@ const MIME_TYPES = {
   'gif': 'image/gif',
   'webp': 'image/webp',
   'svg': 'image/svg+xml',
-  'pdf': 'application/pdf'
+  'pdf': 'application/pdf',
+  'm3u8': 'application/x-mpegURL',
+  'ts': 'video/mp2t'
 };
 
 export async function onRequest(context) {
@@ -40,9 +42,36 @@ export async function onRequest(context) {
   }
 
   try {
-    const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
-    const extension = fileId.includes('.') ? fileId.substring(fileId.lastIndexOf('.') + 1) : '';
+    // Parse fileId for extension and actualId
+    let actualId = fileId;
+    let extension = '';
+    let isHlsPlaylist = false;
+    let isHlsSegment = false;
+    let segmentIndex = -1;
 
+    if (fileId.includes('.')) {
+      const parts = fileId.split('.');
+      extension = parts.pop().toLowerCase();
+      actualId = parts.join('.');
+
+      // Check for HLS playlist request
+      if (extension === 'm3u8') {
+        isHlsPlaylist = true;
+      } else if (extension === 'ts' && actualId.includes('-')) {
+        // Check for segment like id-0.ts
+        const segParts = actualId.split('-');
+        if (segParts.length > 1 && !isNaN(parseInt(segParts.pop()))) {
+          segmentIndex = parseInt(segParts.pop(), 10);
+          actualId = segParts.join('-');
+          isHlsSegment = true;
+        }
+      } else {
+        actualId = fileId.substring(0, fileId.lastIndexOf('.'));
+        extension = fileId.substring(fileId.lastIndexOf('.') + 1).toLowerCase();
+      }
+    }
+
+    // Get metadata
     const metadataString = await env.FILES_KV.get(actualId);
     if (!metadataString) {
       console.error('File not found in KV:', actualId);
@@ -55,9 +84,20 @@ export async function onRequest(context) {
       return new Response('Invalid file metadata', { status: 400 });
     }
 
-    const mimeType = MIME_TYPES[extension.toLowerCase()] || 'application/octet-stream';
-    console.log(`📁 ${metadata.filename} | Size: ${Math.round(metadata.size/1024/1024)}MB | MIME: ${mimeType} | Chunks: ${metadata.chunks?.length || 0}`);
+    const mimeType = MIME_TYPES[extension] || 'application/octet-stream';
+    console.log(`📁 ${metadata.filename} | Size: ${Math.round(metadata.size/1024/1024)}MB | MIME: ${mimeType} | Chunks: ${metadata.chunks?.length || 0} | HLS Playlist: ${isHlsPlaylist} | HLS Segment: ${isHlsSegment} Index: ${segmentIndex}`);
 
+    // Handle HLS playlist request
+    if (isHlsPlaylist) {
+      return await handleHlsPlaylist(request, env, metadata, actualId, mimeType);
+    }
+
+    // Handle HLS segment request
+    if (isHlsSegment && segmentIndex >= 0) {
+      return await handleHlsSegment(request, env, metadata, segmentIndex, mimeType);
+    }
+
+    // Standard handling
     if (metadata.telegramFileId && !metadata.chunks) {
       return await handleSingleFile(request, env, metadata, mimeType);
     }
@@ -74,6 +114,69 @@ export async function onRequest(context) {
   }
 }
 
+// Generate HLS playlist for large videos
+async function handleHlsPlaylist(request, env, metadata, actualId, mimeType) {
+  console.log('📼 Generating HLS playlist for:', actualId);
+
+  if (!metadata.chunks || metadata.chunks.length === 0) {
+    return new Response('HLS not supported for single files', { status: 400 });
+  }
+
+  const chunks = metadata.chunks;
+  const segmentDuration = 5; // Assume 5 seconds per segment (adjust based on your chunking)
+
+  let playlist = '#EXTM3U\n';
+  playlist += '#EXT-X-VERSION:3\n';
+  playlist += `#EXT-X-TARGETDURATION:${segmentDuration}\n`;
+  playlist += '#EXT-X-MEDIA-SEQUENCE:0\n';
+
+  for (let i = 0; i < chunks.length; i++) {
+    const duration = (i === chunks.length - 1) ? segmentDuration : segmentDuration; // Last segment same for simplicity
+    playlist += `#EXTINF:${duration.toFixed(1)},\n`;
+    playlist += `${actualId}-${i}.ts\n`;
+  }
+
+  playlist += '#EXT-X-ENDLIST\n';
+
+  const headers = new Headers();
+  headers.set('Content-Type', 'application/x-mpegURL');
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Cache-Control', 'no-cache');
+
+  console.log('📼 HLS playlist generated with', chunks.length, 'segments');
+
+  return new Response(playlist, { status: 200, headers });
+}
+
+// Serve HLS segment (chunk as .ts)
+async function handleHlsSegment(request, env, metadata, segmentIndex, mimeType) {
+  console.log('📼 Serving HLS segment:', segmentIndex);
+
+  if (!metadata.chunks || segmentIndex >= metadata.chunks.length || segmentIndex < 0) {
+    return new Response('Segment not found', { status: 404 });
+  }
+
+  try {
+    const chunkInfo = metadata.chunks[segmentIndex];
+    const chunkData = await loadSingleChunk(env, chunkInfo);
+
+    const headers = new Headers();
+    headers.set('Content-Type', 'video/mp2t');
+    headers.set('Content-Length', chunkData.byteLength.toString());
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.set('Cache-Control', 'public, max-age=3600');
+    headers.set('Content-Disposition', 'inline');
+
+    console.log('📼 HLS segment served:', segmentIndex, 'Size:', Math.round(chunkData.byteLength/1024/1024), 'MB');
+
+    return new Response(chunkData, { status: 200, headers });
+  } catch (error) {
+    console.error('❌ HLS segment error:', error);
+    return new Response(`Segment error: ${error.message}`, { status: 500 });
+  }
+}
+
+// Handle single files (Direct proxy - fastest)
 async function handleSingleFile(request, env, metadata, mimeType) {
   console.log('🚀 Single file streaming');
 
@@ -138,6 +241,7 @@ async function handleSingleFile(request, env, metadata, mimeType) {
   return new Response('All streaming servers failed', { status: 503 });
 }
 
+// Handle chunked files (Smart streaming - Netflix style)
 async function handleChunkedFile(request, env, metadata, mimeType, extension) {
   const chunks = metadata.chunks;
   const size = metadata.size;
@@ -161,6 +265,7 @@ async function handleChunkedFile(request, env, metadata, mimeType, extension) {
   return await handleInstantPlay(request, env, metadata, mimeType, size);
 }
 
+// Instant play strategy (Netflix/YouTube approach)
 async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
   const chunks = metadata.chunks;
   
@@ -211,6 +316,7 @@ async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
   }
 }
 
+// Smart Range handling (for video seeking)
 async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, chunkSize, isDownload = false) {
   const size = metadata.size;
   const chunks = metadata.chunks;
@@ -285,6 +391,7 @@ async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, c
   return new Response(stream, { status: 206, headers });
 }
 
+// Smart download (Progressive download like IDM)
 async function handleFullStreamDownload(request, env, metadata, mimeType) {
   const chunks = metadata.chunks;
   const filename = metadata.filename;
@@ -326,6 +433,7 @@ async function handleFullStreamDownload(request, env, metadata, mimeType) {
   return new Response(stream, { status: 200, headers });
 }
 
+// Load single chunk with 4-bot fallback + auto-refresh
 async function loadSingleChunk(env, chunkInfo) {
   const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
   const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
@@ -392,6 +500,7 @@ async function loadSingleChunk(env, chunkInfo) {
   throw new Error(`All refresh attempts failed: ${chunkKey}`);
 }
 
+// Fetch with retry logic, increased retries for stability
 async function fetchWithRetry(url, options, retries = 5) {
   for (let i = 0; i < retries; i++) {
     try {
