@@ -30,7 +30,6 @@ export async function onRequest(context) {
 
   console.log('🎬 TOP TIER STREAMING:', fileId);
 
-  // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     const headers = new Headers();
     headers.set('Access-Control-Allow-Origin', '*');
@@ -44,7 +43,6 @@ export async function onRequest(context) {
     const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
     const extension = fileId.includes('.') ? fileId.substring(fileId.lastIndexOf('.') + 1) : '';
 
-    // Get metadata
     const metadataString = await env.FILES_KV.get(actualId);
     if (!metadataString) {
       console.error('File not found in KV:', actualId);
@@ -52,7 +50,6 @@ export async function onRequest(context) {
     }
 
     const metadata = JSON.parse(metadataString);
-    // Validate metadata0
     if (!metadata.filename || !metadata.size || (!metadata.telegramFileId && (!metadata.chunks || metadata.chunks.length === 0))) {
       console.error('Invalid metadata:', metadata);
       return new Response('Invalid file metadata', { status: 400 });
@@ -61,7 +58,6 @@ export async function onRequest(context) {
     const mimeType = MIME_TYPES[extension.toLowerCase()] || 'application/octet-stream';
     console.log(`📁 ${metadata.filename} | Size: ${Math.round(metadata.size/1024/1024)}MB | MIME: ${mimeType} | Chunks: ${metadata.chunks?.length || 0}`);
 
-    // Handle based on file type
     if (metadata.telegramFileId && !metadata.chunks) {
       return await handleSingleFile(request, env, metadata, mimeType);
     }
@@ -78,7 +74,6 @@ export async function onRequest(context) {
   }
 }
 
-// Handle single files (Direct proxy - fastest)
 async function handleSingleFile(request, env, metadata, mimeType) {
   console.log('🚀 Single file streaming');
 
@@ -86,7 +81,6 @@ async function handleSingleFile(request, env, metadata, mimeType) {
   
   for (const botToken of botTokens) {
     try {
-      // Get fresh URL with retry
       const getFileResponse = await fetchWithRetry(
         `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(metadata.telegramFileId)}`,
         { signal: AbortSignal.timeout(15000) }
@@ -99,8 +93,6 @@ async function handleSingleFile(request, env, metadata, mimeType) {
       }
 
       const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-
-      // Direct proxy
       const telegramResponse = await fetchWithRetry(directUrl, {
         headers: request.headers.get('Range') ? { 'Range': request.headers.get('Range') } : {},
         signal: AbortSignal.timeout(45000)
@@ -111,7 +103,6 @@ async function handleSingleFile(request, env, metadata, mimeType) {
         continue;
       }
 
-      // Perfect streaming headers
       const headers = new Headers();
       ['content-length', 'content-range', 'accept-ranges'].forEach(header => {
         if (telegramResponse.headers.get(header)) {
@@ -147,12 +138,11 @@ async function handleSingleFile(request, env, metadata, mimeType) {
   return new Response('All streaming servers failed', { status: 503 });
 }
 
-// Handle chunked files (Smart streaming - Netflix style)
 async function handleChunkedFile(request, env, metadata, mimeType, extension) {
   const chunks = metadata.chunks;
   const size = metadata.size;
   const filename = metadata.filename;
-  const chunkSize = metadata.chunkSize || 20971520; // 20MB default
+  const chunkSize = metadata.chunkSize || 20971520;
 
   const range = request.headers.get('Range');
   const url = new URL(request.url);
@@ -171,23 +161,25 @@ async function handleChunkedFile(request, env, metadata, mimeType, extension) {
   return await handleInstantPlay(request, env, metadata, mimeType, size);
 }
 
-// Instant play strategy (Netflix/YouTube approach)
 async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
   const chunks = metadata.chunks;
   
-  console.log('⚡ INSTANT PLAY: Loading initial chunks...');
+  console.log('⚡ INSTANT PLAY: Loading initial chunks for large file...');
 
   try {
-    const initialChunks = Math.min(3, chunks.length);
+    // Load up to 5 chunks or until we have enough data for MP4 moov atom (100MB max)
+    const maxInitialBytes = 100 * 1024 * 1024; // 100MB
     const initialChunkData = [];
     let totalLoaded = 0;
+    let i = 0;
 
-    for (let i = 0; i < initialChunks; i++) {
+    while (i < chunks.length && totalLoaded < maxInitialBytes) {
       try {
         const chunkData = await loadSingleChunk(env, chunks[i]);
         initialChunkData.push(new Uint8Array(chunkData));
         totalLoaded += chunkData.byteLength;
         console.log(`⚡ Initial chunk ${i + 1} loaded: ${Math.round(chunkData.byteLength/1024/1024)}MB`);
+        i++;
       } catch (chunkError) {
         console.error(`❌ Initial chunk ${i + 1} failed:`, chunkError);
         break;
@@ -198,27 +190,30 @@ async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
       throw new Error('No initial chunks could be loaded');
     }
 
-    const combinedBuffer = new Uint8Array(totalLoaded);
-    let offset = 0;
-    for (const chunkData of initialChunkData) {
-      combinedBuffer.set(chunkData, offset);
-      offset += chunkData.byteLength;
-    }
+    // Stream chunks instead of combining in memory
+    const stream = new ReadableStream({
+      async pull(controller) {
+        for (const chunkData of initialChunkData) {
+          controller.enqueue(chunkData);
+        }
+        controller.close();
+      }
+    });
 
     const headers = new Headers();
     headers.set('Content-Type', mimeType);
-    headers.set('Content-Length', combinedBuffer.byteLength.toString());
-    headers.set('Content-Range', `bytes 0-${combinedBuffer.byteLength - 1}/${totalSize}`);
+    headers.set('Content-Length', totalLoaded.toString());
+    headers.set('Content-Range', `bytes 0-${totalLoaded - 1}/${totalSize}`);
     headers.set('Accept-Ranges', 'bytes');
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Content-Disposition', 'inline');
     headers.set('Cache-Control', 'public, max-age=3600');
     headers.set('X-Streaming-Mode', 'instant-play');
-    headers.set('X-Initial-Chunks', initialChunks.toString());
+    headers.set('X-Initial-Chunks', initialChunkData.length.toString());
 
     console.log(`⚡ INSTANT PLAY READY: ${Math.round(totalLoaded/1024/1024)}MB buffered`);
 
-    return new Response(combinedBuffer, { status: 206, headers });
+    return new Response(stream, { status: 206, headers });
 
   } catch (error) {
     console.error('⚡ Instant play error:', error);
@@ -226,21 +221,19 @@ async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
   }
 }
 
-// Smart Range handling (for video seeking)
 async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, chunkSize) {
   const size = metadata.size;
   const chunks = metadata.chunks;
 
   console.log('🎯 SMART RANGE:', rangeHeader);
 
-  // Parse range
   const rangeMatch = rangeHeader.match(/bytes=(\d+)-(\d*)/);
   if (!rangeMatch) {
     return new Response('Invalid range', { status: 416 });
   }
 
   const start = parseInt(rangeMatch[1], 10);
-  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : size - 1;
+  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : Math.min(start + chunkSize * 4 - 1, size - 1);
   
   if (start >= size || end >= size || start > end) {
     return new Response('Range not satisfiable', { 
@@ -258,21 +251,38 @@ async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, c
 
   console.log(`🎯 Need chunks: ${startChunk}-${endChunk} (${neededChunks.length})`);
 
-  if (neededChunks.length > 4) {
-    console.log('⚠️ Range too large, serving partial');
-    const limitedChunks = neededChunks.slice(0, 4);
-    const limitedEndChunk = startChunk + 3;
-    const limitedEnd = Math.min(end, (limitedEndChunk + 1) * chunkSize - 1);
-    
-    const rangeData = await loadRangeChunks(env, limitedChunks, start, limitedEnd, startChunk, chunkSize);
-    return createRangeResponse(rangeData, start, limitedEnd, size, mimeType);
-  }
+  // Stream chunks to avoid memory issues
+  const stream = new ReadableStream({
+    async pull(controller) {
+      let currentOffset = startChunk * chunkSize;
+      for (let i = 0; i < neededChunks.length; i++) {
+        const chunkInfo = neededChunks[i];
+        try {
+          const chunkData = await loadSingleChunk(env, chunkInfo);
+          const chunkArray = new Uint8Array(chunkData);
+          
+          // Trim chunk if necessary
+          const chunkStart = i === 0 ? start - currentOffset : 0;
+          const chunkEnd = i === neededChunks.length - 1 ? Math.min(chunkArray.length, end - currentOffset + 1) : chunkArray.length;
+          
+          if (chunkStart < chunkArray.length && chunkEnd > chunkStart) {
+            controller.enqueue(chunkArray.slice(chunkStart, chunkEnd));
+          }
+          
+          currentOffset += chunkSize;
+        } catch (error) {
+          console.error(`❌ Range chunk ${startChunk + i + 1} failed:`, error);
+          controller.error(error);
+          return;
+        }
+      }
+      controller.close();
+    }
+  });
 
-  const rangeData = await loadRangeChunks(env, neededChunks, start, end, startChunk, chunkSize);
-  return createRangeResponse(rangeData, start, end, size, mimeType);
+  return createRangeResponse(stream, start, end, size, mimeType);
 }
 
-// Smart download (Progressive download like IDM)
 async function handleSmartDownload(request, env, metadata, mimeType) {
   console.log('📥 SMART DOWNLOAD: Starting...');
 
@@ -301,59 +311,19 @@ async function handleSmartDownload(request, env, metadata, mimeType) {
   }
 }
 
-// Load chunks for range
-async function loadRangeChunks(env, chunkInfos, rangeStart, rangeEnd, startChunk, chunkSize) {
-  console.log(`🎯 Loading ${chunkInfos.length} range chunks...`);
-  
-  const parts = [];
-  let totalSize = 0;
-
-  for (let i = 0; i < chunkInfos.length; i++) {
-    const chunkInfo = chunkInfos[i];
-    const chunkIndex = startChunk + i;
-    
-    try {
-      console.log(`🎯 Loading range chunk ${chunkIndex + 1}...`);
-      const chunkData = await loadSingleChunk(env, chunkInfo);
-      parts.push(new Uint8Array(chunkData));
-      totalSize += chunkData.byteLength;
-      console.log(`✅ Range chunk ${chunkIndex + 1}: ${Math.round(chunkData.byteLength/1024)}KB`);
-    } catch (error) {
-      console.error(`❌ Range chunk ${chunkIndex + 1} failed:`, error);
-      throw error;
-    }
-  }
-
-  const combined = new Uint8Array(totalSize);
-  let offset = 0;
-  for (const part of parts) {
-    combined.set(part, offset);
-    offset += part.byteLength;
-  }
-
-  const rangeStartInBuffer = rangeStart - (startChunk * chunkSize);
-  const requestedSize = rangeEnd - rangeStart + 1;
-  const exactRange = combined.slice(rangeStartInBuffer, rangeStartInBuffer + requestedSize);
-
-  console.log(`🎯 EXACT RANGE: ${exactRange.byteLength} bytes extracted`);
-  return exactRange;
-}
-
-// Create Range response
-function createRangeResponse(data, start, end, totalSize, mimeType) {
+function createRangeResponse(stream, start, end, totalSize, mimeType) {
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
-  headers.set('Content-Length', data.byteLength.toString());
+  headers.set('Content-Length', (end - start + 1).toString());
   headers.set('Content-Range', `bytes ${start}-${end}/${totalSize}`);
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Content-Disposition', 'inline');
 
-  console.log(`✅ RANGE RESPONSE: ${data.byteLength} bytes delivered`);
-  return new Response(data, { status: 206, headers });
+  console.log(`✅ RANGE RESPONSE: ${end - start + 1} bytes delivered`);
+  return new Response(stream, { status: 206, headers });
 }
 
-// Load single chunk with 4-bot fallback + auto-refresh
 async function loadSingleChunk(env, chunkInfo) {
   const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
   const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
@@ -420,7 +390,6 @@ async function loadSingleChunk(env, chunkInfo) {
   throw new Error(`All refresh attempts failed: ${chunkKey}`);
 }
 
-// Fetch with retry logic
 async function fetchWithRetry(url, options, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
