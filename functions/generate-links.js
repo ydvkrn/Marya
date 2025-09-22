@@ -1,4 +1,4 @@
-// SAFONE.CO STYLE LINK GENERATOR
+// STYLE LINK GENERATOR
 // Creates both streaming and download links
 
 export async function onRequest(context) {
