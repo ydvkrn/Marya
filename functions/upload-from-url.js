@@ -45,7 +45,7 @@ async function handleTelegramURL(url, env, request, corsHeaders) {
   console.log('📱 Processing Telegram URL...');
   
   // Extract file info from Telegram URL
-  const telegramMatch = url.match(/t\.me\/c\/(-?\d+)\/(\d+)/);
+  const telegramMatch = url.match(/t.me/c/(-?d+)/(d+)/);
   if (!telegramMatch) {
     throw new Error('Invalid Telegram URL format. Use direct file URLs instead of t.me links.');
   }
@@ -57,7 +57,12 @@ async function handleTelegramURL(url, env, request, corsHeaders) {
   // We need the user to provide the direct file URL instead
   return new Response(JSON.stringify({
     success: false,
-    error: 'Telegram t.me URLs cannot be directly imported. Please:\n1. Right-click on the file in Telegram\n2. Copy the direct download link (not t.me link)\n3. Use that URL instead.\n\nOr upload the file directly to get a permanent URL.',
+    error: 'Telegram t.me URLs cannot be directly imported. Please:
+1. Right-click on the file in Telegram
+2. Copy the direct download link (not t.me link)
+3. Use that URL instead.
+
+Or upload the file directly to get a permanent URL.',
     suggestion: 'Upload the file directly for better performance and permanent storage.'
   }), {
     status: 400,
@@ -342,7 +347,9 @@ async function uploadImportedChunkWithRetry(chunk, fileId, chunkIndex, kvIndex, 
 function extractFilename(url, response) {
   const contentDisposition = response.headers.get('Content-Disposition');
   if (contentDisposition) {
-    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const filenameMatch = contentDisposition.match(/filename[^;=
+]*=((['"]).*?\u0002|[^;
+]*)/);
     if (filenameMatch) {
       let filename = filenameMatch[1].replace(/['"]/g, '');
       if (filename && filename !== 'undefined') {
