@@ -8,6 +8,9 @@
     "/admin/list-files",
     "/admin/delete-files",
     "/admin/update-expiry",
+    "/stream/*",
+    "/download/*", 
+    "/generate-links",
     "/btfstorage/file/*"
   ],
   "exclude": [
