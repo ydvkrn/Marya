@@ -1,295 +1,327 @@
-// 🚀 LIGHTNING FAST STREAMING SYSTEM
-// Zero buffering • Instant play • 2GB+ support
-
+// Perfect browser-compatible MIME types
 const MIME_TYPES = {
-  'mp4': 'video/mp4', 'mkv': 'video/mp4', 'avi': 'video/mp4', 'mov': 'video/mp4', 'm4v': 'video/mp4',
-  'webm': 'video/webm', 'ogv': 'video/ogg', 'flv': 'video/mp4', '3gp': 'video/mp4', 'wmv': 'video/mp4',
-  'mp3': 'audio/mpeg', 'wav': 'audio/wav', 'aac': 'audio/mp4', 'm4a': 'audio/mp4', 'ogg': 'audio/ogg',
-  'flac': 'audio/flac', 'wma': 'audio/x-ms-wma', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
-  'png': 'image/png', 'gif': 'image/gif', 'webp': 'image/webp', 'svg': 'image/svg+xml'
+  'mp4': 'video/mp4',
+  'webm': 'video/webm',
+  'mkv': 'video/mp4', // Serve as MP4 for browser compatibility
+  'mov': 'video/mp4',
+  'avi': 'video/mp4',
+  'm4v': 'video/mp4',
+  'wmv': 'video/mp4',
+  'flv': 'video/mp4',
+  '3gp': 'video/mp4',
+  'mp3': 'audio/mpeg',
+  'wav': 'audio/wav',
+  'flac': 'audio/mpeg',
+  'aac': 'audio/mp4',
+  'm4a': 'audio/mp4',
+  'ogg': 'audio/ogg',
+  'jpg': 'image/jpeg',
+  'jpeg': 'image/jpeg',
+  'png': 'image/png',
+  'gif': 'image/gif',
+  'webp': 'image/webp',
+  'pdf': 'application/pdf',
+  'txt': 'text/plain',
+  'zip': 'application/zip'
 };
+
+function getMimeType(extension) {
+  const ext = extension.toLowerCase().replace('.', '');
+  return MIME_TYPES[ext] || 'application/octet-stream';
+}
+
+function isStreamable(mimeType) {
+  return mimeType.startsWith('video/') || 
+         mimeType.startsWith('audio/') || 
+         mimeType.startsWith('image/') ||
+         mimeType === 'application/pdf';
+}
 
 export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
-  
-  console.log('🚀 LIGHTNING STREAMING:', fileId);
-  
+
+  console.log('🎬 ULTIMATE MEMORY-SAFE STREAMING:', fileId);
+
   try {
     const actualId = fileId.includes('.') ? fileId.substring(0, fileId.lastIndexOf('.')) : fileId;
     const extension = fileId.includes('.') ? fileId.substring(fileId.lastIndexOf('.')) : '';
-    
-    // Get master metadata
-    const metadataString = await env.FILES_KV.get(actualId);
-    if (!metadataString) {
-      return new Response('File not found', { status: 404 });
+
+    if (!actualId.startsWith('MSM')) {
+      return new Response('❌ Invalid file ID format', { status: 404 });
     }
+
+    const kvNamespaces = {
+      FILES_KV: env.FILES_KV,
+      FILES_KV2: env.FILES_KV2,
+      FILES_KV3: env.FILES_KV3,
+      FILES_KV4: env.FILES_KV4,
+      FILES_KV5: env.FILES_KV5,
+      FILES_KV6: env.FILES_KV6,
+      FILES_KV7: env.FILES_KV7
+    };
+
+    const masterMetadataString = await kvNamespaces.FILES_KV.get(actualId);
+    if (!masterMetadataString) {
+      return new Response('🔍 File not found', { status: 404 });
+    }
+
+    const masterMetadata = JSON.parse(masterMetadataString);
+    const { filename, size, totalChunks } = masterMetadata;
     
-    const metadata = JSON.parse(metadataString);
-    const mimeType = MIME_TYPES[extension.toLowerCase().replace('.', '')] || 'application/octet-stream';
-    
-    console.log(`📁 ${metadata.filename} | Size: ${Math.round(metadata.size/1024/1024)}MB | Chunks: ${metadata.totalChunks}`);
-    
-    // Lightning fast streaming strategy
-    return await handleLightningStream(request, env, metadata, mimeType, extension);
-    
+    console.log(`📁 File: ${filename} (${Math.round(size/1024/1024)}MB, ${totalChunks} chunks)`);
+
+    // Always use memory-safe streaming for ALL files
+    return await handleMemorySafeStreaming(request, kvNamespaces, masterMetadata, extension, env);
+
   } catch (error) {
-    console.error('❌ Streaming error:', error);
-    return new Response(`Streaming error: ${error.message}`, { status: 500 });
+    console.error('💥 Error:', error);
+    return new Response(`❌ Server error: ${error.message}`, { status: 500 });
   }
 }
 
-// Lightning fast streaming (Netflix/YouTube level)
-async function handleLightningStream(request, env, metadata, mimeType, extension) {
-  const chunks = metadata.chunks || [];
-  const totalSize = metadata.size;
-  const filename = metadata.filename;
-  const chunkSize = metadata.chunkSize || 5242880; // 5MB default
+// Memory-safe streaming that NEVER loads full file into memory
+async function handleMemorySafeStreaming(request, kvNamespaces, masterMetadata, extension, env) {
+  const { chunks, filename, size } = masterMetadata;
+  const mimeType = getMimeType(extension);
   
-  const range = request.headers.get('Range');
+  console.log(`🎬 Memory-safe streaming: ${filename} (Type: ${mimeType})`);
+
   const url = new URL(request.url);
-  const isDownload = url.searchParams.has('dl');
+  const isDownload = url.searchParams.has('dl') && url.searchParams.get('dl') === '1';
   
-  console.log(`🎬 Mode: ${range ? 'RANGE' : isDownload ? 'DOWNLOAD' : 'STREAM'}`);
-  
+  console.log(`📺 Mode: ${isDownload ? 'DOWNLOAD' : 'STREAM'}`);
+
+  // Handle Range requests (essential for video streaming)
+  const range = request.headers.get('Range');
   if (range && !isDownload) {
-    return await handlePrecisionRange(request, env, metadata, range, mimeType, chunkSize);
+    console.log('📺 Range request:', range);
+    return await handleRangeStreaming(request, kvNamespaces, masterMetadata, extension, range, env, mimeType);
   }
-  
-  if (isDownload) {
-    return await handleSmartDownload(request, env, metadata, mimeType);
-  }
-  
-  // Instant streaming (first 3-4 chunks for immediate playback)
-  return await handleInstantStream(request, env, metadata, mimeType, totalSize);
-}
 
-// Instant streaming (0-delay playback start)
-async function handleInstantStream(request, env, metadata, mimeType, totalSize) {
-  console.log('⚡ INSTANT STREAM: Loading initial buffer...');
+  // Memory-safe ReadableStream for ALL files (no memory limits)
+  console.log('🌊 Creating memory-safe stream...');
   
-  const chunks = metadata.chunks;
-  const initialChunks = Math.min(4, chunks.length); // First 4 chunks for instant play
-  
-  const loadPromises = [];
-  for (let i = 0; i < initialChunks; i++) {
-    loadPromises.push(loadChunkLightning(env, chunks[i]));
-  }
-  
-  try {
-    // Load initial chunks in parallel (controlled)
-    const chunkResults = await Promise.all(loadPromises);
-    
-    // Combine chunks
-    const totalBufferSize = chunkResults.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-    const streamBuffer = new Uint8Array(totalBufferSize);
-    
-    let offset = 0;
-    for (const chunkData of chunkResults) {
-      streamBuffer.set(new Uint8Array(chunkData), offset);
-      offset += chunkData.byteLength;
+  const readable = new ReadableStream({
+    async start(controller) {
+      try {
+        console.log(`🌊 Starting chunk-by-chunk streaming (${chunks.length} chunks)...`);
+        
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkInfo = chunks[i];
+          const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
+          
+          console.log(`📦 Loading chunk ${i + 1}/${chunks.length}...`);
+          
+          // Load chunk data
+          const chunkData = await getChunkSafely(kvNamespace, chunkInfo.keyName, chunkInfo, env, i);
+          
+          // Stream chunk immediately (no accumulation)
+          controller.enqueue(new Uint8Array(chunkData));
+          
+          // Force garbage collection by nullifying the chunk data
+          chunkData = null;
+        }
+        
+        console.log('✅ All chunks streamed successfully');
+        controller.close();
+        
+      } catch (error) {
+        console.error('💥 Streaming error:', error);
+        controller.error(error);
+      }
     }
-    
-    // Instant streaming headers
-    const headers = new Headers();
-    headers.set('Content-Type', mimeType);
-    headers.set('Content-Length', streamBuffer.byteLength.toString());
-    headers.set('Content-Range', `bytes 0-${streamBuffer.byteLength - 1}/${totalSize}`);
-    headers.set('Accept-Ranges', 'bytes');
-    headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Content-Disposition', 'inline');
-    headers.set('Cache-Control', 'public, max-age=86400');
-    
-    // Lightning streaming headers
-    headers.set('X-Streaming-Mode', 'instant');
-    headers.set('X-Buffer-Chunks', initialChunks.toString());
-    headers.set('Connection', 'keep-alive');
-    
-    console.log(`⚡ INSTANT STREAM READY: ${Math.round(totalBufferSize/1024/1024)}MB buffered`);
-    
-    return new Response(streamBuffer, { status: 206, headers });
-    
-  } catch (error) {
-    console.error('❌ Instant stream error:', error);
-    return new Response(`Instant stream error: ${error.message}`, { status: 500 });
+  });
+
+  // Perfect headers for streaming
+  const headers = new Headers();
+  headers.set('Content-Type', mimeType);
+  headers.set('Content-Length', size.toString());
+  headers.set('Accept-Ranges', 'bytes');
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Access-Control-Expose-Headers', 'Content-Length, Accept-Ranges');
+  headers.set('Cache-Control', 'public, max-age=86400');
+
+  if (isDownload) {
+    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+  } else {
+    if (isStreamable(mimeType)) {
+      headers.set('Content-Disposition', 'inline');
+      // Essential for video streaming
+      headers.set('X-Content-Type-Options', 'nosniff');
+    } else {
+      headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+    }
   }
+
+  console.log(`🚀 Starting memory-safe ${isDownload ? 'download' : 'stream'} as ${mimeType}`);
+  return new Response(readable, { status: 200, headers });
 }
 
-// Precision range handling (seeking support)
-async function handlePrecisionRange(request, env, metadata, rangeHeader, mimeType, chunkSize) {
-  console.log('🎯 PRECISION RANGE:', rangeHeader);
+// Handle Range requests for video seeking (YouTube-style)
+async function handleRangeStreaming(request, kvNamespaces, masterMetadata, extension, range, env, mimeType) {
+  const { size, chunks } = masterMetadata;
+  const chunkSize = masterMetadata.chunkSize || Math.ceil(size / chunks.length);
   
-  const size = metadata.size;
-  const chunks = metadata.chunks;
-  
-  // Parse range
-  const rangeMatch = rangeHeader.match(/bytes=(d+)-(d*)/);
-  if (!rangeMatch) {
-    return new Response('Invalid range', { status: 416 });
-  }
-  
-  const start = parseInt(rangeMatch[1], 10);
-  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : size - 1;
-  
-  if (start >= size || end >= size || start > end) {
-    return new Response('Range not satisfiable', { 
+  const ranges = parseRange(range, size);
+  if (!ranges || ranges.length !== 1) {
+    return new Response('Range Not Satisfiable', { 
       status: 416,
-      headers: { 'Content-Range': `bytes */${size}` }
+      headers: { 
+        'Content-Range': `bytes */${size}`,
+        'Accept-Ranges': 'bytes'
+      }
     });
   }
-  
-  console.log(`🎯 Range: ${start}-${end} (${Math.round((end - start + 1)/1024/1024)}MB)`);
-  
-  // Calculate needed chunks
+
+  const { start, end } = ranges[0];
+  const requestedSize = end - start + 1;
+
+  console.log(`📺 Range: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB)`);
+
+  // Memory-efficient range handling
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
   const neededChunks = chunks.slice(startChunk, endChunk + 1);
-  
-  // Limit to 6 chunks max (no CPU overload)
-  if (neededChunks.length > 6) {
-    console.log('⚠️ Range too large, limiting to 6 chunks');
-    const limitedChunks = neededChunks.slice(0, 6);
-    const limitedEnd = Math.min(end, (startChunk + 5) * chunkSize + chunkSize - 1);
-    
-    const rangeData = await loadRangeLightning(env, limitedChunks, start, limitedEnd, startChunk, chunkSize);
-    return createRangeResponse(rangeData, start, limitedEnd, size, mimeType);
-  }
-  
-  // Load needed chunks
-  const rangeData = await loadRangeLightning(env, neededChunks, start, end, startChunk, chunkSize);
-  return createRangeResponse(rangeData, start, end, size, mimeType);
-}
 
-// Smart download (progressive)
-async function handleSmartDownload(request, env, metadata, mimeType) {
-  console.log('📥 SMART DOWNLOAD');
-  
-  const firstChunk = metadata.chunks[0];
-  
-  try {
-    const chunkData = await loadChunkLightning(env, firstChunk);
-    
-    const headers = new Headers();
-    headers.set('Content-Type', 'application/octet-stream');
-    headers.set('Content-Length', chunkData.byteLength.toString());
-    headers.set('Content-Disposition', `attachment; filename="${metadata.filename}"`);
-    headers.set('Accept-Ranges', 'bytes');
-    headers.set('Access-Control-Allow-Origin', '*');
-    
-    console.log(`📥 Download ready: ${Math.round(chunkData.byteLength/1024/1024)}MB`);
-    
-    return new Response(chunkData, { status: 200, headers });
-    
-  } catch (error) {
-    console.error('❌ Download error:', error);
-    return new Response(`Download error: ${error.message}`, { status: 500 });
-  }
-}
+  console.log(`📦 Need chunks ${startChunk}-${endChunk} (${neededChunks.length} chunks)`);
 
-// Lightning chunk loader (with smart caching & auto-refresh)
-async function loadChunkLightning(env, chunkInfo) {
-  const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
-  const chunkKey = chunkInfo.chunkKey;
-  
-  console.log(`⚡ Loading: ${chunkKey}`);
-  
-  // Get chunk metadata
-  const metadataString = await kvNamespace.get(chunkKey);
-  if (!metadataString) {
-    throw new Error(`Chunk not found: ${chunkKey}`);
-  }
-  
-  const chunkMetadata = JSON.parse(metadataString);
-  
-  // Try direct URL (fastest path)
-  let response = await fetch(chunkMetadata.directUrl, {
-    signal: AbortSignal.timeout(30000)
+  // Create streaming response for range
+  const readable = new ReadableStream({
+    async start(controller) {
+      try {
+        let totalProcessed = 0;
+        const rangeStart = start - (startChunk * chunkSize);
+        
+        for (let i = 0; i < neededChunks.length; i++) {
+          const chunkInfo = neededChunks[i];
+          const kvNamespace = kvNamespaces[chunkInfo.kvNamespace];
+          const actualIndex = startChunk + i;
+          
+          // Load chunk
+          const chunkData = await getChunkSafely(kvNamespace, chunkInfo.keyName, chunkInfo, env, actualIndex);
+          
+          let chunkSlice;
+          
+          if (i === 0 && neededChunks.length === 1) {
+            // Single chunk, extract exact range
+            chunkSlice = chunkData.slice(rangeStart, rangeStart + requestedSize);
+          } else if (i === 0) {
+            // First chunk, start from rangeStart
+            chunkSlice = chunkData.slice(rangeStart);
+          } else if (i === neededChunks.length - 1) {
+            // Last chunk, take only what we need
+            const remainingBytes = requestedSize - totalProcessed;
+            chunkSlice = chunkData.slice(0, remainingBytes);
+          } else {
+            // Middle chunk, take all
+            chunkSlice = chunkData;
+          }
+          
+          controller.enqueue(new Uint8Array(chunkSlice));
+          totalProcessed += chunkSlice.byteLength;
+          
+          // Clean up memory
+          chunkData = null;
+          chunkSlice = null;
+        }
+        
+        controller.close();
+        
+      } catch (error) {
+        console.error('Range streaming error:', error);
+        controller.error(error);
+      }
+    }
   });
-  
-  if (response.ok) {
-    console.log(`⚡ Direct hit: ${chunkKey}`);
-    return response.arrayBuffer();
+
+  const headers = new Headers();
+  headers.set('Content-Type', mimeType);
+  headers.set('Content-Length', requestedSize.toString());
+  headers.set('Content-Range', `bytes ${start}-${end}/${size}`);
+  headers.set('Accept-Ranges', 'bytes');
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Cache-Control', 'public, max-age=86400');
+  headers.set('Content-Disposition', 'inline');
+
+  console.log(`✅ Range streaming: ${Math.round(requestedSize/1024/1024)}MB`);
+  return new Response(readable, { status: 206, headers });
+}
+
+// Safe chunk loading with auto-refresh
+async function getChunkSafely(kvNamespace, keyName, chunkInfo, env, index) {
+  console.log(`📦 Loading chunk ${index}: ${keyName}`);
+
+  const chunkMetadataString = await kvNamespace.get(keyName);
+  if (!chunkMetadataString) {
+    throw new Error(`Chunk ${keyName} not found`);
   }
-  
-  // URL refresh with multi-bot fallback
-  console.log(`🔄 Refreshing: ${chunkKey}`);
-  
-  const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
-  
-  for (const botToken of botTokens) {
-    try {
-      const getFileResponse = await fetch(
-        `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
-        { signal: AbortSignal.timeout(10000) }
-      );
-      
-      if (!getFileResponse.ok) continue;
-      
-      const getFileData = await getFileResponse.json();
-      if (!getFileData.ok || !getFileData.result?.file_path) continue;
-      
-      const freshUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-      
-      response = await fetch(freshUrl, { signal: AbortSignal.timeout(30000) });
-      
-      if (response.ok) {
-        // Update KV async (don't wait)
-        kvNamespace.put(chunkKey, JSON.stringify({
+
+  const chunkMetadata = JSON.parse(chunkMetadataString);
+  let directUrl = chunkMetadata.directUrl;
+
+  let response = await fetch(directUrl);
+
+  // Auto-refresh expired URLs
+  if (!response.ok && (response.status === 403 || response.status === 404 || response.status === 410)) {
+    console.log(`🔄 URL expired for chunk ${index}, refreshing...`);
+
+    const botTokens = [
+      env.BOT_TOKEN,
+      env.BOT_TOKEN2,
+      env.BOT_TOKEN3,
+      env.BOT_TOKEN4
+    ].filter(token => token);
+
+    for (const botToken of botTokens) {
+      try {
+        const getFileResponse = await fetch(
+          `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`
+        );
+
+        if (!getFileResponse.ok) continue;
+
+        const getFileData = await getFileResponse.json();
+        if (!getFileData.ok || !getFileData.result?.file_path) continue;
+
+        const freshUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+
+        // Update KV
+        const updatedMetadata = {
           ...chunkMetadata,
           directUrl: freshUrl,
           lastRefreshed: Date.now()
-        })).catch(() => {});
-        
-        console.log(`✅ Refreshed: ${chunkKey}`);
-        return response.arrayBuffer();
+        };
+
+        await kvNamespace.put(keyName, JSON.stringify(updatedMetadata));
+
+        response = await fetch(freshUrl);
+        if (response.ok) {
+          console.log(`✅ URL refreshed for chunk ${index}`);
+          break;
+        }
+
+      } catch (refreshError) {
+        continue;
       }
-      
-    } catch (botError) {
-      continue;
     }
   }
-  
-  throw new Error(`All refresh attempts failed: ${chunkKey}`);
-}
 
-// Load range chunks (lightning fast)
-async function loadRangeLightning(env, chunkInfos, rangeStart, rangeEnd, startChunk, chunkSize) {
-  console.log(`🎯 Loading ${chunkInfos.length} range chunks...`);
-  
-  // Load chunks in parallel (controlled)
-  const loadPromises = chunkInfos.map(chunkInfo => loadChunkLightning(env, chunkInfo));
-  const chunkResults = await Promise.all(loadPromises);
-  
-  // Combine chunks
-  const totalSize = chunkResults.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-  const combined = new Uint8Array(totalSize);
-  
-  let offset = 0;
-  for (const chunkData of chunkResults) {
-    combined.set(new Uint8Array(chunkData), offset);
-    offset += chunkData.byteLength;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch chunk ${index}: ${response.status}`);
   }
-  
-  // Extract exact range
-  const rangeStartInBuffer = rangeStart - (startChunk * chunkSize);
-  const requestedSize = rangeEnd - rangeStart + 1;
-  const exactRange = combined.slice(rangeStartInBuffer, rangeStartInBuffer + requestedSize);
-  
-  console.log(`🎯 EXACT RANGE: ${exactRange.byteLength} bytes extracted`);
-  return exactRange;
+
+  return await response.arrayBuffer();
 }
 
-// Create range response
-function createRangeResponse(data, start, end, totalSize, mimeType) {
-  const headers = new Headers();
-  headers.set('Content-Type', mimeType);
-  headers.set('Content-Length', data.byteLength.toString());
-  headers.set('Content-Range', `bytes ${start}-${end}/${totalSize}`);
-  headers.set('Accept-Ranges', 'bytes');
-  headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Content-Disposition', 'inline');
-  headers.set('Cache-Control', 'public, max-age=86400');
-  
-  console.log(`✅ RANGE DELIVERED: ${data.byteLength} bytes`);
-  return new Response(data, { status: 206, headers });
+function parseRange(range, size) {
+  const rangeMatch = range.match(/bytes=(d+)-(d*)/);
+  if (!rangeMatch) return null;
+
+  const start = parseInt(rangeMatch[1], 10);
+  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : size - 1;
+
+  if (start >= size || end >= size || start > end) return null;
+
+  return [{ start, end }];
 }
