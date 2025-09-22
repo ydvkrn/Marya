@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marya Admin Panel</title>
+<title>Marya Admin - Working</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -11,40 +11,27 @@
 :root {
     --primary: #2563eb;
     --primary-dark: #1d4ed8;
-    --primary-light: #dbeafe;
     --success: #10b981;
     --danger: #ef4444;
-    --warning: #f59e0b;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
     --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
     --gray-900: #111827;
     --white: #ffffff;
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     min-height: 100vh;
     color: var(--gray-900);
     font-size: 14px;
 }
 
-/* Login Screen */
 .login-screen {
     display: flex;
     align-items: center;
@@ -56,52 +43,25 @@ body {
 .login-card {
     background: var(--white);
     border-radius: 16px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow);
     padding: 2rem;
     width: 100%;
     max-width: 400px;
     text-align: center;
 }
 
-.login-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    color: var(--white);
-    font-size: 1.5rem;
-}
-
 .login-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: 0.5rem;
-}
-
-.login-subtitle {
-    color: var(--gray-600);
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 .form-input {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem;
     border: 2px solid var(--gray-200);
     border-radius: 8px;
-    font-size: 1rem;
     margin-bottom: 1rem;
-    transition: border-color 0.2s;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary);
 }
 
 .btn {
@@ -113,63 +73,21 @@ body {
     border: none;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.2s;
-    text-decoration: none;
 }
 
-.btn-primary {
-    background: var(--primary);
-    color: var(--white);
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: var(--primary-dark);
-}
-
-.btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: var(--white);
-}
-
-.btn-danger:hover:not(:disabled) {
-    background: #dc2626;
-}
-
-.btn-success {
-    background: var(--success);
-    color: var(--white);
-}
-
-.btn-success:hover:not(:disabled) {
-    background: #059669;
-}
+.btn-primary { background: var(--primary); color: var(--white); }
+.btn-danger { background: var(--danger); color: var(--white); }
+.btn-success { background: var(--success); color: var(--white); }
 
 .btn-sm {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
 }
 
-.error-message {
-    color: var(--danger);
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    background: #fef2f2;
-    border-radius: 4px;
-    display: none;
-}
-
-/* Dashboard */
 .dashboard {
     display: none;
-    min-height: 100vh;
     padding: 1rem;
 }
 
@@ -182,16 +100,14 @@ body {
     margin: 0 auto;
 }
 
-/* Header */
 .header {
     background: var(--white);
     border-radius: 12px;
-    box-shadow: var(--shadow);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -199,15 +115,8 @@ body {
 .header-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--gray-900);
 }
 
-.header-subtitle {
-    color: var(--gray-600);
-    font-size: 0.9rem;
-}
-
-/* Stats */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -218,7 +127,6 @@ body {
 .stat-card {
     background: var(--white);
     border-radius: 8px;
-    box-shadow: var(--shadow);
     padding: 1.5rem;
     text-align: center;
 }
@@ -234,57 +142,11 @@ body {
     color: var(--gray-600);
     font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
-/* Controls */
-.controls {
-    background: var(--white);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.controls-row {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.search-box {
-    flex: 1;
-    position: relative;
-    min-width: 200px;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid var(--gray-300);
-    border-radius: 6px;
-    font-size: 0.9rem;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
-.search-icon {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--gray-400);
-}
-
-/* Files */
 .files-section {
     background: var(--white);
     border-radius: 8px;
-    box-shadow: var(--shadow);
     overflow: hidden;
 }
 
@@ -292,53 +154,34 @@ body {
     padding: 1rem;
     border-bottom: 1px solid var(--gray-200);
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
 }
 
 .files-title {
     font-weight: 600;
-    color: var(--gray-900);
-}
-
-.delete-selected-btn {
-    display: none;
 }
 
 .files-body {
-    max-height: 70vh;
+    max-height: 60vh;
     overflow-y: auto;
-}
-
-.select-all-row {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--gray-200);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--gray-50);
 }
 
 .file-row {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 1rem;
     border-bottom: 1px solid var(--gray-100);
-    transition: background-color 0.2s;
+    gap: 1rem;
 }
 
 .file-row:hover {
     background: var(--gray-50);
 }
 
-.file-row:last-child {
-    border-bottom: none;
-}
-
 .file-checkbox {
-    margin-right: 0.75rem;
+    cursor: pointer;
 }
 
 .file-icon {
@@ -348,111 +191,43 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
     color: var(--white);
-    margin-right: 0.75rem;
     flex-shrink: 0;
 }
 
 .file-icon.video { background: var(--danger); }
 .file-icon.audio { background: var(--success); }
 .file-icon.image { background: var(--primary); }
-.file-icon.document { background: var(--warning); }
-.file-icon.archive { background: #8b5cf6; }
-.file-icon.other { background: var(--gray-500); }
+.file-icon.other { background: var(--gray-600); }
 
 .file-info {
     flex: 1;
     min-width: 0;
-    margin-right: 0.75rem;
 }
 
 .file-name {
     font-weight: 600;
-    color: var(--gray-900);
     margin-bottom: 0.25rem;
     word-break: break-word;
 }
 
 .file-meta {
     font-size: 0.75rem;
-    color: var(--gray-500);
+    color: var(--gray-600);
     display: flex;
-    gap: 0.75rem;
+    gap: 1rem;
     flex-wrap: wrap;
-}
-
-.file-size {
-    font-weight: 600;
-    color: var(--primary);
 }
 
 .file-actions {
     display: flex;
     gap: 0.5rem;
     flex-shrink: 0;
-    flex-wrap: wrap;
 }
 
-.quick-links {
-    display: flex;
-    gap: 0.25rem;
-    margin-bottom: 0.5rem;
-}
-
-.quick-link {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.quick-link.stream {
-    background: var(--primary-light);
-    color: var(--primary);
-}
-
-.quick-link.stream:hover {
-    background: var(--primary);
-    color: var(--white);
-}
-
-.quick-link.download {
-    background: #d1fae5;
-    color: var(--success);
-}
-
-.quick-link.download:hover {
-    background: var(--success);
-    color: var(--white);
-}
-
-/* Status Badge */
-.status-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-}
-
-.status-permanent {
-    background: var(--primary-light);
-    color: var(--primary);
-}
-
-.status-expiring {
-    background: #fef3c7;
-    color: var(--warning);
-}
-
-/* Loading */
 .loading {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 3rem;
 }
 
 .spinner {
@@ -469,14 +244,12 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
-    padding: 3rem 1rem;
-    color: var(--gray-500);
+    padding: 3rem;
+    color: var(--gray-600);
 }
 
-/* Modal */
 .modal {
     position: fixed;
     inset: 0;
@@ -498,14 +271,12 @@ body {
     padding: 1.5rem;
     width: 100%;
     max-width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
 .modal-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--gray-200);
@@ -513,7 +284,6 @@ body {
 
 .modal-title {
     font-weight: 600;
-    color: var(--gray-900);
 }
 
 .modal-close {
@@ -521,8 +291,7 @@ body {
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: var(--gray-400);
-    padding: 0;
+    color: var(--gray-600);
 }
 
 .modal-actions {
@@ -531,15 +300,14 @@ body {
     margin-top: 1.5rem;
 }
 
-/* Toast */
 .toast {
     position: fixed;
     top: 1rem;
     right: 1rem;
     background: var(--white);
     border-radius: 8px;
-    box-shadow: var(--shadow-lg);
     padding: 1rem;
+    box-shadow: var(--shadow);
     z-index: 1001;
     transform: translateX(400px);
     transition: transform 0.3s;
@@ -561,19 +329,25 @@ body {
     border-left: 4px solid var(--danger);
 }
 
-/* Mobile Responsive */
+.delete-selected-btn {
+    display: none;
+}
+
+.error-message {
+    color: var(--danger);
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #fef2f2;
+    border-radius: 4px;
+    display: none;
+}
+
+/* Mobile */
 @media (max-width: 768px) {
     .header {
         flex-direction: column;
         text-align: center;
-    }
-    
-    .controls-row {
-        flex-direction: column;
-    }
-    
-    .search-box {
-        min-width: auto;
     }
     
     .file-row {
@@ -583,27 +357,9 @@ body {
         padding: 1rem;
     }
     
-    .file-meta {
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    
     .file-actions {
         width: 100%;
         justify-content: space-between;
-    }
-    
-    .quick-links {
-        flex: 1;
-    }
-    
-    .quick-link {
-        flex: 1;
-        text-align: center;
-    }
-    
-    .modal-actions {
-        flex-direction: column;
     }
     
     .toast {
@@ -624,20 +380,15 @@ body {
     <!-- Login Screen -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
-            <div class="login-icon">
-                <i class="fas fa-lock"></i>
-            </div>
-            <h1 class="login-title">Admin Access</h1>
-            <p class="login-subtitle">Secure file management system</p>
-            
+            <h1 class="login-title">🔐 Admin Login</h1>
             <form onsubmit="return handleLogin(event)">
                 <input type="password" id="adminKey" class="form-input" placeholder="Enter admin key" required>
                 <button type="submit" class="btn btn-primary" id="loginBtn" style="width: 100%;">
                     <i class="fas fa-sign-in-alt"></i>
-                    Access Dashboard
+                    Login
                 </button>
                 <div id="loginError" class="error-message">
-                    Invalid admin key. Please try again.
+                    Invalid admin key. Try: MSMxMarya7
                 </div>
             </form>
         </div>
@@ -653,7 +404,6 @@ body {
                         <i class="fas fa-database"></i>
                         Marya Admin Panel
                     </h1>
-                    <p class="header-subtitle">Professional file management</p>
                 </div>
                 <button class="btn btn-danger btn-sm" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i>
@@ -665,44 +415,28 @@ body {
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="totalFiles">0</div>
-                    <div class="stat-label">Total Files</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalSize">0</div>
-                    <div class="stat-label">Storage Used</div>
+                    <div class="stat-label">Files</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="selectedCount">0</div>
                     <div class="stat-label">Selected</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="kvCount">0</div>
-                    <div class="stat-label">Namespaces</div>
-                </div>
-            </div>
-
-            <!-- Controls -->
-            <div class="controls">
-                <div class="controls-row">
-                    <div class="search-box">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="searchInput" class="search-input" placeholder="Search files by name or ID">
-                    </div>
-                    <button class="btn btn-primary" onclick="refreshFiles()">
-                        <i class="fas fa-sync-alt"></i>
-                        Refresh
-                    </button>
                 </div>
             </div>
 
             <!-- Files -->
             <div class="files-section">
                 <div class="files-header">
-                    <h2 class="files-title">File Management</h2>
-                    <button class="btn btn-danger btn-sm delete-selected-btn" onclick="deleteSelected()" id="deleteSelectedBtn">
-                        <i class="fas fa-trash"></i>
-                        Delete Selected
-                    </button>
+                    <h2 class="files-title">Files</h2>
+                    <div>
+                        <button class="btn btn-primary btn-sm" onclick="refreshFiles()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button class="btn btn-danger btn-sm delete-selected-btn" onclick="deleteSelected()" id="deleteSelectedBtn">
+                            <i class="fas fa-trash"></i>
+                            Delete Selected
+                        </button>
+                    </div>
                 </div>
 
                 <div id="loadingSection" class="loading">
@@ -711,10 +445,9 @@ body {
                 </div>
 
                 <div id="filesContainer" class="files-body" style="display: none;">
-                    <div class="select-all-row">
+                    <div style="padding: 0.75rem 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-200);">
                         <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                        <label for="selectAll">Select All</label>
-                        <span id="selectionInfo" style="margin-left: auto; color: var(--gray-500); font-size: 0.8rem;"></span>
+                        <label for="selectAll" style="margin-left: 0.5rem;">Select All</label>
                     </div>
                     <div id="filesList"></div>
                 </div>
@@ -736,18 +469,17 @@ body {
                 <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
             </div>
             <div>
-                <p>Are you sure you want to delete <span id="deleteCount">0</span> file(s)?</p>
+                <p>Delete <strong id="deleteCount">0</strong> file(s)?</p>
                 <div style="background: #fef2f2; padding: 0.75rem; border-radius: 6px; margin: 1rem 0; border-left: 4px solid var(--danger);">
-                    <strong>Warning:</strong> This will permanently remove all file data and chunks. This action cannot be undone.
+                    <strong>Warning:</strong> This will permanently remove all data.
                 </div>
-                <div id="deleteFilesList" style="max-height: 100px; overflow-y: auto; font-size: 0.8rem; color: var(--gray-600);"></div>
             </div>
             <div class="modal-actions">
                 <button class="btn btn-danger" onclick="confirmDelete()">
                     <i class="fas fa-trash"></i>
                     Delete
                 </button>
-                <button class="btn" style="background: var(--gray-200); color: var(--gray-700);" onclick="closeDeleteModal()">
+                <button class="btn" style="background: var(--gray-200);" onclick="closeDeleteModal()">
                     Cancel
                 </button>
             </div>
@@ -758,7 +490,9 @@ body {
     <div id="toast" class="toast"></div>
 
     <script>
-        // Configuration
+        // WORKING ADMIN PANEL - FINAL VERSION
+        console.log('🚀 Loading Marya Admin Panel...');
+        
         const ADMIN_KEY = 'MSMxMarya7';
         let allFiles = [];
         let selectedFiles = new Set();
@@ -767,20 +501,18 @@ body {
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM Ready');
             checkAuthStatus();
-            setupSearch();
         });
 
-        // Auth functions
+        // Login Functions
         function checkAuthStatus() {
             const savedAuth = localStorage.getItem('maryaAdminAuth');
             const savedTime = localStorage.getItem('maryaAdminTime');
             
             if (savedAuth === 'true' && savedTime) {
-                const loginTime = parseInt(savedTime);
-                const timeDiff = Date.now() - loginTime;
-                
-                if (timeDiff < (4 * 60 * 60 * 1000)) { // 4 hours
+                const timeDiff = Date.now() - parseInt(savedTime);
+                if (timeDiff < (4 * 60 * 60 * 1000)) {
                     showDashboard();
                     return;
                 }
@@ -799,7 +531,7 @@ body {
             const enteredKey = keyInput.value.trim();
             
             loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
             errorDiv.style.display = 'none';
             
             setTimeout(() => {
@@ -807,7 +539,7 @@ body {
                     localStorage.setItem('maryaAdminAuth', 'true');
                     localStorage.setItem('maryaAdminTime', Date.now().toString());
                     showDashboard();
-                    showToast('Welcome to admin panel', 'success');
+                    showToast('Welcome to admin panel!', 'success');
                 } else {
                     errorDiv.style.display = 'block';
                     keyInput.value = '';
@@ -815,8 +547,8 @@ body {
                 }
                 
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Access Dashboard';
-            }, 800);
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            }, 500);
             
             return false;
         }
@@ -838,12 +570,12 @@ body {
             localStorage.removeItem('maryaAdminAuth');
             localStorage.removeItem('maryaAdminTime');
             showLogin();
-            showToast('Logged out successfully', 'success');
+            showToast('Logged out', 'success');
         }
 
-        // Load files
+        // Load Files Function - WORKING VERSION
         async function loadFiles() {
-            if (!isLoggedIn) return;
+            console.log('📂 Loading files...');
             
             try {
                 showLoading(true);
@@ -856,43 +588,49 @@ body {
                     }
                 });
 
+                console.log('📡 Response status:', response.status);
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
 
                 const data = await response.json();
+                console.log('📊 Response data:', data);
                 
-                if (data.success) {
-                    allFiles = (data.files || []).filter(file => 
-                        file && 
-                        file.filename && 
-                        file.id && 
-                        file.id.toString().includes('MSM')
-                    );
+                if (data.success && data.files) {
+                    // Filter valid files with proper IDs
+                    allFiles = data.files.filter(file => {
+                        const hasValidId = file.id && typeof file.id === 'string' && file.id.length > 0;
+                        const hasValidName = file.filename && typeof file.filename === 'string';
+                        return hasValidId && hasValidName;
+                    });
                     
-                    updateStats(data.stats);
+                    console.log(`✅ Loaded ${allFiles.length} valid files`);
+                    console.log('📋 First few files:', allFiles.slice(0, 3));
+                    
+                    updateStats();
                     displayFiles(allFiles);
                 } else {
-                    throw new Error(data.error || 'Failed to load files');
+                    throw new Error('No files data received');
                 }
                 
             } catch (error) {
-                console.error('Load error:', error);
-                showToast(`Failed to load files: ${error.message}`, 'error');
+                console.error('❌ Load error:', error);
+                showToast(`Load failed: ${error.message}`, 'error');
                 showEmptyState();
             } finally {
                 showLoading(false);
             }
         }
 
-        function updateStats(stats) {
-            document.getElementById('totalFiles').textContent = stats?.totalFiles || allFiles.length;
-            document.getElementById('totalSize').textContent = formatBytes(stats?.totalSize || 0);
+        function updateStats() {
+            document.getElementById('totalFiles').textContent = allFiles.length;
             document.getElementById('selectedCount').textContent = selectedFiles.size;
-            document.getElementById('kvCount').textContent = stats?.kvNamespaces || 0;
         }
 
         function displayFiles(files) {
+            console.log('🖼️ Displaying files:', files.length);
+            
             const filesList = document.getElementById('filesList');
             const filesContainer = document.getElementById('filesContainer');
             const emptyState = document.getElementById('emptyState');
@@ -906,13 +644,13 @@ body {
             filesContainer.style.display = 'block';
             emptyState.style.display = 'none';
 
-            files.forEach(file => {
-                const fileRow = createFileRow(file);
+            files.forEach((file, index) => {
+                const fileRow = createFileRow(file, index);
                 filesList.appendChild(fileRow);
             });
         }
 
-        function createFileRow(file) {
+        function createFileRow(file, index) {
             const row = document.createElement('div');
             row.className = 'file-row';
             row.dataset.fileId = file.id;
@@ -920,8 +658,10 @@ body {
             const fileIcon = getFileIcon(file.filename);
             const uploadDate = file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'Unknown';
             
+            console.log(`🃏 Creating row ${index}:`, { id: file.id, filename: file.filename });
+            
             row.innerHTML = `
-                <input type="checkbox" class="file-checkbox" value="${file.id}" onchange="toggleFileSelection('${file.id}')">
+                <input type="checkbox" class="file-checkbox" value="${file.id}" data-filename="${file.filename}" onchange="toggleFileSelection('${file.id}')">
                 
                 <div class="file-icon ${fileIcon.type}">
                     <i class="${fileIcon.icon}"></i>
@@ -930,27 +670,19 @@ body {
                 <div class="file-info">
                     <div class="file-name">${truncateText(file.filename, 40)}</div>
                     <div class="file-meta">
-                        <span class="file-size">${formatBytes(file.size || 0)}</span>
+                        <span><strong>${formatBytes(file.size || 0)}</strong></span>
                         <span>${uploadDate}</span>
                         <span>ID: ${file.id.substring(0, 12)}...</span>
                     </div>
-                    <div class="quick-links">
-                        <a href="/btfstorage/file/${file.id}${file.extension || ''}" target="_blank" class="quick-link stream">
-                            <i class="fas fa-play"></i> Stream
-                        </a>
-                        <a href="/btfstorage/file/${file.id}${file.extension || ''}?dl=1" class="quick-link download">
-                            <i class="fas fa-download"></i> Download
-                        </a>
-                    </div>
-                    <span class="status-badge status-permanent">
-                        <i class="fas fa-infinity"></i> Permanent
-                    </span>
                 </div>
                 
                 <div class="file-actions">
-                    <button onclick="copyFileInfo('${file.id}', '${file.filename.replace(/'/g, '\\\'')}')" class="btn btn-primary btn-sm">
-                        <i class="fas fa-copy"></i>
-                    </button>
+                    <a href="/btfstorage/file/${file.id}" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="fas fa-play"></i>
+                    </a>
+                    <a href="/btfstorage/file/${file.id}?dl=1" class="btn btn-success btn-sm">
+                        <i class="fas fa-download"></i>
+                    </a>
                     <button onclick="deleteFile('${file.id}', '${file.filename.replace(/'/g, '\\\'')}')" class="btn btn-danger btn-sm">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -971,91 +703,103 @@ body {
                 return { type: 'audio', icon: 'fas fa-music' };
             } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
                 return { type: 'image', icon: 'fas fa-image' };
-            } else if (['pdf', 'doc', 'txt'].includes(ext)) {
-                return { type: 'document', icon: 'fas fa-file-alt' };
-            } else if (['zip', 'rar', '7z'].includes(ext)) {
-                return { type: 'archive', icon: 'fas fa-archive' };
             }
             
             return { type: 'other', icon: 'fas fa-file' };
         }
 
-        // Selection functions
+        // Selection Functions - WORKING VERSION
         function toggleSelectAll() {
+            console.log('🔄 Toggle select all');
+            
             const selectAll = document.getElementById('selectAll');
             const checkboxes = document.querySelectorAll('.file-checkbox');
             
+            selectedFiles.clear(); // Clear first
+            
             checkboxes.forEach(checkbox => {
                 checkbox.checked = selectAll.checked;
-                toggleFileSelection(checkbox.value, false);
+                if (checkbox.checked && checkbox.value) {
+                    selectedFiles.add(checkbox.value);
+                }
             });
             
+            console.log('✅ Selection updated:', Array.from(selectedFiles));
             updateSelectionUI();
         }
 
-        function toggleFileSelection(fileId, updateUI = true) {
-            if (!fileId) return;
+        function toggleFileSelection(fileId) {
+            console.log('✅ Toggle file:', fileId);
+            
+            if (!fileId) {
+                console.warn('⚠️ No file ID provided');
+                return;
+            }
             
             const checkbox = document.querySelector(`input[value="${fileId}"]`);
             
             if (checkbox && checkbox.checked) {
                 selectedFiles.add(fileId);
+                console.log('➕ Added:', fileId);
             } else {
                 selectedFiles.delete(fileId);
+                console.log('➖ Removed:', fileId);
             }
             
-            if (updateUI) {
-                updateSelectionUI();
-            }
+            console.log('📋 Current selection:', Array.from(selectedFiles));
+            updateSelectionUI();
         }
 
         function updateSelectionUI() {
             const deleteBtn = document.getElementById('deleteSelectedBtn');
-            const selectionInfo = document.getElementById('selectionInfo');
             const selectedCount = document.getElementById('selectedCount');
             
             if (selectedFiles.size > 0) {
                 deleteBtn.style.display = 'inline-flex';
-                deleteBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedFiles.size} Selected`;
+                deleteBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedFiles.size}`;
             } else {
                 deleteBtn.style.display = 'none';
             }
             
-            selectionInfo.textContent = `${selectedFiles.size} selected`;
             selectedCount.textContent = selectedFiles.size;
         }
 
-        // Delete functions
+        // Delete Functions - WORKING VERSION
         function deleteFile(fileId, filename) {
-            if (!fileId) return;
+            console.log('🗑️ Single delete:', { fileId, filename });
             
-            deleteQueue = [{ id: fileId, filename }];
+            if (!fileId) {
+                showToast('Invalid file ID', 'error');
+                return;
+            }
+            
+            deleteQueue = [{ id: fileId, filename: filename }];
             showDeleteModal();
         }
 
         function deleteSelected() {
-            if (selectedFiles.size === 0) return;
+            console.log('🗑️ Bulk delete. Selected files:', Array.from(selectedFiles));
+            
+            if (selectedFiles.size === 0) {
+                showToast('No files selected', 'error');
+                return;
+            }
             
             deleteQueue = Array.from(selectedFiles).map(fileId => {
                 const file = allFiles.find(f => f.id === fileId);
                 return { 
                     id: fileId, 
-                    filename: file?.filename || 'Unknown File'
+                    filename: file ? file.filename : 'Unknown'
                 };
             });
             
+            console.log('🗑️ Delete queue prepared:', deleteQueue);
             showDeleteModal();
         }
 
         function showDeleteModal() {
             const deleteCount = document.getElementById('deleteCount');
-            const deleteFilesList = document.getElementById('deleteFilesList');
-            
             deleteCount.textContent = deleteQueue.length;
-            
-            const filesList = deleteQueue.map(f => `• ${f.filename}`).join('<br>');
-            deleteFilesList.innerHTML = filesList;
-            
             document.getElementById('deleteModal').classList.add('show');
         }
 
@@ -1064,102 +808,87 @@ body {
             deleteQueue = [];
         }
 
-        // FIXED DELETE FUNCTION
+        // FINAL WORKING DELETE FUNCTION
         async function confirmDelete() {
-            if (deleteQueue.length === 0) return;
+            console.log('🗑️ CONFIRM DELETE - Queue:', deleteQueue);
+            
+            if (deleteQueue.length === 0) {
+                console.warn('⚠️ Empty delete queue');
+                return;
+            }
             
             try {
                 closeDeleteModal();
                 showToast('Deleting files...', 'success');
                 
-                // Extract valid MSM file IDs
-                const fileIds = deleteQueue
-                    .map(f => f.id)
-                    .filter(id => id && typeof id === 'string');
+                // Extract file IDs - PROPER METHOD
+                const fileIdsToDelete = deleteQueue.map(item => item.id).filter(id => {
+                    const isValid = id && typeof id === 'string' && id.trim().length > 0;
+                    console.log(`🔍 Validating ID "${id}": ${isValid}`);
+                    return isValid;
+                });
                 
-                console.log('Deleting file IDs:', fileIds);
+                console.log('🎯 Final IDs to delete:', fileIdsToDelete);
                 
+                if (fileIdsToDelete.length === 0) {
+                    throw new Error('No valid file IDs to delete');
+                }
+                
+                // Create request body - EXACT FORMAT
+                const requestBody = JSON.stringify({ 
+                    fileIds: fileIdsToDelete 
+                });
+                
+                console.log('📤 Request body:', requestBody);
+                
+                // Make delete request
                 const response = await fetch('/admin/delete-files', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${ADMIN_KEY}`
                     },
-                    body: JSON.stringify({ fileIds })
+                    body: requestBody
                 });
+
+                console.log('📥 Delete response status:', response.status);
 
                 if (!response.ok) {
                     const errorText = await response.text();
+                    console.error('❌ Delete API error:', errorText);
                     throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
 
                 const result = await response.json();
+                console.log('✅ Delete result:', result);
                 
                 if (result.success) {
-                    showToast(`Successfully deleted ${result.deletedCount} files`, 'success');
+                    showToast(`Successfully deleted ${result.deletedCount} files!`, 'success');
                     
-                    // Clear selections and refresh
+                    // Clear selections
                     selectedFiles.clear();
                     document.getElementById('selectAll').checked = false;
                     updateSelectionUI();
                     
+                    // Refresh files list
                     setTimeout(() => refreshFiles(), 1000);
                 } else {
-                    throw new Error(result.error || 'Delete failed');
+                    throw new Error(result.error || 'Delete operation failed');
                 }
                 
             } catch (error) {
-                console.error('Delete error:', error);
+                console.error('💥 Delete error:', error);
                 showToast(`Delete failed: ${error.message}`, 'error');
             }
         }
 
-        // Utility functions
-        function setupSearch() {
-            const searchInput = document.getElementById('searchInput');
-            
-            searchInput.addEventListener('input', function(e) {
-                const query = e.target.value.toLowerCase();
-                
-                if (query === '') {
-                    displayFiles(allFiles);
-                    return;
-                }
-                
-                const filtered = allFiles.filter(file => 
-                    file.filename.toLowerCase().includes(query) ||
-                    file.id.toLowerCase().includes(query)
-                );
-                
-                displayFiles(filtered);
-            });
-        }
-
-        function copyFileInfo(fileId, filename) {
-            const baseUrl = window.location.origin;
-            const info = `${filename}\\nStream: ${baseUrl}/btfstorage/file/${fileId}\\nDownload: ${baseUrl}/btfstorage/file/${fileId}?dl=1`;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(info).then(() => {
-                    showToast('File info copied!', 'success');
-                });
-            } else {
-                const textArea = document.createElement('textarea');
-                textArea.value = info;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showToast('File info copied!', 'success');
-            }
-        }
-
+        // Utility Functions
         async function refreshFiles() {
             selectedFiles.clear();
             document.getElementById('selectAll').checked = false;
             updateSelectionUI();
             await loadFiles();
-            showToast('Files refreshed', 'success');
+            showToast('Files refreshed!', 'success');
         }
 
         function showLoading(show) {
@@ -1204,7 +933,7 @@ body {
             }, 4000);
         }
 
-        console.log('✅ Professional Admin Panel Ready');
+        console.log('✅ Marya Admin Panel Ready - Final Working Version');
     </script>
 </body>
 </html>
