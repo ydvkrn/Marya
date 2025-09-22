@@ -1,21 +1,10 @@
 {
   "version": 1,
   "include": [
-    "/upload",
-    "/upload-from-url",
-    "/telegram-import", 
-    "/admin/get-key",
-    "/admin/list-files",
-    "/admin/delete-files",
-    "/admin/update-expiry",
-    "/stream/*",
-    "/download/*", 
-    "/generate-links",
-    "/btfstorage/file/*"
+    "/*"
   ],
   "exclude": [
     "/assets/*",
-    "/static/*",
-    "/favicon.ico"
+    "/static/*"
   ]
 }
