@@ -1,11 +1,11 @@
 
-// functions/upload-from-url.js  
-// EXACT original pattern for URL uploads
+// functions/upload-from-url.js
+// Enhanced URL upload with better error handling for complex URLs
 
 export async function onRequest(context) {
   const { request, env } = context;
 
-  console.log('=== URL UPLOAD START ===');
+  console.log('=== ENHANCED URL UPLOAD START ===');
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -31,7 +31,6 @@ export async function onRequest(context) {
     const BOT_TOKEN = env.BOT_TOKEN;
     const CHANNEL_ID = env.CHANNEL_ID;
 
-    // Same KV setup as original
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
       { kv: env.FILES_KV2, name: 'FILES_KV2' },
@@ -56,50 +55,146 @@ export async function onRequest(context) {
       throw new Error('No URL provided');
     }
 
-    // Simple URL validation
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    console.log('Downloading from URL (truncated):', url.substring(0, 100) + '...');
+
+    // Enhanced URL validation and cleaning
+    let cleanUrl = url.trim();
+
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
       throw new Error('Invalid URL - must start with http:// or https://');
     }
 
-    console.log('Downloading from URL:', url);
-
-    // Simple fetch with basic error handling
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
+    // Handle special characters and encoding
+    try {
+      // Test if URL is parseable
+      new URL(cleanUrl);
+    } catch {
+      throw new Error('Invalid URL format - contains unsupported characters');
     }
 
-    // Get filename from URL or Content-Disposition
-    let filename = '';
+    // Enhanced fetch with better timeout and error handling
+    console.log('Starting download with enhanced error handling...');
+
+    let response;
+    try {
+      // First try a HEAD request to get file info
+      const headResponse = await fetch(cleanUrl, { 
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': '*/*',
+          'Accept-Encoding': 'identity'
+        },
+        signal: AbortSignal.timeout(30000) // 30 second timeout for HEAD
+      });
+
+      if (headResponse.ok) {
+        const contentLength = parseInt(headResponse.headers.get('Content-Length') || '0');
+        console.log(`File size from HEAD request: ${Math.round(contentLength/1024/1024)}MB`);
+
+        // Check size limit early
+        if (contentLength > 2 * 1024 * 1024 * 1024) {
+          throw new Error(`File too large: ${Math.round(contentLength/1024/1024)}MB (max 2048MB)`);
+        }
+      }
+    } catch (headError) {
+      console.log('HEAD request failed, proceeding with GET request:', headError.message);
+    }
+
+    // Main download with extended timeout for large files
+    response = await fetch(cleanUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Encoding': 'identity',
+        'Cache-Control': 'no-cache'
+      },
+      signal: AbortSignal.timeout(600000) // 10 minutes timeout for large files
+    });
+
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+    }
+
+    // Get filename with enhanced extraction
+    let filename = 'download';
+
+    // Try Content-Disposition header first
     const contentDisposition = response.headers.get('Content-Disposition');
     if (contentDisposition) {
-      const match = contentDisposition.match(/filename[*]?=([^;\n\r"']+)/);
-      if (match) {
-        filename = match[1].replace(/['"]/g, '');
+      const matches = contentDisposition.match(/filename[*]?=([^;\n\r"']+)/);
+      if (matches && matches[1]) {
+        filename = decodeURIComponent(matches[1].replace(/['"]/g, '').trim());
       }
     }
 
-    if (!filename) {
-      const urlPath = new URL(url).pathname;
-      filename = urlPath.split('/').pop() || `download_${Date.now()}.file`;
+    // If no filename from header, extract from URL
+    if (filename === 'download') {
+      try {
+        const urlPath = new URL(cleanUrl).pathname;
+        const urlFilename = urlPath.split('/').pop();
+        if (urlFilename && urlFilename.includes('.')) {
+          filename = decodeURIComponent(urlFilename);
+        }
+      } catch {
+        // Fallback to timestamp-based filename
+        filename = `download_${Date.now()}`;
+      }
     }
 
-    // Convert to ArrayBuffer and create File
-    const arrayBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+    // Clean filename (remove unsafe characters)
+    filename = filename.replace(/[<>:"/\|?*]/g, '_').trim();
 
-    console.log(`Downloaded: ${filename} (${Math.round(arrayBuffer.byteLength/1024/1024)}MB)`);
+    console.log(`Downloading file: ${filename}`);
 
-    // Check size limit (2GB)
-    if (arrayBuffer.byteLength > 2 * 1024 * 1024 * 1024) {
-      throw new Error(`File too large: ${Math.round(arrayBuffer.byteLength/1024/1024)}MB (max 2048MB)`);
+    // Convert to ArrayBuffer with progress logging
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Cannot read response stream');
     }
+
+    const chunks = [];
+    let receivedLength = 0;
+    const contentLength = parseInt(response.headers.get('Content-Length') || '0');
+
+    console.log(`Starting stream download, expected size: ${Math.round(contentLength/1024/1024)}MB`);
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      chunks.push(value);
+      receivedLength += value.length;
+
+      // Log progress every 50MB
+      if (receivedLength % (50 * 1024 * 1024) < value.length) {
+        console.log(`Downloaded: ${Math.round(receivedLength/1024/1024)}MB${contentLength > 0 ? `/${Math.round(contentLength/1024/1024)}MB` : ''}`);
+      }
+
+      // Check size limit during download
+      if (receivedLength > 2 * 1024 * 1024 * 1024) {
+        reader.releaseLock();
+        throw new Error(`File too large: ${Math.round(receivedLength/1024/1024)}MB (max 2048MB)`);
+      }
+    }
+
+    reader.releaseLock();
+
+    // Combine chunks
+    const arrayBuffer = new Uint8Array(receivedLength);
+    let position = 0;
+    for (const chunk of chunks) {
+      arrayBuffer.set(chunk, position);
+      position += chunk.length;
+    }
+
+    console.log(`Download completed: ${filename} (${Math.round(receivedLength/1024/1024)}MB)`);
 
     // Create file object
-    const file = new File([arrayBuffer], filename, { type: contentType });
+    const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+    const file = new File([arrayBuffer.buffer], filename, { type: contentType });
 
-    // Use EXACT same upload logic as regular file upload
+    // Process with same chunking logic as regular upload
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).slice(2, 8);
     const fileId = `id${timestamp}${random}`;
@@ -114,21 +209,23 @@ export async function onRequest(context) {
 
     console.log(`Processing ${totalChunks} chunks for URL download`);
 
-    // Upload chunks (EXACT same pattern)
+    // Upload chunks with enhanced error handling
     const chunkPromises = [];
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
       const chunkFile = new File([chunk], `${filename}.part${i}`, { type: contentType });
-      const targetKV = kvNamespaces[i % kvNamespaces.length]; // Round-robin
-      const chunkPromise = uploadChunkToKV(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV);
+      const targetKV = kvNamespaces[i % kvNamespaces.length];
+
+      // Add retry logic for chunk uploads
+      const chunkPromise = uploadChunkWithRetry(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV, 3);
       chunkPromises.push(chunkPromise);
     }
 
     const chunkResults = await Promise.all(chunkPromises);
 
-    // Store master metadata (EXACT same structure)
+    // Store master metadata
     const masterMetadata = {
       filename: filename,
       size: file.size,
@@ -138,7 +235,7 @@ export async function onRequest(context) {
       type: 'url_upload_chunked',
       totalChunks: totalChunks,
       chunkSize: CHUNK_SIZE,
-      sourceUrl: url,
+      sourceUrl: url.substring(0, 200) + '...', // Truncate long URL in metadata
       chunks: chunkResults.map((result, index) => ({
         index: index,
         kvNamespace: result.kvNamespace,
@@ -164,21 +261,36 @@ export async function onRequest(context) {
       id: fileId,
       strategy: 'url_upload_chunked',
       chunks: totalChunks,
-      sourceUrl: url,
+      sourceUrl: url.substring(0, 100) + '...', // Truncated for response
       kvDistribution: chunkResults.map(r => r.kvNamespace)
     };
 
-    console.log('URL upload completed:', result);
+    console.log('Enhanced URL upload completed:', {
+      filename: result.filename,
+      size: `${Math.round(result.size/1024/1024)}MB`,
+      chunks: result.chunks
+    });
 
     return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('URL upload error:', error);
+    console.error('Enhanced URL upload error:', error);
+
+    // Enhanced error messages
+    let errorMessage = error.message;
+    if (error.name === 'TimeoutError') {
+      errorMessage = 'Download timeout - file too large or server too slow';
+    } else if (error.message.includes('fetch')) {
+      errorMessage = 'Failed to download file - check if URL is accessible';
+    } else if (error.message.includes('AbortError')) {
+      errorMessage = 'Download was cancelled due to timeout';
+    }
+
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: errorMessage
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -186,11 +298,33 @@ export async function onRequest(context) {
   }
 }
 
-// EXACT same chunk upload function
-async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
-  console.log(`Uploading chunk ${chunkIndex} to ${kvNamespace.name}...`);
+// Enhanced chunk upload with retry logic
+async function uploadChunkWithRetry(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace, maxRetries = 3) {
+  let lastError;
 
-  // Simple Telegram upload (NO complex timeouts)
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Uploading chunk ${chunkIndex} to ${kvNamespace.name} (attempt ${attempt}/${maxRetries})`);
+
+      return await uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace);
+    } catch (error) {
+      lastError = error;
+      console.error(`Chunk ${chunkIndex} upload attempt ${attempt} failed:`, error.message);
+
+      if (attempt < maxRetries) {
+        // Wait before retry (exponential backoff)
+        const waitTime = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+  }
+
+  throw new Error(`Chunk ${chunkIndex} failed after ${maxRetries} attempts: ${lastError.message}`);
+}
+
+// Standard chunk upload function
+async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
+  // Upload to Telegram
   const telegramForm = new FormData();
   telegramForm.append('chat_id', channelId);
   telegramForm.append('document', chunkFile);
@@ -201,30 +335,31 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   });
 
   if (!telegramResponse.ok) {
-    throw new Error(`Telegram upload failed for chunk ${chunkIndex}: ${telegramResponse.status}`);
+    const errorText = await telegramResponse.text();
+    throw new Error(`Telegram upload failed for chunk ${chunkIndex}: ${telegramResponse.status} - ${errorText}`);
   }
 
   const telegramData = await telegramResponse.json();
   if (!telegramData.ok || !telegramData.result?.document?.file_id) {
-    throw new Error(`Invalid Telegram response for chunk ${chunkIndex}`);
+    throw new Error(`Invalid Telegram response for chunk ${chunkIndex}: ${JSON.stringify(telegramData)}`);
   }
 
   const telegramFileId = telegramData.result.document.file_id;
 
-  // Simple getFile request (NO timeouts)
+  // Get file URL
   const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
   if (!getFileResponse.ok) {
-    throw new Error(`GetFile API failed for chunk ${chunkIndex}`);
+    throw new Error(`GetFile API failed for chunk ${chunkIndex}: ${getFileResponse.status}`);
   }
 
   const getFileData = await getFileResponse.json();
   if (!getFileData.ok || !getFileData.result?.file_path) {
-    throw new Error(`No file_path for chunk ${chunkIndex}`);
+    throw new Error(`No file_path for chunk ${chunkIndex}: ${JSON.stringify(getFileData)}`);
   }
 
   const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
 
-  // Store chunk metadata (EXACT same structure)
+  // Store chunk metadata
   const chunkKey = `${fileId}_chunk_${chunkIndex}`;
   const chunkMetadata = {
     telegramFileId: telegramFileId,
