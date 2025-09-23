@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deployment Check - MARYA VAULT</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .check-item { margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .test-btn { background: #007bff; color: white; }
+        .refresh-btn { background: #28a745; color: white; }
+        .cache-indicator { position: fixed; top: 10px; right: 10px; background: #17a2b8; color: white; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="cache-indicator">
+        🕐 Loaded: <span id="loadTime"></span>
+    </div>
+
+    <h1>🚀 MARYA VAULT - Deployment Check</h1>
+
+    <div class="check-item info">
+        <h3>📅 Version Info</h3>
+        <p><strong>Version:</strong> 2.0 Ultimate Uploader</p>
+        <p><strong>Last Updated:</strong> September 23, 2025 - 8:12 AM IST</p>
+        <p><strong>Cache Timestamp:</strong> <span id="cacheTime"></span></p>
+    </div>
+
+    <div class="check-item" id="uploadEndpointCheck">
+        <h3>📤 Upload Endpoint Check</h3>
+        <button class="test-btn" onclick="testUploadEndpoint()">Test Upload Endpoint</button>
+        <div id="uploadResult"></div>
+    </div>
+
+    <div class="check-item" id="streamEndpointCheck">
+        <h3>🎬 Stream Endpoint Check</h3>
+        <button class="test-btn" onclick="testStreamEndpoint()">Test Stream Endpoint</button>
+        <div id="streamResult"></div>
+    </div>
+
+    <div class="check-item info">
+        <h3>🔧 Cache Management</h3>
+        <button class="refresh-btn" onclick="hardRefresh()">Hard Refresh Page</button>
+        <button class="refresh-btn" onclick="clearCache()">Clear Browser Cache</button>
+        <button class="refresh-btn" onclick="bypassCache()">Bypass Cache Test</button>
+    </div>
+
+    <div class="check-item" id="jsCheck">
+        <h3>⚙️ JavaScript Check</h3>
+        <p>If you can see this and interact with buttons, JavaScript is working!</p>
+        <button class="test-btn" onclick="alert('JavaScript is working perfectly!')">Test JS</button>
+    </div>
+
+    <script>
+        // Show load time
+        document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
+        document.getElementById('cacheTime').textContent = new Date().toISOString();
+
+        // Test upload endpoint
+        async function testUploadEndpoint() {
+            const result = document.getElementById('uploadResult');
+            result.innerHTML = '<p>Testing...</p>';
+
+            try {
+                const response = await fetch('/upload', { 
+                    method: 'OPTIONS',
+                    cache: 'no-cache'
+                });
+
+                if (response.status === 204) {
+                    result.innerHTML = '<p style="color: green;">✅ Upload endpoint is working!</p>';
+                    document.getElementById('uploadEndpointCheck').className = 'check-item success';
+                } else {
+                    result.innerHTML = `<p style="color: orange;">⚠️ Unexpected response: ${response.status}</p>`;
+                    document.getElementById('uploadEndpointCheck').className = 'check-item info';
+                }
+            } catch (error) {
+                result.innerHTML = `<p style="color: red;">❌ Upload endpoint failed: ${error.message}</p>`;
+                document.getElementById('uploadEndpointCheck').className = 'check-item error';
+            }
+        }
+
+        // Test stream endpoint
+        async function testStreamEndpoint() {
+            const result = document.getElementById('streamResult');
+            result.innerHTML = '<p>Testing...</p>';
+
+            try {
+                const response = await fetch('/btfstorage/file/test', { 
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+
+                if (response.status === 404) {
+                    result.innerHTML = '<p style="color: green;">✅ Stream endpoint is responding (404 expected for test file)</p>';
+                    document.getElementById('streamEndpointCheck').className = 'check-item success';
+                } else {
+                    result.innerHTML = `<p style="color: orange;">⚠️ Stream response: ${response.status}</p>`;
+                    document.getElementById('streamEndpointCheck').className = 'check-item info';
+                }
+            } catch (error) {
+                result.innerHTML = `<p style="color: red;">❌ Stream endpoint failed: ${error.message}</p>`;
+                document.getElementById('streamEndpointCheck').className = 'check-item error';
+            }
+        }
+
+        // Hard refresh
+        function hardRefresh() {
+            window.location.reload(true);
+        }
+
+        // Clear cache (opens settings)
+        function clearCache() {
+            alert('Press Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac) to clear cache');
+        }
+
+        // Bypass cache test
+        function bypassCache() {
+            window.open(window.location.href + '?v=' + Date.now(), '_blank');
+        }
+
+        // Auto-test on load
+        setTimeout(() => {
+            testUploadEndpoint();
+            testStreamEndpoint();
+        }, 1000);
+    </script>
+</body>
+</html>
