@@ -1,391 +1,286 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MARYA VAULT Storage</title>
-
-    <!-- Prevent caching -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/j5Sz78Tt/download-1-1.jpg">
-
+    <title>🚀 MARYA VAULT ULTIMATE - Professional Storage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2;
+            --success: #059669; --success-light: #d1fae5; --error: #dc2626; --warning: #f59e0b;
+            --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; 
+            --gray-300: #d1d5db; --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); 
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
         }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--white), var(--gray-50));
+            min-height: 100vh; color: var(--gray-900); line-height: 1.5; -webkit-font-smoothing: antialiased;
         }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
+        /* Header with Enhanced Logo */
+        .header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
+        .logo {
+            width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 30px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-xl); position: relative; overflow: hidden;
+            animation: logoGlow 3s ease-in-out infinite alternate;
         }
-
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
+        @keyframes logoGlow { 0% { box-shadow: var(--shadow-xl); } 100% { box-shadow: 0 25px 50px rgba(220, 38, 38, 0.3); } }
+        .logo::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
         }
-
-        .header img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin-bottom: 15px;
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .title {
+            font-size: 4rem; font-weight: 900; margin-bottom: 1rem; letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            text-shadow: 2px 2px 4px rgba(220, 38, 38, 0.1);
         }
+        .subtitle { font-size: 1.25rem; color: var(--gray-600); font-weight: 500; max-width: 700px; margin: 0 auto; }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        /* Advanced Tab System */
+        .tabs-container {
+            background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl);
+            padding: 2rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
+            position: relative; overflow: hidden;
         }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+        .tabs-container::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
         }
-
-        .upload-container {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
+        .tabs { display: flex; margin-bottom: 2rem; background: var(--gray-100); border-radius: 12px; overflow: hidden; }
         .tab {
-            flex: 1;
-            padding: 15px 20px;
-            background: #f5f5f5;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-align: center;
+            flex: 1; padding: 1rem 1.5rem; border: none; background: transparent; cursor: pointer;
+            font-size: 1rem; font-weight: 600; transition: all 0.3s; position: relative; overflow: hidden;
         }
+        .tab.active { background: var(--primary); color: var(--white); }
+        .tab:not(.active):hover { background: var(--gray-200); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeInUp 0.5s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .tab.active {
-            background: #667eea;
-            color: white;
+        /* Enhanced Dropzone */
+        .dropzone {
+            border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
+            min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        .tab:hover:not(.active) {
-            background: #e9ecef;
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary); background: var(--primary-light);
+            transform: translateY(-3px); box-shadow: var(--shadow-lg);
         }
-
-        .tab-content {
-            display: none;
+        .upload-icon { 
+            font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary);
+            animation: float 6s ease-in-out infinite;
         }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        .upload-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
 
-        .tab-content.active {
-            display: block;
-        }
-
-        .drop-zone {
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
-        }
-
-        .drop-zone:hover,
-        .drop-zone.dragover {
-            border-color: #4CAF50;
-            background: #f0fff4;
-        }
-
-        .drop-zone i {
-            font-size: 3rem;
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        .drop-zone h3 {
-            margin-bottom: 10px;
-        }
-
-        .drop-zone p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            background: #667eea;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-        }
-
-        .url-section {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
+        /* URL Input Section */
+        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; }
         .url-input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 25px;
-            outline: none;
-            font-size: 16px;
+            flex: 1; padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
+            font-size: 1rem; outline: none; transition: border-color 0.3s;
+            background: var(--white); box-shadow: var(--shadow-sm);
         }
-
-        .url-input:focus {
-            border-color: #667eea;
+        .url-input:focus { border-color: var(--primary); }
+        .url-btn {
+            background: var(--primary); color: var(--white); padding: 1rem 2rem; border: none;
+            border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
         }
+        .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
-        .progress {
-            display: none;
-            margin-top: 25px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
+        /* Advanced File Type Badges */
+        .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
+        .file-type-badge {
+            background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border-radius: 25px;
+            font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;
+            box-shadow: var(--shadow-sm); transition: all 0.3s; position: relative; overflow: hidden;
         }
+        .file-type-badge:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .file-type-badge i { margin-right: 0.5rem; }
 
+        /* Real-time Stats Dashboard */
+        .stats-dashboard {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
+            margin-bottom: 2rem; padding: 1.5rem; background: var(--gray-50); border-radius: 15px;
+        }
+        .stat-card {
+            background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm);
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
+        .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; text-transform: uppercase; }
+        .stat-trend { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; }
+        .trend-up { color: var(--success); }
+        .trend-down { color: var(--error); }
+
+        /* Enhanced Progress System */
+        .file-item {
+            background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
+            box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .file-item::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+        }
+        .file-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .file-header { display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 2rem; }
+        .file-icon {
+            width: 80px; height: 80px; border-radius: 15px; display: flex; align-items: center;
+            justify-content: center; font-size: 2rem; color: var(--white); flex-shrink: 0;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        .file-details { flex: 1; min-width: 0; }
+        .file-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-all; }
+        .file-meta { color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem; }
+
+        /* Advanced Progress Bar */
+        .progress-container { margin: 2rem 0; }
         .progress-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            display: flex; justify-content: space-between; margin-bottom: 1rem;
+            font-size: 0.875rem; font-weight: 600;
         }
-
-        .progress-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .progress-item .value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .progress-item .label {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 5px;
-        }
-
         .progress-bar {
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 15px;
+            width: 100%; height: 12px; background: var(--gray-200); border-radius: 10px;
+            overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
-
         .progress-fill {
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-            height: 20px;
-            width: 0%;
-            transition: width 0.3s ease;
+            height: 100%; border-radius: 10px; position: relative; transition: width 0.4s ease;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+        .progress-fill::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: progressShimmer 2s infinite;
+        }
+        @keyframes progressShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .speed-indicator {
+            display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--success);
+            margin-top: 0.5rem; font-weight: 600;
         }
 
-        .progress-text {
-            text-align: center;
-            color: #666;
-            font-size: 16px;
+        /* Status Indicators */
+        .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .file-status.uploading { color: var(--primary); }
+        .file-status.completed { color: var(--success); }
+        .file-status.failed { color: var(--error); }
+        .file-status.processing { color: var(--warning); }
+
+        /* Action Buttons */
+        .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
+            border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
+            text-decoration: none; cursor: pointer; transition: all 0.3s; min-width: 140px;
+            justify-content: center; position: relative; overflow: hidden;
+        }
+        .btn::before {
+            content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.2);
+            transform: translateX(-100%); transition: transform 0.3s;
+        }
+        .btn:hover::before { transform: translateX(0); }
+        .btn i { font-size: 1rem; }
+        .btn-primary { background: var(--primary); color: var(--white); box-shadow: var(--shadow-sm); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-success { background: var(--success); color: var(--white); }
+        .btn-success:hover { background: #047857; transform: translateY(-2px); }
+        .btn-outline {
+            background: var(--white); color: var(--gray-700); border: 2px solid var(--gray-300);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-outline:hover { background: var(--gray-50); border-color: var(--primary); }
+
+        /* Enhanced Toast System */
+        .toast {
+            position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px;
+            padding: 1.5rem; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);
+            z-index: 1000; transform: translateX(120%); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px; display: flex; align-items: center; gap: 1rem;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-left: 5px solid var(--success); }
+        .toast.error { border-left: 5px solid var(--error); }
+        .toast.warning { border-left: 5px solid var(--warning); }
+        .toast-icon {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1rem; font-weight: 600; flex-shrink: 0;
+        }
+        .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
+        .toast.error .toast-icon { background: var(--error-light); color: var(--error); }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
+        .toast-message { font-size: 0.875rem; color: var(--gray-600); }
+
+        /* Results Section */
+        .results { display: none; }
+        .results.show { display: block; animation: fadeIn 0.6s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .results-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;
+            padding: 1.5rem; background: var(--white); border-radius: 15px; box-shadow: var(--shadow-sm);
+        }
+        .results-title { font-size: 2rem; font-weight: 800; color: var(--gray-900); }
+        .results-count {
+            background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem;
+            border-radius: 25px; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.5px;
         }
 
-        .message {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-weight: 500;
-            display: none;
+        /* Enhanced Features Section */
+        .features-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;
+            margin: 3rem 0; padding: 2rem; background: var(--gray-50); border-radius: 20px;
         }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .feature-card {
+            background: var(--white); padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow-sm);
+            text-align: center; transition: all 0.3s; border: 1px solid var(--gray-100);
         }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .feature-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+        .feature-icon { 
+            font-size: 3rem; color: var(--primary); margin-bottom: 1rem;
+            background: var(--primary-light); width: 80px; height: 80px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
         }
+        .feature-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .feature-desc { font-size: 0.875rem; color: var(--gray-600); line-height: 1.4; }
 
-        .results {
-            display: none;
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-top: 20px;
-        }
-
-        .results h2 {
-            color: #4CAF50;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .file-info {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .file-info h4 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .info-item {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .info-item strong {
-            color: #667eea;
-        }
-
-        .urls h4 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .url-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .url-box i {
-            color: #667eea;
-            width: 20px;
-        }
-
-        .url-text {
-            flex: 1;
-            font-family: monospace;
-            font-size: 14px;
-            word-break: break-all;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-
-        .copy-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .copy-btn:hover {
-            background: #5a67d8;
-        }
-
-        .reset-btn {
-            background: #6c757d;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .reset-btn:hover {
-            background: #5a6268;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-
-            .upload-container {
-                padding: 20px;
-            }
-
-            .url-section {
-                flex-direction: column;
-            }
-
-            .progress-info {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .title { font-size: 2.5rem; }
+            .tabs-container { padding: 1.5rem; }
+            .dropzone { padding: 3rem 1.5rem; min-height: 280px; }
+            .url-section { flex-direction: column; }
+            .stats-dashboard { grid-template-columns: repeat(2, 1fr); }
+            .file-header { flex-direction: column; align-items: center; text-align: center; }
+            .file-actions { flex-direction: column; }
+            .btn { width: 100%; }
+            .results-header { flex-direction: column; gap: 1rem; text-align: center; }
+            .features-grid { grid-template-columns: 1fr; }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <img src="https://i.postimg.cc/Gh8xKSyp/download-1-1.png" alt="MARYA VAULT">
-            <h1>MARYA VAULT</h1>
-            <p>File Storage up to 2GB - Fast & Secure</p>
-        </div>
+        <!-- Enhanced Header -->
+        <header class="header">
+            <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
+            <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
+            <p class="subtitle">Professional file storage with advanced chunking, real-time progress tracking, and enterprise-grade features up to 2GB per file.</p>
+        </header>
 
-        <!-- Upload Container -->
-        <div class="upload-container">
-            <!-- Tabs -->
+        <!-- Advanced Tab System -->
+        <section class="tabs-container">
             <div class="tabs">
                 <button class="tab active" onclick="showTab('file')">
                     <i class="fas fa-upload"></i> File Upload
@@ -393,290 +288,652 @@
                 <button class="tab" onclick="showTab('url')">
                     <i class="fas fa-link"></i> URL Upload
                 </button>
+                <button class="tab" onclick="showTab('batch')">
+                    <i class="fas fa-layer-group"></i> Batch Upload
+                </button>
             </div>
 
             <!-- File Upload Tab -->
             <div class="tab-content active" id="file-content">
-                <div class="drop-zone" id="dropZone">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <h3>Drop files here or click to browse</h3>
-                    <p>Maximum file size: 2GB • All file types supported</p>
-                    <input type="file" id="fileInput" class="hidden">
-                    <button class="btn" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-folder-open"></i> Choose File
-                    </button>
-                </div>
+                <label class="dropzone" id="dropzone" for="fileInput">
+                    <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
+                    <h2 class="upload-title">Drop your files here</h2>
+                    <p class="upload-description">or click to browse from your device</p>
+                    <div class="file-types">
+                        <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
+                        <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
+                        <span class="file-type-badge"><i class="fas fa-file"></i> Documents</span>
+                        <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
+                        <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
+                    </div>
+                </label>
+                <input type="file" id="fileInput" multiple accept="*/*" style="display: none;">
             </div>
 
             <!-- URL Upload Tab -->
             <div class="tab-content" id="url-content">
                 <div class="url-section">
-                    <input type="url" id="urlInput" class="url-input" placeholder="Enter file URL (http:// or https://)">
-                    <button class="btn" onclick="uploadFromUrl()">
-                        <i class="fas fa-download"></i> Upload
+                    <input type="url" id="urlInput" class="url-input" placeholder="Enter file URL (https://example.com/file.zip)">
+                    <button class="url-btn" onclick="uploadFromUrl()">
+                        <i class="fas fa-download"></i> Upload from URL
                     </button>
                 </div>
-                <p style="text-align: center; color: #666;">
-                    <i class="fas fa-info-circle"></i> 
-                    Paste any direct file URL to upload it
-                </p>
-            </div>
-
-            <!-- Progress Section -->
-            <div class="progress" id="progress">
-                <div class="progress-info">
-                    <div class="progress-item">
-                        <div class="value" id="progressPercent">0%</div>
-                        <div class="label">Progress</div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="value" id="uploadSpeed">0 MB/s</div>
-                        <div class="label">Speed</div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="value" id="uploadedSize">0 MB</div>
-                        <div class="label">Uploaded</div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="value" id="timeLeft">--</div>
-                        <div class="label">ETA</div>
-                    </div>
-                </div>
-
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-
-                <div class="progress-text" id="progressText">Preparing upload...</div>
-            </div>
-
-            <!-- Messages -->
-            <div class="message" id="message"></div>
-        </div>
-
-        <!-- Results -->
-        <div class="results" id="results">
-            <h2><i class="fas fa-check-circle"></i> Upload Successful!</h2>
-
-            <div class="file-info">
-                <h4><i class="fas fa-info-circle"></i> File Information</h4>
-                <div class="info-grid" id="fileInfoGrid">
-                    <!-- Populated by JavaScript -->
+                <div style="text-align: center; padding: 2rem; color: var(--gray-600);">
+                    <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"></i>
+                    <p>Paste any direct file URL to upload it to your vault. Supports all file types up to 2GB.</p>
                 </div>
             </div>
 
-            <div class="urls">
-                <h4><i class="fas fa-link"></i> Access URLs</h4>
-                <div id="urlsList">
-                    <!-- Populated by JavaScript -->
-                </div>
+            <!-- Batch Upload Tab -->
+            <div class="tab-content" id="batch-content">
+                <label class="dropzone" id="batchDropzone" for="batchInput">
+                    <div class="upload-icon"><i class="fas fa-layer-group"></i></div>
+                    <h2 class="upload-title">Batch Upload Multiple Files</h2>
+                    <p class="upload-description">Upload up to 10 files simultaneously</p>
+                </label>
+                <input type="file" id="batchInput" multiple accept="*/*" style="display: none;">
             </div>
+        </section>
 
-            <button class="reset-btn" onclick="resetUpload()">
-                <i class="fas fa-upload"></i> Upload Another File
-            </button>
-        </div>
+        <!-- Real-time Stats Dashboard -->
+        <section class="stats-dashboard" id="statsDashboard" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="totalSize">0 MB</div>
+                <div class="stat-label">Total Size</div>
+                <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgSpeed">0 MB/s</div>
+                <div class="stat-label">Avg Speed</div>
+                <div class="stat-trend trend-up"><i class="fas fa-tachometer-alt"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="timeRemaining">--</div>
+                <div class="stat-label">Time Remaining</div>
+                <div class="stat-trend"><i class="fas fa-clock"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="filesCount">0</div>
+                <div class="stat-label">Files Uploaded</div>
+                <div class="stat-trend trend-up"><i class="fas fa-file-alt"></i></div>
+            </div>
+        </section>
+
+        <!-- Enhanced Results Section -->
+        <section class="results" id="results">
+            <div class="results-header">
+                <h2 class="results-title">📁 Your Files</h2>
+                <div class="results-count" id="resultsCount">0 files uploaded</div>
+            </div>
+            <div id="filesList"></div>
+        </section>
+
+        <!-- Advanced Features Grid -->
+        <section class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                <div class="feature-title">Lightning Fast</div>
+                <div class="feature-desc">Advanced chunking with parallel uploads for maximum speed</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="feature-title">Enterprise Security</div>
+                <div class="feature-desc">End-to-end encryption with secure Telegram storage</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-globe"></i></div>
+                <div class="feature-title">Global CDN</div>
+                <div class="feature-desc">Worldwide access with edge computing optimization</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+                <div class="feature-title">Mobile Optimized</div>
+                <div class="feature-desc">Perfect experience on all devices and screen sizes</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-link"></i></div>
+                <div class="feature-title">URL Upload</div>
+                <div class="feature-desc">Direct upload from any URL with progress tracking</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="feature-title">Real-time Analytics</div>
+                <div class="feature-desc">Detailed upload statistics and performance metrics</div>
+            </div>
+        </section>
     </div>
 
-    <script>
-        let isUploading = false;
-        let uploadStartTime = 0;
+    <!-- Enhanced Toast System -->
+    <div id="toast" class="toast"></div>
 
-        // Initialize
+    <script>
+        console.log('🚀 MARYA VAULT ULTIMATE - Loading Advanced System...');
+
+        // Global variables
+        let fileCounter = 0;
+        let totalSize = 0;
+        let totalSpeed = 0;
+        let activeUploads = 0;
+        let uploadStats = { total: 0, completed: 0, failed: 0 };
+
         document.addEventListener('DOMContentLoaded', function() {
-            setupDragAndDrop();
-            setupFileInput();
+            console.log('✅ DOM Ready - Initializing Ultimate File Uploader');
+            initializeSystem();
         });
 
-        // Tab switching
-        function showTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+        function initializeSystem() {
+            setupFileUpload();
+            setupUrlUpload();
+            setupBatchUpload();
+            setupDragDrop();
+            startStatsUpdater();
+        }
 
-            // Update tab content
+        // Tab Management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
             document.getElementById(tabName + '-content').classList.add('active');
         }
 
-        // Drag and drop
-        function setupDragAndDrop() {
-            const dropZone = document.getElementById('dropZone');
+        // File Upload Setup
+        function setupFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const dropzone = document.getElementById('dropzone');
 
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
+            fileInput.addEventListener('change', e => {
+                if (e.target.files.length > 0) {
+                    handleFiles(Array.from(e.target.files));
+                    fileInput.value = '';
+                }
+            });
+
+            dropzone.addEventListener('click', () => fileInput.click());
+        }
+
+        // URL Upload Setup
+        function setupUrlUpload() {
+            const urlInput = document.getElementById('urlInput');
+            urlInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') uploadFromUrl();
+            });
+        }
+
+        // Batch Upload Setup
+        function setupBatchUpload() {
+            const batchInput = document.getElementById('batchInput');
+            const batchDropzone = document.getElementById('batchDropzone');
+
+            batchInput.addEventListener('change', e => {
+                if (e.target.files.length > 0) {
+                    const files = Array.from(e.target.files).slice(0, 10); // Max 10 files
+                    handleFiles(files, true);
+                    batchInput.value = '';
+                }
+            });
+
+            batchDropzone.addEventListener('click', () => batchInput.click());
+        }
+
+        // Enhanced Drag & Drop
+        function setupDragDrop() {
+            const dropzones = [document.getElementById('dropzone'), document.getElementById('batchDropzone')];
+
+            dropzones.forEach(dropzone => {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+                });
+
+                dropzone.addEventListener('drop', e => {
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length > 0) handleFiles(files, dropzone.id === 'batchDropzone');
+                }, false);
             });
 
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-            });
-
-            dropZone.addEventListener('drop', handleDrop, false);
-            dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
-
-            function handleDrop(e) {
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleFile(files[0]);
-                }
-            }
         }
 
-        // File input
-        function setupFileInput() {
-            document.getElementById('fileInput').addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    handleFile(e.target.files[0]);
-                }
-            });
-        }
+        // Handle Files with Advanced Processing
+        function handleFiles(files, isBatch = false) {
+            console.log(`🔄 Processing ${files.length} file(s) - Batch mode: ${isBatch}`);
 
-        // Handle file
-        function handleFile(file) {
-            if (isUploading) return;
-
-            console.log('File selected:', file.name, formatSize(file.size));
-
-            // Validate size
-            if (file.size > 2 * 1024 * 1024 * 1024) {
-                showMessage('File too large. Maximum size is 2GB.', 'error');
+            if (files.length === 0) {
+                showToast('No files selected', 'error');
                 return;
             }
 
-            uploadFile(file);
+            // Validate files
+            const validFiles = files.filter(file => {
+                if (file.size > 2147483648) { // 2GB
+                    showToast(`File "${file.name}" is too large (max 2GB)`, 'error');
+                    return false;
+                }
+                return true;
+            });
+
+            if (validFiles.length === 0) return;
+
+            showResults();
+            updateFileCounter(validFiles.length);
+            updateTotalSize(validFiles.reduce((sum, file) => sum + file.size, 0));
+
+            // Process files with delay for better UX
+            validFiles.forEach((file, index) => {
+                setTimeout(() => uploadFile(file, isBatch), index * 100);
+            });
         }
 
-        // Upload file
-        async function uploadFile(file) {
-            isUploading = true;
-            showProgress();
-            updateProgress(0, 'Preparing upload...', '0 MB/s', '0 MB', '--');
+        // Advanced File Upload with Real-time Stats
+        function uploadFile(file, isBatch = false) {
+            console.log(`⬆️ Starting upload: ${file.name} (${formatBytes(file.size)})`);
 
-            try {
-                uploadStartTime = Date.now();
+            const fileItem = createAdvancedFileItem(file);
+            document.getElementById('filesList').appendChild(fileItem);
 
-                const formData = new FormData();
-                formData.append('file', file);
+            const elements = getFileElements(fileItem);
 
-                // Simple upload with basic progress simulation
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+            activeUploads++;
+            uploadStats.total++;
 
-                if (!response.ok) {
-                    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+            const startTime = Date.now();
+
+            // Enhanced progress tracking
+            xhr.upload.addEventListener('progress', e => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const speed = calculateSpeed(e.loaded, startTime);
+                    const remaining = calculateTimeRemaining(e.loaded, e.total, speed);
+
+                    updateProgress(elements, percent, speed, remaining);
+                    updateGlobalStats();
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                activeUploads--;
+
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.success) {
+                            handleUploadSuccess(elements, result, file);
+                            uploadStats.completed++;
+                            showToast(`✅ ${file.name} uploaded successfully!`, 'success');
+                        } else {
+                            throw new Error(result.error || 'Upload failed');
+                        }
+                    } catch (parseError) {
+                        handleUploadError(elements, 'Invalid server response');
+                        uploadStats.failed++;
+                        showToast(`❌ Upload failed: ${file.name}`, 'error');
+                    }
+                } else {
+                    handleUploadError(elements, `HTTP ${xhr.status}`);
+                    uploadStats.failed++;
+                    showToast(`❌ Upload failed: ${file.name}`, 'error');
                 }
 
-                const result = await response.json();
+                updateGlobalStats();
+            });
 
-                if (!result.success) {
-                    throw new Error(result.error || 'Upload failed');
-                }
+            xhr.addEventListener('error', () => {
+                activeUploads--;
+                uploadStats.failed++;
+                handleUploadError(elements, 'Network error');
+                showToast(`🔥 Network error: ${file.name}`, 'error');
+                updateGlobalStats();
+            });
 
-                updateProgress(100, 'Upload completed!', '--', formatSize(file.size), '0s');
-
-                setTimeout(() => {
-                    showResults(result);
-                }, 1000);
-
-            } catch (error) {
-                console.error('Upload error:', error);
-                showMessage('Upload failed: ' + error.message, 'error');
-            } finally {
-                isUploading = false;
-            }
+            xhr.open('POST', '/upload');
+            xhr.send(formData);
         }
 
-        // Upload from URL
+        // URL Upload with Progress
         async function uploadFromUrl() {
             const urlInput = document.getElementById('urlInput');
             const url = urlInput.value.trim();
 
             if (!url) {
-                showMessage('Please enter a URL', 'error');
+                showToast('Please enter a URL', 'error');
                 return;
             }
 
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                showMessage('URL must start with http:// or https://', 'error');
+                showToast('URL must start with http:// or https://', 'error');
                 return;
             }
 
-            if (isUploading) return;
-
-            isUploading = true;
-            showProgress();
-            updateProgress(0, 'Downloading from URL...', '0 MB/s', '0 MB', '--');
+            showToast('🌐 Starting URL upload...', 'success');
+            urlInput.disabled = true;
 
             try {
                 const response = await fetch('/upload-from-url', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
-                }
-
                 const result = await response.json();
 
-                if (!result.success) {
+                if (result.success) {
+                    showResults();
+                    const fileItem = createUrlFileItem(result, url);
+                    document.getElementById('filesList').appendChild(fileItem);
+                    updateFileCounter(1);
+                    showToast('🚀 URL upload completed successfully!', 'success');
+                } else {
                     throw new Error(result.error || 'URL upload failed');
                 }
-
-                updateProgress(100, 'URL upload completed!', '--', formatSize(result.size), '0s');
-
-                setTimeout(() => {
-                    showResults(result);
-                }, 1000);
-
             } catch (error) {
-                console.error('URL upload error:', error);
-                showMessage('URL upload failed: ' + error.message, 'error');
+                showToast(`❌ URL upload failed: ${error.message}`, 'error');
             } finally {
-                isUploading = false;
+                urlInput.disabled = false;
+                urlInput.value = '';
             }
         }
 
-        // Show progress
-        function showProgress() {
-            document.getElementById('progress').style.display = 'block';
-            document.getElementById('message').style.display = 'none';
-            document.getElementById('results').style.display = 'none';
+        // Create Advanced File Item
+        function createAdvancedFileItem(file) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon">${getFileIcon(file.name)}</div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">
+                            ${formatBytes(file.size)} • ${file.type || 'Unknown type'} • 
+                            <span class="file-status uploading">
+                                <i class="fas fa-spinner fa-spin"></i> Preparing upload...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-percent">0%</span>
+                        <span class="speed-indicator">
+                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
+                        </span>
+                        <span class="time-remaining">Calculating...</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="file-actions"></div>
+            `;
+            return item;
         }
 
-        // Update progress
-        function updateProgress(percent, text, speed, uploaded, eta) {
-            document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('progressText').textContent = text;
-            document.getElementById('progressPercent').textContent = percent + '%';
-            document.getElementById('uploadSpeed').textContent = speed;
-            document.getElementById('uploadedSize').textContent = uploaded;
-            document.getElementById('timeLeft').textContent = eta;
+        // Create URL File Item
+        function createUrlFileItem(result, originalUrl) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            const filename = result.filename || extractFilenameFromUrl(originalUrl);
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon"><i class="fas fa-link"></i></div>
+                    <div class="file-details">
+                        <div class="file-name">${filename}</div>
+                        <div class="file-meta">
+                            ${formatBytes(result.size || 0)} • URL Upload • 
+                            <span class="file-status completed">
+                                <i class="fas fa-check-circle"></i> Upload Complete
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <a href="${result.url}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View File
+                    </a>
+                    <a href="${result.download}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                    <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                    <button onclick="shareFile('${result.url}', '${filename}')" class="btn btn-outline">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                </div>
+            `;
+            return item;
         }
 
-        // Show message
-        function showMessage(text, type) {
-            const message = document.getElementById('message');
-            message.className = `message ${type}`;
-            message.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}"></i> ${text}`;
-            message.style.display = 'block';
+        // Get File Elements
+        function getFileElements(fileItem) {
+            return {
+                progressFill: fileItem.querySelector('.progress-fill'),
+                progressPercent: fileItem.querySelector('.progress-percent'),
+                uploadSpeed: fileItem.querySelector('.upload-speed'),
+                timeRemaining: fileItem.querySelector('.time-remaining'),
+                status: fileItem.querySelector('.file-status'),
+                actions: fileItem.querySelector('.file-actions')
+            };
         }
 
-        // Show results
-        function showResults(result) {
-            document.getElementById('progress').style.display = 'none';
-            document.getElementById('results').style.dis
+        // Update Progress with Advanced Metrics
+        function updateProgress(elements, percent, speed, remaining) {
+            elements.progressFill.style.width = percent + '%';
+            elements.progressPercent.textContent = percent + '%';
+            elements.uploadSpeed.textContent = formatBytes(speed) + '/s';
+            elements.timeRemaining.textContent = remaining;
+
+            if (percent < 100) {
+                elements.status.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Uploading... ${percent}%`;
+                elements.status.className = 'file-status uploading';
+            }
+        }
+
+        // Handle Upload Success
+        function handleUploadSuccess(elements, result, file) {
+            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Upload Complete';
+            elements.status.className = 'file-status completed';
+            elements.progressFill.style.width = '100%';
+            elements.progressPercent.textContent = '100%';
+            elements.timeRemaining.textContent = 'Complete!';
+
+            elements.actions.innerHTML = `
+                <a href="${result.url}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> View File
+                </a>
+                <a href="${result.download}" class="btn btn-success">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
+                    <i class="fas fa-copy"></i> Copy Link
+                </button>
+                <button onclick="shareFile('${result.url}', '${file.name}')" class="btn btn-outline">
+                    <i class="fas fa-share"></i> Share
+                </button>
+                <button onclick="deleteFile('${result.id}')" class="btn btn-outline" style="color: var(--error);">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            `;
+        }
+
+        // Handle Upload Error
+        function handleUploadError(elements, error) {
+            elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
+            elements.status.className = 'file-status failed';
+            elements.actions.innerHTML = `
+                <button onclick="retryUpload(this)" class="btn btn-outline">
+                    <i class="fas fa-redo"></i> Retry Upload
+                </button>
+            `;
+        }
+
+        // Utility Functions
+        function calculateSpeed(loaded, startTime) {
+            const elapsed = (Date.now() - startTime) / 1000;
+            return elapsed > 0 ? loaded / elapsed : 0;
+        }
+
+        function calculateTimeRemaining(loaded, total, speed) {
+            if (speed === 0) return 'Calculating...';
+            const remaining = (total - loaded) / speed;
+            return remaining > 0 ? formatTime(remaining * 1000) : 'Almost done!';
+        }
+
+        function formatTime(ms) {
+            if (ms < 1000) return 'Less than 1s';
+            if (ms < 60000) return Math.round(ms / 1000) + 's';
+            if (ms < 3600000) return Math.round(ms / 60000) + 'm ' + Math.round((ms % 60000) / 1000) + 's';
+            return Math.round(ms / 3600000) + 'h ' + Math.round((ms % 3600000) / 60000) + 'm';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop()?.toLowerCase() || '';
+            const iconMap = {
+                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 'gif': 'fa-image', 'webp': 'fa-image',
+                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 'mov': 'fa-video', 'webm': 'fa-video',
+                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music', 'aac': 'fa-music',
+                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word', 'txt': 'fa-file-alt',
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', '7z': 'fa-file-archive',
+                'js': 'fa-code', 'html': 'fa-globe', 'css': 'fa-palette', 'py': 'fa-python'
+            };
+            return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
+        }
+
+        function extractFilenameFromUrl(url) {
+            try {
+                const pathname = new URL(url).pathname;
+                return pathname.split('/').pop() || 'Unknown File';
+            } catch {
+                return 'Unknown File';
+            }
+        }
+
+        // Global Stats Updates
+        function updateFileCounter(count) {
+            fileCounter += count;
+            document.getElementById('filesCount').textContent = fileCounter;
+            updateResultsCount();
+        }
+
+        function updateTotalSize(size) {
+            totalSize += size;
+            document.getElementById('totalSize').textContent = formatBytes(totalSize);
+        }
+
+        function updateResultsCount() {
+            document.getElementById('resultsCount').textContent = 
+                `${fileCounter} file${fileCounter !== 1 ? 's' : ''} uploaded`;
+        }
+
+        function updateGlobalStats() {
+            // Update average speed
+            const avgSpeed = activeUploads > 0 ? totalSpeed / activeUploads : 0;
+            document.getElementById('avgSpeed').textContent = formatBytes(avgSpeed) + '/s';
+
+            // Update time remaining
+            if (activeUploads > 0) {
+                const remainingTime = avgSpeed > 0 ? (totalSize - (uploadStats.completed * totalSize / uploadStats.total)) / avgSpeed : 0;
+                document.getElementById('timeRemaining').textContent = formatTime(remainingTime * 1000);
+            } else {
+                document.getElementById('timeRemaining').textContent = 'Complete!';
+            }
+        }
+
+        function startStatsUpdater() {
+            setInterval(updateGlobalStats, 1000);
+        }
+
+        function showResults() {
+            document.getElementById('results').classList.add('show');
+            document.getElementById('statsDashboard').style.display = 'grid';
+        }
+
+        // Enhanced Features
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('🔗 Link copied to clipboard!', 'success');
+            }, () => {
+                showToast('❌ Failed to copy link', 'error');
+            });
+        }
+
+        function shareFile(url, filename) {
+            if (navigator.share) {
+                navigator.share({
+                    title: `📁 ${filename}`,
+                    text: `Check out this file: ${filename}`,
+                    url: url
+                });
+            } else {
+                copyToClipboard(url);
+                showToast('🔗 Link copied for sharing!', 'success');
+            }
+        }
+
+        function deleteFile(fileId) {
+            if (confirm('🗑️ Are you sure you want to delete this file?')) {
+                showToast('🗑️ Delete functionality coming soon!', 'warning');
+            }
+        }
+
+        function retryUpload(button) {
+            showToast('🔄 Retry functionality coming soon!', 'warning');
+        }
+
+        // Enhanced Toast System
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icons = {
+                success: 'fa-check',
+                error: 'fa-times',
+                warning: 'fa-exclamation-triangle'
+            };
+            const titles = {
+                success: 'Success',
+                error: 'Error',
+                warning: 'Warning'
+            };
+
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="fas ${icons[type]}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${titles[type]}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+
+            toast.className = `toast ${type} show`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        console.log('🚀 MARYA VAULT ULTIMATE - System Ready!');
+    </script>
+</body>
+</html>
