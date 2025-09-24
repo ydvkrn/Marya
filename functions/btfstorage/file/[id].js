@@ -148,7 +148,7 @@ export async function onRequest(context) {
     ðŸ“ Name: ${metadata.filename}
     ðŸ“ Size: ${Math.round(metadata.size/1024/1024)}MB (${metadata.size} bytes)
     ðŸ·ï¸ MIME: ${mimeType}
-    ðŸ§© Chunks: ${metadata.chunks?.length || 0}
+    MaryaUploader Chunks: ${metadata.chunks?.length || 0}
     ðŸ“… Uploaded: ${metadata.uploadedAt || 'N/A'}
     ðŸŽµ HLS Playlist: ${isHlsPlaylist}
     ðŸ“¼ HLS Segment: ${isHlsSegment} (Index: ${segmentIndex})
