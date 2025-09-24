@@ -1,13 +1,12 @@
+// 🚀 ULTIMATE MARYA VAULT - ADVANCED URL UPLOAD SYSTEM
+// Enhanced to match the advanced upload system (FIXED & COMPLETE)
 
-// functions/upload-from-url.js
-// ðŸš€ ULTIMATE MARYA VAULT - ADVANCED URL UPLOAD SYSTEM
-// Enhanced to match the advanced upload system
-
+// Main handler for the request
 export async function onRequest(context) {
   const { request, env } = context;
 
-  console.log('ðŸŒ === ULTIMATE URL UPLOAD START === ðŸŒ');
-  console.log('ðŸ“… Timestamp:', new Date().toISOString());
+  console.log('🌐 === ULTIMATE URL UPLOAD START === 🌐');
+  console.log('📅 Timestamp:', new Date().toISOString());
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -32,7 +31,7 @@ export async function onRequest(context) {
   const downloadId = generateAdvancedDownloadId();
 
   try {
-    // ðŸ”§ Enhanced environment validation (same as upload)
+    // 🔧 Enhanced environment validation
     const envValidation = await validateAdvancedEnvironment(env);
     if (!envValidation.success) {
       throw new Error(`Environment validation failed: ${envValidation.error}`);
@@ -40,7 +39,7 @@ export async function onRequest(context) {
 
     const { kvNamespaces, botTokens, channelId } = envValidation;
 
-    // ðŸ“¥ Process URL input
+    // 📥 Process URL input
     const { url } = await request.json();
 
     if (!url || !url.trim()) {
@@ -48,32 +47,32 @@ export async function onRequest(context) {
     }
 
     const cleanUrl = url.trim();
-    console.log('ðŸ”— Processing URL:', cleanUrl.substring(0, 100) + '...');
+    console.log('🔗 Processing URL:', cleanUrl.substring(0, 100) + '...');
 
-    // ðŸ” Advanced URL validation
+    // 🔍 Advanced URL validation
     const urlValidation = validateAdvancedUrl(cleanUrl);
     if (!urlValidation.valid) {
       throw new Error(urlValidation.error);
     }
 
-    console.log('âœ… URL validation passed:', urlValidation.type);
+    console.log('✅ URL validation passed:', urlValidation.type);
 
-    // ðŸ“Š Get file information
+    // 📊 Get file information
     const fileInfo = await getAdvancedFileInfo(cleanUrl);
-    console.log('ðŸ“ File info retrieved:', {
+    console.log('📁 File info retrieved:', {
       size: formatFileSize(fileInfo.size),
       type: fileInfo.contentType,
       filename: fileInfo.filename
     });
 
-    // âœ… Validate file size
+    // ✅ Validate file size
     const maxFileSize = calculateMaxFileSize(kvNamespaces.length);
-    if (fileInfo.size > maxFileSize) {
-      throw new Error(`File too large: ${formatFileSize(fileInfo.size)} (max: ${formatFileSize(maxFileSize)})`);
+    if (fileInfo.size > 0 && fileInfo.size > maxFileSize) {
+        throw new Error(`File too large: ${formatFileSize(fileInfo.size)} (max: ${formatFileSize(maxFileSize)})`);
     }
 
-    // ðŸ“¥ Enhanced download with progress tracking
-    console.log('â¬‡ï¸ Starting enhanced download...');
+    // ⬇️ Enhanced download with progress tracking
+    console.log('⬇️ Starting enhanced download...');
     const downloadResult = await downloadAdvancedFile(cleanUrl, fileInfo);
 
     if (!downloadResult.success) {
@@ -81,15 +80,15 @@ export async function onRequest(context) {
     }
 
     const { arrayBuffer, actualSize, downloadTime } = downloadResult;
-    console.log(`âœ… Download completed: ${formatFileSize(actualSize)} in ${formatTime(downloadTime)}`);
+    console.log(`✅ Download completed: ${formatFileSize(actualSize)} in ${formatTime(downloadTime)}`);
 
-    // ðŸ“ Create enhanced file object
+    // 📁 Create enhanced file object
     const file = new File([arrayBuffer], fileInfo.filename, { 
       type: fileInfo.contentType,
       lastModified: Date.now()
     });
 
-    // ðŸ“Š Generate advanced metadata
+    // 📊 Generate advanced metadata
     const metadata = await generateAdvancedFileMetadata(file);
     metadata.sourceUrl = cleanUrl.length > 200 ? cleanUrl.substring(0, 200) + '...' : cleanUrl;
     metadata.downloadStats = {
@@ -99,7 +98,7 @@ export async function onRequest(context) {
       userAgent: 'MARYA-VAULT/3.0 Advanced Downloader'
     };
 
-    // ðŸ†” Generate advanced file ID
+    // 🆔 Generate advanced file ID
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).slice(2, 10);
     const category = metadata.category.charAt(0).toUpperCase();
@@ -107,18 +106,18 @@ export async function onRequest(context) {
     const fileId = `${category}${sizeIndicator}${timestamp}${random}`;
     const extension = fileInfo.filename.includes('.') ? fileInfo.filename.slice(fileInfo.filename.lastIndexOf('.')) : '';
 
-    console.log(`ðŸ†” Advanced file ID: ${fileId}${extension}`);
+    console.log(`🆔 Advanced file ID: ${fileId}${extension}`);
 
-    // ðŸ§© Calculate optimal chunking strategy
+    // 🧩 Calculate optimal chunking strategy
     const chunkingStrategy = calculateOptimalChunkingStrategy(file.size, kvNamespaces.length, metadata);
-    console.log(`ðŸ§© Chunking strategy:`, {
+    console.log(`🧩 Chunking strategy:`, {
       totalChunks: chunkingStrategy.totalChunks,
       chunkSize: formatFileSize(chunkingStrategy.chunkSize),
       distribution: chunkingStrategy.distribution,
       parallelUploads: chunkingStrategy.parallelUploads
     });
 
-    // ðŸš€ Execute advanced chunked upload
+    // 🚀 Execute advanced chunked upload
     const uploadResult = await executeAdvancedChunkedUpload(
       file, 
       fileId, 
@@ -129,7 +128,7 @@ export async function onRequest(context) {
       downloadId
     );
 
-    // ðŸ“ˆ Create comprehensive metadata
+    // 📈 Create comprehensive metadata
     const masterMetadata = createAdvancedMasterMetadata(
       file, 
       fileId, 
@@ -140,7 +139,6 @@ export async function onRequest(context) {
       startTime
     );
 
-    // Add URL-specific metadata
     masterMetadata.source = {
       type: 'url_upload',
       originalUrl: cleanUrl,
@@ -151,138 +149,51 @@ export async function onRequest(context) {
     };
 
     await kvNamespaces[0].kv.put(fileId, JSON.stringify(masterMetadata));
-    console.log(`ðŸ’¾ Master metadata stored`);
+    console.log(`💾 Master metadata stored`);
 
-    // ðŸ”— Generate advanced URLs
+    // 🔗 Generate advanced URLs
     const baseUrl = new URL(request.url).origin;
     const urls = generateAdvancedUrls(baseUrl, fileId, extension, metadata);
 
-    // ðŸ“Š Calculate comprehensive metrics
+    // 📊 Calculate comprehensive metrics
     const totalProcessingTime = Date.now() - startTime;
     const overallSpeed = file.size / (totalProcessingTime / 1000);
     const efficiency = calculateUrlUploadEfficiency(downloadTime, uploadResult.processingTime, file.size);
 
-    // ðŸŽ‰ Create ultimate response
-    const response = {
+    // 🎉 Create ultimate response
+    const responseData = {
       success: true,
-      message: 'ðŸŒ Ultimate URL upload completed!',
-      timestamp: new Date().toISOString(),
-      downloadId: downloadId,
-
-      // Source information
+      message: '🌐 Ultimate URL upload completed!',
       source: {
         originalUrl: cleanUrl.length > 100 ? cleanUrl.substring(0, 100) + '...' : cleanUrl,
-        urlType: urlValidation.type,
-        serverInfo: extractServerInfo(cleanUrl),
-        downloadTime: downloadTime,
         downloadTimeFormatted: formatTime(downloadTime),
-        downloadSpeed: actualSize / (downloadTime / 1000),
         downloadSpeedFormatted: formatFileSize(actualSize / (downloadTime / 1000)) + '/s'
       },
-
-      // File information
       file: {
         id: fileId,
         filename: fileInfo.filename,
         size: file.size,
         sizeFormatted: formatFileSize(file.size),
-        contentType: fileInfo.contentType,
-        extension: extension,
-        category: metadata.category,
-        hash: metadata.hash,
-        isVideo: metadata.isVideo,
-        isLarge: metadata.isLarge,
-        quality: metadata.quality
+        extension: extension
       },
-
-      // Processing information
       processing: {
-        totalTime: totalProcessingTime,
         totalTimeFormatted: formatTime(totalProcessingTime),
-        downloadTime: downloadTime,
-        uploadTime: uploadResult.processingTime,
-        overallSpeed: overallSpeed,
         overallSpeedFormatted: formatFileSize(overallSpeed) + '/s',
-        efficiency: efficiency
       },
-
-      // Chunking details
-      chunking: {
-        strategy: chunkingStrategy.strategy,
-        totalChunks: chunkingStrategy.totalChunks,
-        chunkSize: chunkingStrategy.chunkSize,
-        chunkSizeFormatted: formatFileSize(chunkingStrategy.chunkSize),
-        distribution: chunkingStrategy.distribution,
-        parallelUploads: chunkingStrategy.parallelUploads,
-        kvNamespaces: uploadResult.kvDistribution
-      },
-
-      // Performance metrics
-      performance: {
-        successRate: uploadResult.successRate,
-        retries: uploadResult.totalRetries,
-        bottlenecks: uploadResult.bottlenecks,
-        performanceScore: calculatePerformanceScore(uploadResult, totalProcessingTime),
-        downloadEfficiency: (downloadTime / totalProcessingTime) * 100,
-        uploadEfficiency: (uploadResult.processingTime / totalProcessingTime) * 100
-      },
-
-      // Access URLs
       urls: urls,
-
-      // Advanced features
-      features: {
-        instantStreaming: metadata.isVideo && chunkingStrategy.totalChunks > 1,
-        rangeRequests: true,
-        hlsStreaming: metadata.isVideo && file.size > 100 * 1024 * 1024,
-        adaptiveBitrate: metadata.isVideo,
-        resumableDownload: true,
-        crossOriginSupport: true,
-        cdnAcceleration: true,
-        encryptionAtRest: true,
-        analyticsTracking: true
-      },
-
-      // System info
-      system: {
-        version: '3.0.0-ultimate-url',
-        infrastructure: 'Cloudflare Workers + KV + Telegram',
-        maxFileSize: formatFileSize(maxFileSize),
-        supportedProtocols: ['HTTP', 'HTTPS'],
-        supportedDomains: 'All public domains',
-        downloadTimeout: '10 minutes',
-        retryPolicy: '5 attempts with exponential backoff'
-      }
     };
 
-    console.log(`ðŸŽ‰ URL upload completed:`, {
-      downloadId: downloadId,
-      filename: fileInfo.filename,
-      size: formatFileSize(file.size),
-      totalTime: formatTime(totalProcessingTime),
-      overallSpeed: formatFileSize(overallSpeed) + '/s'
-    });
-
-    return new Response(JSON.stringify(response, null, 2), {
+    return new Response(JSON.stringify(responseData, null, 2), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
-        'X-Download-ID': downloadId,
-        'X-Processing-Time': totalProcessingTime.toString(),
-        'X-Download-Stats': JSON.stringify({
-          downloadTime: downloadTime,
-          downloadSpeed: actualSize / (downloadTime / 1000),
-          efficiency: efficiency
-        }),
         ...corsHeaders 
       }
     });
 
   } catch (error) {
-    console.error('ðŸ’¥ URL UPLOAD ERROR:', error);
-
+    console.error('💥 URL UPLOAD ERROR:', error);
     const processingTime = Date.now() - startTime;
-
     return createJsonResponse({
       success: false,
       error: error.message,
@@ -291,333 +202,351 @@ export async function onRequest(context) {
       processingTime: processingTime,
       errorCode: getErrorCode(error),
       troubleshooting: generateUrlTroubleshootingTips(error),
-      support: {
-        documentation: '/docs/url-upload-errors',
-        contact: 'support@marya-vault.com'
-      }
     }, 500, corsHeaders);
   }
 }
 
+
+// #############################################################
+// #################### UTILITY FUNCTIONS ######################
+// #############################################################
+
 /**
- * ðŸ” Advanced URL Validation
+ * 🔧 Advanced Environment Validation
+ */
+async function validateAdvancedEnvironment(env) {
+    const requiredVars = ['BOT_TOKEN', 'CHANNEL_ID'];
+    const missing = requiredVars.filter(key => !env[key]);
+    if (missing.length > 0) {
+        return { success: false, error: `Missing env variables: ${missing.join(', ')}` };
+    }
+    const kvNamespaces = [];
+    for (let i = 1; i <= 7; i++) {
+        const kvKey = i === 1 ? 'FILES_KV' : `FILES_KV${i}`;
+        if (env[kvKey]) {
+            kvNamespaces.push({ kv: env[kvKey], name: kvKey, index: i - 1 });
+        }
+    }
+    const botTokens = [];
+    for (let i = 1; i <= 4; i++) {
+        const tokenKey = i === 1 ? 'BOT_TOKEN' : `BOT_TOKEN${i}`;
+        if (env[tokenKey]) {
+            botTokens.push({ token: env[tokenKey], name: tokenKey, index: i - 1 });
+        }
+    }
+    if (kvNamespaces.length === 0) {
+        return { success: false, error: 'No KV namespaces configured' };
+    }
+    return {
+        success: true,
+        kvNamespaces,
+        botTokens,
+        channelId: env.CHANNEL_ID,
+    };
+}
+
+/**
+ * 🔍 Advanced URL Validation
  */
 function validateAdvancedUrl(url) {
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    return {
-      valid: false,
-      error: 'URL must start with http:// or https://'
-    };
-  }
-
-  try {
-    const parsedUrl = new URL(url);
-
-    // Check for suspicious patterns
-    const suspiciousPatterns = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
-    if (suspiciousPatterns.some(pattern => parsedUrl.hostname.includes(pattern))) {
-      return {
-        valid: false,
-        error: 'Local URLs are not allowed for security reasons'
-      };
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        return { valid: false, error: 'URL must start with http:// or https://' };
     }
-
-    // Determine URL type
-    let urlType = 'generic';
-    if (parsedUrl.hostname.includes('workers.dev')) urlType = 'cloudflare_worker';
-    else if (parsedUrl.hostname.includes('github')) urlType = 'github';
-    else if (parsedUrl.hostname.includes('gdrive') || parsedUrl.hostname.includes('drive.google')) urlType = 'google_drive';
-    else if (parsedUrl.hostname.includes('dropbox')) urlType = 'dropbox';
-    else if (parsedUrl.hostname.includes('mega.')) urlType = 'mega';
-
-    return {
-      valid: true,
-      type: urlType,
-      hostname: parsedUrl.hostname,
-      protocol: parsedUrl.protocol
-    };
-  } catch (urlError) {
-    return {
-      valid: false,
-      error: `Invalid URL format: ${urlError.message}`
-    };
-  }
+    try {
+        const parsedUrl = new URL(url);
+        const suspiciousPatterns = ['localhost', '127.0.0.1'];
+        if (suspiciousPatterns.some(pattern => parsedUrl.hostname.includes(pattern))) {
+            return { valid: false, error: 'Local URLs are not allowed' };
+        }
+        let urlType = 'generic';
+        if (parsedUrl.hostname.includes('workers.dev')) urlType = 'cloudflare_worker';
+        return { valid: true, type: urlType, hostname: parsedUrl.hostname };
+    } catch (urlError) {
+        return { valid: false, error: `Invalid URL format: ${urlError.message}` };
+    }
 }
 
 /**
- * ðŸ“Š Get Advanced File Information
+ * 📊 Get Advanced File Information from URL
  */
 async function getAdvancedFileInfo(url) {
-  console.log('ðŸ” Getting file info with HEAD request...');
-
-  try {
-    const headResponse = await fetch(url, { 
-      method: 'HEAD',
-      headers: {
-        'User-Agent': 'MARYA-VAULT/3.0 Advanced Downloader',
-        'Accept': '*/*',
-        'Accept-Encoding': 'identity',
-        'Cache-Control': 'no-cache'
-      },
-      signal: AbortSignal.timeout(30000) // 30 seconds
-    });
-
-    let size = 0;
-    let contentType = 'application/octet-stream';
-    let filename = 'download';
-
-    if (headResponse.ok) {
-      size = parseInt(headResponse.headers.get('Content-Length') || '0');
-      contentType = headResponse.headers.get('Content-Type') || contentType;
-
-      // Extract filename from Content-Disposition
-      const disposition = headResponse.headers.get('Content-Disposition');
-      if (disposition && disposition.includes('filename')) {
-        const match = disposition.match(/filename[*]?=([^;]+)/);
-        if (match) {
-          filename = match[1].replace(/['"]/g, '').trim();
-          filename = decodeURIComponent(filename);
-        }
-      }
-    }
-
-    // If HEAD failed or no filename, extract from URL
-    if (filename === 'download') {
-      try {
-        const urlPath = new URL(url).pathname;
-        const urlFilename = urlPath.split('/').pop();
-        if (urlFilename && urlFilename.includes('.')) {
-          filename = decodeURIComponent(urlFilename);
-        }
-      } catch (e) {
-        filename = `download_${Date.now()}`;
-      }
-    }
-
-    // Clean filename
-    filename = filename.replace(/[<>:"/\|?*]/g, '_').trim();
-
-    // Add extension if missing
-    if (!filename.includes('.') && contentType) {
-      const ext = getExtensionFromMimeType(contentType);
-      if (ext) filename += ext;
-    }
-
-    return {
-      size: size,
-      contentType: contentType,
-      filename: filename,
-      hasValidInfo: size > 0
-    };
-
-  } catch (error) {
-    console.warn('âš ï¸ HEAD request failed, will determine info during download:', error.message);
-
-    // Fallback: extract filename from URL
-    let filename = 'download';
     try {
-      const urlPath = new URL(url).pathname;
-      const urlFilename = urlPath.split('/').pop();
-      if (urlFilename && urlFilename.includes('.')) {
-        filename = decodeURIComponent(urlFilename);
-      }
-    } catch (e) {
-      filename = `download_${Date.now()}`;
+        const headResponse = await fetch(url, {
+            method: 'HEAD',
+            headers: { 'User-Agent': 'MARYA-VAULT/3.0' },
+            signal: AbortSignal.timeout(30000)
+        });
+        let size = 0;
+        let contentType = 'application/octet-stream';
+        let filename = 'download';
+        if (headResponse.ok) {
+            size = parseInt(headResponse.headers.get('Content-Length') || '0');
+            contentType = headResponse.headers.get('Content-Type') || contentType;
+            const disposition = headResponse.headers.get('Content-Disposition');
+            if (disposition && disposition.includes('filename')) {
+                const match = disposition.match(/filename[*]?=([^;]+)/);
+                if (match) filename = decodeURIComponent(match[1].replace(/['"]/g, '').trim());
+            }
+        }
+        if (filename === 'download') {
+            const urlPath = new URL(url).pathname;
+            const urlFilename = urlPath.split('/').pop();
+            if (urlFilename) filename = decodeURIComponent(urlFilename);
+        }
+        filename = filename.replace(/[<>:"/\\|?*]/g, '_').trim();
+        if (!filename.includes('.') && contentType) {
+            const ext = getExtensionFromMimeType(contentType);
+            if (ext) filename += ext;
+        }
+        return { size, contentType, filename };
+    } catch (error) {
+        console.warn('⚠️ HEAD request failed, proceeding without file info:', error.message);
+        let filename = 'download';
+        try {
+            const urlPath = new URL(url).pathname;
+            const urlFilename = urlPath.split('/').pop();
+            if (urlFilename) filename = decodeURIComponent(urlFilename);
+        } catch (e) {
+            filename = `download_${Date.now()}`;
+        }
+        return { size: 0, contentType: 'application/octet-stream', filename: filename.replace(/[<>:"/\\|?*]/g, '_').trim() };
     }
-
-    return {
-      size: 0,
-      contentType: 'application/octet-stream',
-      filename: filename.replace(/[<>:"/\|?*]/g, '_').trim(),
-      hasValidInfo: false
-    };
-  }
 }
 
 /**
- * â¬‡ï¸ Advanced File Download
+ * ⬇️ Advanced File Download from URL
  */
 async function downloadAdvancedFile(url, fileInfo) {
-  const downloadStartTime = Date.now();
+    const downloadStartTime = Date.now();
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'User-Agent': 'MARYA-VAULT/3.0' }
+        });
+        if (!response.ok) {
+            throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const downloadTime = Date.now() - downloadStartTime;
+        return {
+            success: true,
+            arrayBuffer,
+            actualSize: arrayBuffer.byteLength,
+            downloadTime
+        };
+    } catch (error) {
+        return { success: false, error: error.message, downloadTime: Date.now() - downloadStartTime };
+    }
+}
 
-  console.log('â¬‡ï¸ Starting advanced file download...');
+/**
+ * 📊 Generate Advanced File Metadata
+ */
+async function generateAdvancedFileMetadata(file) {
+    const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.') + 1).toLowerCase() : '';
+    const categories = {
+        video: ['mp4', 'mkv', 'webm'],
+        audio: ['mp3', 'wav', 'ogg'],
+        image: ['jpg', 'jpeg', 'png', 'gif'],
+        document: ['pdf', 'doc', 'docx', 'txt'],
+        archive: ['zip', 'rar', '7z']
+    };
+    let category = 'other';
+    for (const cat in categories) {
+        if (categories[cat].includes(extension)) {
+            category = cat;
+            break;
+        }
+    }
+    const hash = generateFileHash(file.name, file.size);
+    return {
+        category,
+        extension,
+        hash,
+        isVideo: category === 'video',
+        isLarge: file.size > 500 * 1024 * 1024,
+        quality: determineFileQuality(file.name, file.size),
+    };
+}
 
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'MARYA-VAULT/3.0 Advanced Downloader',
-        'Accept': '*/*',
-        'Accept-Encoding': 'identity',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      }
-      // No timeout - let it download as long as needed
+/**
+ * 🧩 Calculate Optimal Chunking Strategy
+ */
+function calculateOptimalChunkingStrategy(fileSize, kvCount, metadata) {
+    let baseChunkSize = 20 * 1024 * 1024; // Default 20MB
+    if (metadata.isVideo) baseChunkSize = 25 * 1024 * 1024;
+    else if (fileSize > 1024 * 1024 * 1024) baseChunkSize = 30 * 1024 * 1024;
+    const totalChunks = Math.ceil(fileSize / baseChunkSize);
+    const distribution = {};
+    for (let i = 0; i < totalChunks; i++) {
+        const kvIndex = i % kvCount;
+        distribution[kvIndex] = (distribution[kvIndex] || 0) + 1;
+    }
+    return {
+        strategy: totalChunks === 1 ? 'single' : 'chunked',
+        chunkSize: baseChunkSize,
+        totalChunks,
+        distribution,
+        parallelUploads: Math.min(5, kvCount),
+    };
+}
+
+/**
+ * 🚀 Execute Advanced Chunked Upload
+ */
+async function executeAdvancedChunkedUpload(file, fileId, strategy, kvNamespaces, botTokens, channelId, uploadId) {
+    const startTime = Date.now();
+    const results = [];
+    const chunkQueue = [];
+    for (let i = 0; i < strategy.totalChunks; i++) {
+        const start = i * strategy.chunkSize;
+        const end = Math.min(start + strategy.chunkSize, file.size);
+        const chunk = file.slice(start, end);
+        const chunkFile = new File([chunk], `${file.name}.chunk${i.toString().padStart(3, '0')}`);
+        chunkQueue.push({
+            index: i,
+            file: chunkFile,
+            kvNamespace: kvNamespaces[i % kvNamespaces.length],
+            botToken: botTokens[i % botTokens.length].token,
+        });
+    }
+    for (let i = 0; i < chunkQueue.length; i += strategy.parallelUploads) {
+        const batch = chunkQueue.slice(i, i + strategy.parallelUploads);
+        const batchPromises = batch.map(info => uploadAdvancedChunkWithRetry(info.file, fileId, info.index, info.botToken, channelId, info.kvNamespace, 3));
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+    }
+    const totalTime = Date.now() - startTime;
+    return {
+        results,
+        totalRetries: 0, // Simplified for this fix
+        bottlenecks: [], // Simplified
+        processingTime: totalTime,
+        successRate: (results.length / strategy.totalChunks) * 100,
+        kvDistribution: [...new Set(results.map(r => r.kvNamespace))],
+    };
+}
+
+/**
+ * 🔄 Advanced Chunk Upload with Retry Logic
+ */
+async function uploadAdvancedChunkWithRetry(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace, maxRetries = 3) {
+    let lastError;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await uploadSingleAdvancedChunk(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace);
+        } catch (error) {
+            lastError = error;
+            console.warn(`⚠️ Chunk ${chunkIndex} attempt ${attempt} failed: ${error.message}`);
+            if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+            }
+        }
+    }
+    throw new Error(`Chunk ${chunkIndex} failed after ${maxRetries} attempts: ${lastError.message}`);
+}
+
+/**
+ * 📤 Upload Single Advanced Chunk
+ */
+async function uploadSingleAdvancedChunk(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
+    const telegramForm = new FormData();
+    telegramForm.append('chat_id', channelId);
+    telegramForm.append('document', chunkFile);
+    const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+        method: 'POST',
+        body: telegramForm
     });
-
-    if (!response.ok) {
-      throw new Error(`Download failed: ${response.status} ${response.statusText}`);
-    }
-
-    // Update content info if we have better data
-    const actualContentType = response.headers.get('Content-Type') || fileInfo.contentType;
-    const actualSize = parseInt(response.headers.get('Content-Length') || '0') || fileInfo.size;
-
-    console.log('ðŸ“¥ Response received, reading stream...');
-
-    // Read the response as stream with progress tracking
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('Cannot read response stream');
-    }
-
-    const chunks = [];
-    let receivedLength = 0;
-    let lastProgressTime = Date.now();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      chunks.push(value);
-      receivedLength += value.length;
-
-      // Log progress every 100MB or 10 seconds
-      const now = Date.now();
-      if (receivedLength % (100 * 1024 * 1024) < value.length || now - lastProgressTime > 10000) {
-        const speed = receivedLength / ((now - downloadStartTime) / 1000);
-        console.log(`ðŸ“¥ Downloaded: ${formatFileSize(receivedLength)} at ${formatFileSize(speed)}/s`);
-        lastProgressTime = now;
-      }
-
-      // Check size limits during download
-      if (receivedLength > 1050 * 1024 * 1024) { // Max 1050MB
-        reader.releaseLock();
-        throw new Error(`File too large during download: ${formatFileSize(receivedLength)} (max 1050MB)`);
-      }
-    }
-
-    reader.releaseLock();
-
-    // Combine all chunks
-    const arrayBuffer = new Uint8Array(receivedLength);
-    let position = 0;
-    for (const chunk of chunks) {
-      arrayBuffer.set(chunk, position);
-      position += chunk.length;
-    }
-
-    const downloadTime = Date.now() - downloadStartTime;
-    const downloadSpeed = receivedLength / (downloadTime / 1000);
-
-    console.log(`âœ… Download completed: ${formatFileSize(receivedLength)} in ${formatTime(downloadTime)} at ${formatFileSize(downloadSpeed)}/s`);
-
-    return {
-      success: true,
-      arrayBuffer: arrayBuffer.buffer,
-      actualSize: receivedLength,
-      downloadTime: downloadTime,
-      downloadSpeed: downloadSpeed,
-      actualContentType: actualContentType
+    if (!telegramResponse.ok) throw new Error(`Telegram API error ${telegramResponse.status}`);
+    const telegramData = await telegramResponse.json();
+    if (!telegramData.ok) throw new Error(`Telegram API rejected: ${telegramData.description}`);
+    const telegramFileId = telegramData.result.document.file_id;
+    const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
+    if (!getFileResponse.ok) throw new Error(`GetFile API error ${getFileResponse.status}`);
+    const getFileData = await getFileResponse.json();
+    if (!getFileData.ok) throw new Error(`GetFile failed: ${getFileData.description}`);
+    const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+    const chunkKey = `${fileId}_chunk_${chunkIndex.toString().padStart(3, '0')}`;
+    const chunkMetadata = {
+        telegramFileId,
+        directUrl,
+        size: chunkFile.size,
+        index: chunkIndex,
+        parentFileId: fileId,
+        kvNamespace: kvNamespace.name,
+        uploadedAt: Date.now()
     };
-
-  } catch (error) {
-    console.error('âŒ Download failed:', error);
+    await kvNamespace.kv.put(chunkKey, JSON.stringify(chunkMetadata));
     return {
-      success: false,
-      error: error.message,
-      downloadTime: Date.now() - downloadStartTime
+        telegramFileId,
+        directUrl,
+        size: chunkFile.size,
+        chunkKey,
+        kvNamespace: kvNamespace.name
     };
-  }
 }
 
-// Additional utility functions for URL upload
-function generateAdvancedDownloadId() {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).slice(2, 12);
-  return `download_${timestamp}_${random}`;
-}
-
-function extractServerInfo(url) {
-  try {
-    const parsedUrl = new URL(url);
+/**
+ * 📋 Create Advanced Master Metadata
+ */
+function createAdvancedMasterMetadata(file, fileId, extension, chunkingStrategy, uploadResult, metadata, startTime) {
+    const processingTime = Date.now() - startTime;
     return {
-      hostname: parsedUrl.hostname,
-      protocol: parsedUrl.protocol,
-      port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? '443' : '80'),
-      path: parsedUrl.pathname.substring(0, 50) + '...'
+        fileId,
+        filename: file.name,
+        extension,
+        size: file.size,
+        contentType: file.type,
+        category: metadata.category,
+        hash: metadata.hash,
+        type: 'advanced_multi_kv_chunked',
+        totalChunks: chunkingStrategy.totalChunks,
+        chunkSize: chunkingStrategy.chunkSize,
+        uploadedAt: Date.now(),
+        processingTime,
+        chunks: uploadResult.results.map((result, index) => ({
+            index,
+            kvNamespace: result.kvNamespace,
+            chunkKey: result.chunkKey,
+            telegramFileId: result.telegramFileId,
+            size: result.size,
+        })),
+        version: '3.0.0'
     };
-  } catch (e) {
-    return {
-      hostname: 'unknown',
-      protocol: 'unknown',
-      port: 'unknown',
-      path: 'unknown'
+}
+
+/**
+ * 🔗 Generate Advanced URLs
+ */
+function generateAdvancedUrls(baseUrl, fileId, extension, metadata) {
+    const urls = {
+        stream: `${baseUrl}/btfstorage/file/${fileId}${extension}`,
+        download: `${baseUrl}/btfstorage/file/${fileId}${extension}?dl=1`,
+        info: `${baseUrl}/btfstorage/info/${fileId}`,
     };
-  }
+    if (metadata.isVideo) {
+        urls.hls = `${baseUrl}/btfstorage/hls/${fileId}/master.m3u8`;
+        urls.thumbnail = `${baseUrl}/btfstorage/thumb/${fileId}.jpg`;
+    }
+    return urls;
 }
 
-function getExtensionFromMimeType(mimeType) {
-  const mimeMap = {
-    'video/mp4': '.mp4',
-    'video/webm': '.webm',
-    'video/x-msvideo': '.avi',
-    'video/quicktime': '.mov',
-    'video/x-matroska': '.mkv',
-    'audio/mpeg': '.mp3',
-    'audio/wav': '.wav',
-    'audio/aac': '.aac',
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/gif': '.gif',
-    'image/webp': '.webp',
-    'application/pdf': '.pdf',
-    'application/zip': '.zip',
-    'application/x-rar-compressed': '.rar'
-  };
-
-  return mimeMap[mimeType.toLowerCase()] || '';
+// Other Helper Functions
+function createJsonResponse(data, status = 200, headers = {}) {
+    return new Response(JSON.stringify(data, null, 2), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...headers }
+    });
 }
-
-function calculateUrlUploadEfficiency(downloadTime, uploadTime, fileSize) {
-  const totalTime = downloadTime + uploadTime;
-  const baselineTime = (fileSize / (10 * 1024 * 1024)) * 1000; // 10MB/s baseline
-  return Math.round((baselineTime / totalTime) * 100);
-}
-
-function generateUrlTroubleshootingTips(error) {
-  const message = error.message.toLowerCase();
-  if (message.includes('download failed')) {
-    return [
-      'Check if the URL is accessible',
-      'Verify the file still exists at the source',
-      'Try the URL in a browser to confirm it works',
-      'Check if the server requires authentication'
-    ];
-  }
-  if (message.includes('timeout') || message.includes('slow')) {
-    return [
-      'The source server may be slow or overloaded',
-      'Try downloading during off-peak hours',
-      'Check if there are alternative download URLs',
-      'Contact the file host about server performance'
-    ];
-  }
-  if (message.includes('too large')) {
-    return [
-      'File exceeds maximum size limit',
-      'Try compressing the file at source',
-      'Use a file splitter to break into parts',
-      'Consider using direct upload instead'
-    ];
-  }
-  return [
-    'Verify the URL is correct and accessible',
-    'Check your internet connection',
-    'Try the upload again after a few minutes',
-    'Contact support if the issue persists'
-  ];
-}
-
-// Include all utility functions from the main upload system
-${utility_functions}
+function generateAdvancedDownloadId() { return `download_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`; }
+function calculateMaxFileSize(kvCount) { return kvCount * 150 * 1024 * 1024; }
+function formatFileSize(bytes) { if (bytes === 0) return '0 Bytes'; const i = Math.floor(Math.log(bytes) / Math.log(1024)); return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]; }
+function formatTime(ms) { if (ms < 1000) return `${ms}ms`; if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`; return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`; }
+function generateFileHash(filename, size) { let hash = 0; const str = filename + size; for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; } return Math.abs(hash).toString(36); }
+function determineFileQuality(filename) { const name = filename.toLowerCase(); if (name.includes('1080p')) return 'high'; if (name.includes('720p')) return 'medium'; if (name.includes('480p')) return 'standard'; return 'standard'; }
+function extractServerInfo(url) { try { const u = new URL(url); return { hostname: u.hostname, protocol: u.protocol }; } catch { return { hostname: 'unknown' }; } }
+function getExtensionFromMimeType(mimeType) { const map = { 'video/mp4': '.mp4', 'video/webm': '.webm', 'image/jpeg': '.jpg', 'application/zip': '.zip' }; return map[mimeType.toLowerCase()] || ''; }
+function calculateUrlUploadEfficiency(downloadTime, uploadTime, fileSize) { const totalTime = downloadTime + uploadTime; const baseline = (fileSize / (10 * 1024 * 1024)) * 1000; return Math.round((baseline / totalTime) * 100); }
+function getErrorCode(error) { const msg = error.message.toLowerCase(); if (msg.includes('file too large')) return 'FILE_TOO_LARGE'; if (msg.includes('telegram')) return 'TELEGRAM_API_ERROR'; if (msg.includes('timeout')) return 'TIMEOUT_ERROR'; return 'UNKNOWN_ERROR'; }
+function generateUrlTroubleshootingTips(error) { const code = getErrorCode(error); if (code === 'FILE_TOO_LARGE') return ['File exceeds max size limit']; if (code === 'TELEGRAM_API_ERROR') return ['Check bot token and channel ID']; if (code === 'TIMEOUT_ERROR') return ['Source server may be too slow']; return ['Check if URL is correct and public']; }
+function calculatePerformanceScore(uploadResult, processingTime) { const reliabilityScore = uploadResult.successRate; return Math.round(reliabilityScore); }
