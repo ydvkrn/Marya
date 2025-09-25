@@ -217,7 +217,7 @@
             justify-content: center; font-size: 1rem; font-weight: 600; flex-shrink: 0;
         }
         .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
-        .toast.error .toast-icon { background: var(--error-light); color: var(--error); }
+        .toast.error .toast-icon { background: var(--primary-light); color: var(--error); }
         .toast-content { flex: 1; }
         .toast-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
         .toast-message { font-size: 0.875rem; color: var(--gray-600); }
@@ -604,7 +604,7 @@
             xhr.send(formData);
         }
 
-        // URL Upload with Progress
+        // URL Upload with Enhanced Validation
         async function uploadFromUrl() {
             const urlInput = document.getElementById('urlInput');
             const url = urlInput.value.trim();
@@ -808,132 +808,203 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
+        // Complete File Icon Function
         function getFileIcon(filename) {
             const ext = filename.split('.').pop()?.toLowerCase() || '';
             const iconMap = {
-                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 'gif': 'fa-image', 'webp': 'fa-image',
-                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 'mov': 'fa-video', 'webm': 'fa-video',
-                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music', 'aac': 'fa-music',
-                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word', 'txt': 'fa-file-alt',
-                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', '7z': 'fa-file-archive',
-                'js': 'fa-code', 'html': 'fa-globe', 'css': 'fa-palette', 'py': 'fa-python'
+                // Images
+                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 
+                'gif': 'fa-image', 'webp': 'fa-image', 'svg': 'fa-image',
+                'bmp': 'fa-image', 'tiff': 'fa-image', 'ico': 'fa-image',
+                // Videos
+                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 
+                'mov': 'fa-video', 'webm': 'fa-video', 'flv': 'fa-video',
+                'wmv': 'fa-video', 'm4v': 'fa-video', '3gp': 'fa-video',
+                // Audio
+                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music',
+                'aac': 'fa-music', 'ogg': 'fa-music', 'wma': 'fa-music',
+                'm4a': 'fa-music', 'opus': 'fa-music',
+                // Documents
+                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
+                'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+                'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
+                'txt': 'fa-file-alt', 'rtf': 'fa-file-alt',
+                // Archives
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', 
+                '7z': 'fa-file-archive', 'tar': 'fa-file-archive',
+                'gz': 'fa-file-archive', 'bz2': 'fa-file-archive',
+                // Code
+                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code',
+                'php': 'fa-file-code', 'py': 'fa-file-code', 'java': 'fa-file-code',
+                'cpp': 'fa-file-code', 'c': 'fa-file-code', 'json': 'fa-file-code',
+                'xml': 'fa-file-code', 'sql': 'fa-file-code'
             };
+
             return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
         }
 
-        function extractFilenameFromUrl(url) {
-            try {
-                const pathname = new URL(url).pathname;
-                return pathname.split('/').pop() || 'Unknown File';
-            } catch {
-                return 'Unknown File';
-            }
-        }
-
-        // Global Stats Updates
-        function updateFileCounter(count) {
-            fileCounter += count;
-            document.getElementById('filesCount').textContent = fileCounter;
-            updateResultsCount();
-        }
-
-        function updateTotalSize(size) {
-            totalSize += size;
-            document.getElementById('totalSize').textContent = formatBytes(totalSize);
-        }
-
-        function updateResultsCount() {
-            document.getElementById('resultsCount').textContent = 
-                `${fileCounter} file${fileCounter !== 1 ? 's' : ''} uploaded`;
-        }
-
+        // Enhanced Global Stats
         function updateGlobalStats() {
-            // Update average speed
-            const avgSpeed = activeUploads > 0 ? totalSpeed / activeUploads : 0;
-            document.getElementById('avgSpeed').textContent = formatBytes(avgSpeed) + '/s';
+            const stats = {
+                totalSize: formatBytes(totalSize),
+                avgSpeed: formatBytes(totalSpeed / Math.max(activeUploads, 1)) + '/s',
+                timeRemaining: calculateGlobalTimeRemaining(),
+                filesCount: uploadStats.completed
+            };
 
-            // Update time remaining
-            if (activeUploads > 0) {
-                const remainingTime = avgSpeed > 0 ? (totalSize - (uploadStats.completed * totalSize / uploadStats.total)) / avgSpeed : 0;
-                document.getElementById('timeRemaining').textContent = formatTime(remainingTime * 1000);
-            } else {
-                document.getElementById('timeRemaining').textContent = 'Complete!';
+            Object.entries(stats).forEach(([key, value]) => {
+                const element = document.getElementById(key);
+                if (element) element.textContent = value;
+            });
+
+            // Show/hide stats dashboard
+            const dashboard = document.getElementById('statsDashboard');
+            if (activeUploads > 0 || uploadStats.total > 0) {
+                dashboard.style.display = 'grid';
             }
+        }
+
+        function calculateGlobalTimeRemaining() {
+            if (activeUploads === 0) return 'Complete';
+            return 'Calculating...';
         }
 
         function startStatsUpdater() {
             setInterval(updateGlobalStats, 1000);
         }
 
+        // Show Results Section
         function showResults() {
-            document.getElementById('results').classList.add('show');
-            document.getElementById('statsDashboard').style.display = 'grid';
+            const results = document.getElementById('results');
+            results.classList.add('show');
         }
 
-        // Enhanced Features
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('🔗 Link copied to clipboard!', 'success');
-            }, () => {
-                showToast('❌ Failed to copy link', 'error');
-            });
-        }
-
-        function shareFile(url, filename) {
-            if (navigator.share) {
-                navigator.share({
-                    title: `📁 ${filename}`,
-                    text: `Check out this file: ${filename}`,
-                    url: url
-                });
-            } else {
-                copyToClipboard(url);
-                showToast('🔗 Link copied for sharing!', 'success');
+        // Update File Counter
+        function updateFileCounter(count) {
+            fileCounter += count;
+            const resultsCount = document.getElementById('resultsCount');
+            if (resultsCount) {
+                resultsCount.textContent = `${fileCounter} files uploaded`;
             }
         }
 
-        function deleteFile(fileId) {
-            if (confirm('🗑️ Are you sure you want to delete this file?')) {
-                showToast('🗑️ Delete functionality coming soon!', 'warning');
+        // Update Total Size
+        function updateTotalSize(size) {
+            totalSize += size;
+        }
+
+        // Extract filename from URL
+        function extractFilenameFromUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                const pathname = urlObj.pathname;
+                const filename = pathname.split('/').pop();
+                return filename || 'downloaded-file';
+            } catch (e) {
+                return 'downloaded-file';
             }
         }
 
-        function retryUpload(button) {
-            showToast('🔄 Retry functionality coming soon!', 'warning');
-        }
-
-        // Enhanced Toast System
-        function showToast(message, type = 'success') {
+        // Toast System
+        function showToast(message, type = 'success', duration = 4000) {
             const toast = document.getElementById('toast');
             const icons = {
-                success: 'fa-check',
-                error: 'fa-times',
-                warning: 'fa-exclamation-triangle'
-            };
-            const titles = {
-                success: 'Success',
-                error: 'Error',
-                warning: 'Warning'
+                success: '✅',
+                error: '❌',
+                warning: '⚠️'
             };
 
             toast.innerHTML = `
-                <div class="toast-icon">
-                    <i class="fas ${icons[type]}"></i>
-                </div>
+                <div class="toast-icon">${icons[type] || '💡'}</div>
                 <div class="toast-content">
-                    <div class="toast-title">${titles[type]}</div>
+                    <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
                     <div class="toast-message">${message}</div>
                 </div>
             `;
 
-            toast.className = `toast ${type} show`;
+            toast.className = `toast ${type}`;
+            setTimeout(() => toast.classList.add('show'), 100);
 
             setTimeout(() => {
                 toast.classList.remove('show');
-            }, 5000);
+            }, duration);
         }
 
-        console.log('🚀 MARYA VAULT ULTIMATE - System Ready!');
+        // Copy to Clipboard
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Link copied to clipboard!', 'success');
+            } catch (err) {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('Link copied to clipboard!', 'success');
+            }
+        }
+
+        // Share File
+        async function shareFile(url, filename) {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `${filename} - MARYA VAULT`,
+                        text: `Check out this file: ${filename}`,
+                        url: url
+                    });
+                } catch (err) {
+                    copyToClipboard(url);
+                }
+            } else {
+                copyToClipboard(url);
+            }
+        }
+
+        // Delete File (placeholder)
+        async function deleteFile(fileId) {
+            if (confirm('Are you sure you want to delete this file?')) {
+                try {
+                    const response = await fetch(`/delete/${fileId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        showToast('File deleted successfully!', 'success');
+                        // Remove file item from DOM
+                        const fileItem = event.target.closest('.file-item');
+                        if (fileItem) fileItem.remove();
+                    } else {
+                        throw new Error('Failed to delete file');
+                    }
+                } catch (error) {
+                    showToast(`Delete failed: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Retry Upload (placeholder)
+        function retryUpload(button) {
+            const fileItem = button.closest('.file-item');
+            const fileName = fileItem.querySelector('.file-name').textContent;
+            showToast(`Retrying upload for ${fileName}...`, 'warning');
+
+            // Reset file item status
+            const elements = getFileElements(fileItem);
+            elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retrying...';
+            elements.status.className = 'file-status uploading';
+            elements.actions.innerHTML = '';
+
+            // Here you would implement the retry logic
+            setTimeout(() => {
+                showToast('Retry functionality not implemented yet', 'warning');
+            }, 2000);
+        }
+
+        console.log('🎉 MARYA VAULT ULTIMATE - System Ready!');
     </script>
 </body>
 </html>
