@@ -485,16 +485,15 @@
                     try {
                         const result = JSON.parse(xhr.responseText);
 
-                        // ✅ CRITICAL FIX - Build proper URL
+                        // ✅ FIXED - Correct URL path matching [id].js route
                         if (result.success) {
                             const baseUrl = window.location.origin;
                             const fileName = result.filename || file.name;
 
-                            // Build URL: domain.pages.dev/btfstorage/files/filename.ext
-                            const fileUrl = `${baseUrl}/btfstorage/files/${fileName}`;
-                            const downloadUrl = `${baseUrl}/btfstorage/files/${fileName}`;
+                            // ✅ Correct path: /btfstorage/file/filename (matches [id].js)
+                            const fileUrl = `${baseUrl}/btfstorage/file/${fileName}`;
+                            const downloadUrl = `${baseUrl}/btfstorage/file/${fileName}`;
 
-                            // Override result with correct URLs
                             result.url = fileUrl;
                             result.download = downloadUrl;
                             result.filename = fileName;
@@ -554,11 +553,11 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    // ✅ CRITICAL FIX - Build proper URL
+                    // ✅ FIXED - Correct URL path
                     const baseUrl = window.location.origin;
                     const fileName = result.filename || extractFilenameFromUrl(url);
-                    result.url = `${baseUrl}/btfstorage/files/${fileName}`;
-                    result.download = `${baseUrl}/btfstorage/files/${fileName}`;
+                    result.url = `${baseUrl}/btfstorage/file/${fileName}`;
+                    result.download = `${baseUrl}/btfstorage/file/${fileName}`;
                     result.filename = fileName;
 
                     showResults();
@@ -669,7 +668,6 @@
             elements.progressPercent.textContent = '100%';
             elements.timeRemaining.textContent = 'Complete!';
 
-            // ✅ Use corrected URLs
             elements.actions.innerHTML = `
                 <a href="${result.url}" target="_blank" class="btn btn-primary">
                     <i class="fas fa-eye"></i> View
