@@ -21,8 +21,6 @@
             min-height: 100vh; color: var(--gray-900); line-height: 1.5; -webkit-font-smoothing: antialiased;
         }
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-
-        /* Header with Enhanced Logo */
         .header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
         .logo {
             width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -41,11 +39,8 @@
             font-size: 4rem; font-weight: 900; margin-bottom: 1rem; letter-spacing: -0.02em;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            text-shadow: 2px 2px 4px rgba(220, 38, 38, 0.1);
         }
         .subtitle { font-size: 1.25rem; color: var(--gray-600); font-weight: 500; max-width: 700px; margin: 0 auto; }
-
-        /* Advanced Tab System */
         .tabs-container {
             background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl);
             padding: 2rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
@@ -58,15 +53,13 @@
         .tabs { display: flex; margin-bottom: 2rem; background: var(--gray-100); border-radius: 12px; overflow: hidden; }
         .tab {
             flex: 1; padding: 1rem 1.5rem; border: none; background: transparent; cursor: pointer;
-            font-size: 1rem; font-weight: 600; transition: all 0.3s; position: relative; overflow: hidden;
+            font-size: 1rem; font-weight: 600; transition: all 0.3s; position: relative;
         }
         .tab.active { background: var(--primary); color: var(--white); }
         .tab:not(.active):hover { background: var(--gray-200); }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeInUp 0.5s ease; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Enhanced Dropzone */
         .dropzone {
             border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
             cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
@@ -76,20 +69,14 @@
             border-color: var(--primary); background: var(--primary-light);
             transform: translateY(-3px); box-shadow: var(--shadow-lg);
         }
-        .upload-icon { 
-            font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary);
-            animation: float 6s ease-in-out infinite;
-        }
+        .upload-icon { font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary); animation: float 6s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
         .upload-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
         .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
-
-        /* URL Input Section */
         .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; }
         .url-input {
             flex: 1; padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
-            font-size: 1rem; outline: none; transition: border-color 0.3s;
-            background: var(--white); box-shadow: var(--shadow-sm);
+            font-size: 1rem; outline: none; transition: border-color 0.3s; background: var(--white); box-shadow: var(--shadow-sm);
         }
         .url-input:focus { border-color: var(--primary); }
         .url-btn {
@@ -97,18 +84,14 @@
             border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
         }
         .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
-
-        /* Advanced File Type Badges */
         .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
         .file-type-badge {
             background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border-radius: 25px;
             font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;
-            box-shadow: var(--shadow-sm); transition: all 0.3s; position: relative; overflow: hidden;
+            box-shadow: var(--shadow-sm); transition: all 0.3s;
         }
         .file-type-badge:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
         .file-type-badge i { margin-right: 0.5rem; }
-
-        /* Real-time Stats Dashboard */
         .stats-dashboard {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
             margin-bottom: 2rem; padding: 1.5rem; background: var(--gray-50); border-radius: 15px;
@@ -119,11 +102,6 @@
         }
         .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
         .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; text-transform: uppercase; }
-        .stat-trend { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; }
-        .trend-up { color: var(--success); }
-        .trend-down { color: var(--error); }
-
-        /* Enhanced Progress System */
         .file-item {
             background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
             box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
@@ -143,8 +121,6 @@
         .file-details { flex: 1; min-width: 0; }
         .file-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-all; }
         .file-meta { color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem; }
-
-        /* Advanced Progress Bar */
         .progress-container { margin: 2rem 0; }
         .progress-info {
             display: flex; justify-content: space-between; margin-bottom: 1rem;
@@ -165,19 +141,10 @@
             animation: progressShimmer 2s infinite;
         }
         @keyframes progressShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        .speed-indicator {
-            display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--success);
-            margin-top: 0.5rem; font-weight: 600;
-        }
-
-        /* Status Indicators */
         .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; }
         .file-status.uploading { color: var(--primary); }
         .file-status.completed { color: var(--success); }
         .file-status.failed { color: var(--error); }
-        .file-status.processing { color: var(--warning); }
-
-        /* Action Buttons */
         .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
         .btn {
             display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
@@ -200,8 +167,6 @@
             box-shadow: var(--shadow-sm);
         }
         .btn-outline:hover { background: var(--gray-50); border-color: var(--primary); }
-
-        /* Enhanced Toast System */
         .toast {
             position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px;
             padding: 1.5rem; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);
@@ -211,7 +176,6 @@
         .toast.show { transform: translateX(0); }
         .toast.success { border-left: 5px solid var(--success); }
         .toast.error { border-left: 5px solid var(--error); }
-        .toast.warning { border-left: 5px solid var(--warning); }
         .toast-icon {
             width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
             justify-content: center; font-size: 1rem; font-weight: 600; flex-shrink: 0;
@@ -221,8 +185,6 @@
         .toast-content { flex: 1; }
         .toast-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
         .toast-message { font-size: 0.875rem; color: var(--gray-600); }
-
-        /* Results Section */
         .results { display: none; }
         .results.show { display: block; animation: fadeIn 0.6s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -233,10 +195,8 @@
         .results-title { font-size: 2rem; font-weight: 800; color: var(--gray-900); }
         .results-count {
             background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem;
-            border-radius: 25px; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.5px;
+            border-radius: 25px; font-size: 0.875rem; font-weight: 700;
         }
-
-        /* Enhanced Features Section */
         .features-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;
             margin: 3rem 0; padding: 2rem; background: var(--gray-50); border-radius: 20px;
@@ -253,8 +213,6 @@
         }
         .feature-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; }
         .feature-desc { font-size: 0.875rem; color: var(--gray-600); line-height: 1.4; }
-
-        /* Responsive */
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .title { font-size: 2.5rem; }
@@ -272,14 +230,12 @@
 </head>
 <body>
     <div class="container">
-        <!-- Enhanced Header -->
         <header class="header">
             <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
             <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
-            <p class="subtitle">Professional file storage with advanced chunking, real-time progress tracking, and enterprise-grade features up to 2GB per file.</p>
+            <p class="subtitle">Professional file storage with advanced features up to 2GB per file.</p>
         </header>
 
-        <!-- Advanced Tab System -->
         <section class="tabs-container">
             <div class="tabs">
                 <button class="tab active" onclick="showTab('file')">
@@ -293,7 +249,6 @@
                 </button>
             </div>
 
-            <!-- File Upload Tab -->
             <div class="tab-content active" id="file-content">
                 <label class="dropzone" id="dropzone" for="fileInput">
                     <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
@@ -310,7 +265,6 @@
                 <input type="file" id="fileInput" multiple accept="*/*" style="display: none;">
             </div>
 
-            <!-- URL Upload Tab -->
             <div class="tab-content" id="url-content">
                 <div class="url-section">
                     <input type="url" id="urlInput" class="url-input" placeholder="Enter file URL (https://example.com/file.zip)">
@@ -324,7 +278,6 @@
                 </div>
             </div>
 
-            <!-- Batch Upload Tab -->
             <div class="tab-content" id="batch-content">
                 <label class="dropzone" id="batchDropzone" for="batchInput">
                     <div class="upload-icon"><i class="fas fa-layer-group"></i></div>
@@ -335,31 +288,25 @@
             </div>
         </section>
 
-        <!-- Real-time Stats Dashboard -->
         <section class="stats-dashboard" id="statsDashboard" style="display: none;">
             <div class="stat-card">
                 <div class="stat-value" id="totalSize">0 MB</div>
                 <div class="stat-label">Total Size</div>
-                <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i></div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="avgSpeed">0 MB/s</div>
                 <div class="stat-label">Avg Speed</div>
-                <div class="stat-trend trend-up"><i class="fas fa-tachometer-alt"></i></div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="timeRemaining">--</div>
                 <div class="stat-label">Time Remaining</div>
-                <div class="stat-trend"><i class="fas fa-clock"></i></div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="filesCount">0</div>
                 <div class="stat-label">Files Uploaded</div>
-                <div class="stat-trend trend-up"><i class="fas fa-file-alt"></i></div>
             </div>
         </section>
 
-        <!-- Enhanced Results Section -->
         <section class="results" id="results">
             <div class="results-header">
                 <h2 class="results-title">📁 Your Files</h2>
@@ -368,7 +315,6 @@
             <div id="filesList"></div>
         </section>
 
-        <!-- Advanced Features Grid -->
         <section class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-bolt"></i></div>
@@ -378,7 +324,7 @@
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
                 <div class="feature-title">Enterprise Security</div>
-                <div class="feature-desc">End-to-end encryption with secure Telegram storage</div>
+                <div class="feature-desc">End-to-end encryption with secure storage</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-globe"></i></div>
@@ -403,13 +349,11 @@
         </section>
     </div>
 
-    <!-- Enhanced Toast System -->
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 MARYA VAULT ULTIMATE - Loading Advanced System...');
+        console.log('🚀 MARYA VAULT - Loading...');
 
-        // Global variables
         let fileCounter = 0;
         let totalSize = 0;
         let totalSpeed = 0;
@@ -417,7 +361,7 @@
         let uploadStats = { total: 0, completed: 0, failed: 0 };
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Initializing Ultimate File Uploader');
+            console.log('✅ System Ready');
             initializeSystem();
         });
 
@@ -426,10 +370,8 @@
             setupUrlUpload();
             setupBatchUpload();
             setupDragDrop();
-            startStatsUpdater();
         }
 
-        // Tab Management
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -437,22 +379,18 @@
             document.getElementById(tabName + '-content').classList.add('active');
         }
 
-        // File Upload Setup
         function setupFileUpload() {
             const fileInput = document.getElementById('fileInput');
             const dropzone = document.getElementById('dropzone');
-
             fileInput.addEventListener('change', e => {
                 if (e.target.files.length > 0) {
                     handleFiles(Array.from(e.target.files));
                     fileInput.value = '';
                 }
             });
-
             dropzone.addEventListener('click', () => fileInput.click());
         }
 
-        // URL Upload Setup
         function setupUrlUpload() {
             const urlInput = document.getElementById('urlInput');
             urlInput.addEventListener('keypress', e => {
@@ -460,106 +398,82 @@
             });
         }
 
-        // Batch Upload Setup
         function setupBatchUpload() {
             const batchInput = document.getElementById('batchInput');
             const batchDropzone = document.getElementById('batchDropzone');
-
             batchInput.addEventListener('change', e => {
                 if (e.target.files.length > 0) {
-                    const files = Array.from(e.target.files).slice(0, 10); // Max 10 files
+                    const files = Array.from(e.target.files).slice(0, 10);
                     handleFiles(files, true);
                     batchInput.value = '';
                 }
             });
-
             batchDropzone.addEventListener('click', () => batchInput.click());
         }
 
-        // Enhanced Drag & Drop
         function setupDragDrop() {
             const dropzones = [document.getElementById('dropzone'), document.getElementById('batchDropzone')];
-
             dropzones.forEach(dropzone => {
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropzone.addEventListener(eventName, preventDefaults, false);
                     document.body.addEventListener(eventName, preventDefaults, false);
                 });
-
                 ['dragenter', 'dragover'].forEach(eventName => {
                     dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
                 });
-
                 ['dragleave', 'drop'].forEach(eventName => {
                     dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
                 });
-
                 dropzone.addEventListener('drop', e => {
                     const files = Array.from(e.dataTransfer.files);
                     if (files.length > 0) handleFiles(files, dropzone.id === 'batchDropzone');
                 }, false);
             });
-
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
         }
 
-        // Handle Files with Advanced Processing
         function handleFiles(files, isBatch = false) {
-            console.log(`🔄 Processing ${files.length} file(s) - Batch mode: ${isBatch}`);
-
+            console.log(`Processing ${files.length} files`);
             if (files.length === 0) {
                 showToast('No files selected', 'error');
                 return;
             }
-
-            // Validate files
             const validFiles = files.filter(file => {
-                if (file.size > 2147483648) { // 2GB
+                if (file.size > 2147483648) {
                     showToast(`File "${file.name}" is too large (max 2GB)`, 'error');
                     return false;
                 }
                 return true;
             });
-
             if (validFiles.length === 0) return;
-
             showResults();
             updateFileCounter(validFiles.length);
             updateTotalSize(validFiles.reduce((sum, file) => sum + file.size, 0));
-
-            // Process files with delay for better UX
             validFiles.forEach((file, index) => {
                 setTimeout(() => uploadFile(file, isBatch), index * 100);
             });
         }
 
-        // Advanced File Upload with Real-time Stats
         function uploadFile(file, isBatch = false) {
-            console.log(`⬆️ Starting upload: ${file.name} (${formatBytes(file.size)})`);
-
+            console.log(`Uploading: ${file.name}`);
             const fileItem = createAdvancedFileItem(file);
             document.getElementById('filesList').appendChild(fileItem);
-
             const elements = getFileElements(fileItem);
-
             activeUploads++;
             uploadStats.total++;
-
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
             formData.append('file', file);
             const startTime = Date.now();
 
-            // Enhanced progress tracking
             xhr.upload.addEventListener('progress', e => {
                 if (e.lengthComputable) {
                     const percent = Math.round((e.loaded / e.total) * 100);
                     const speed = calculateSpeed(e.loaded, startTime);
                     const remaining = calculateTimeRemaining(e.loaded, e.total, speed);
-
                     updateProgress(elements, percent, speed, remaining);
                     updateGlobalStats();
                 }
@@ -567,19 +481,35 @@
 
             xhr.addEventListener('load', () => {
                 activeUploads--;
-
                 if (xhr.status === 200) {
                     try {
                         const result = JSON.parse(xhr.responseText);
+
+                        // ✅ CRITICAL FIX - Build proper URL
                         if (result.success) {
+                            const baseUrl = window.location.origin;
+                            const fileName = result.filename || file.name;
+
+                            // Build URL: domain.pages.dev/btfstorage/files/filename.ext
+                            const fileUrl = `${baseUrl}/btfstorage/files/${fileName}`;
+                            const downloadUrl = `${baseUrl}/btfstorage/files/${fileName}`;
+
+                            // Override result with correct URLs
+                            result.url = fileUrl;
+                            result.download = downloadUrl;
+                            result.filename = fileName;
+
+                            console.log('✅ Upload success:', result);
+
                             handleUploadSuccess(elements, result, file);
                             uploadStats.completed++;
-                            showToast(`✅ ${file.name} uploaded successfully!`, 'success');
+                            showToast(`✅ ${file.name} uploaded!`, 'success');
                         } else {
                             throw new Error(result.error || 'Upload failed');
                         }
                     } catch (parseError) {
-                        handleUploadError(elements, 'Invalid server response');
+                        console.error('Parse error:', parseError);
+                        handleUploadError(elements, 'Invalid response');
                         uploadStats.failed++;
                         showToast(`❌ Upload failed: ${file.name}`, 'error');
                     }
@@ -588,7 +518,6 @@
                     uploadStats.failed++;
                     showToast(`❌ Upload failed: ${file.name}`, 'error');
                 }
-
                 updateGlobalStats();
             });
 
@@ -604,39 +533,39 @@
             xhr.send(formData);
         }
 
-        // URL Upload with Enhanced Validation
         async function uploadFromUrl() {
             const urlInput = document.getElementById('urlInput');
             const url = urlInput.value.trim();
-
             if (!url) {
                 showToast('Please enter a URL', 'error');
                 return;
             }
-
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 showToast('URL must start with http:// or https://', 'error');
                 return;
             }
-
             showToast('🌐 Starting URL upload...', 'success');
             urlInput.disabled = true;
-
             try {
                 const response = await fetch('/upload-from-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url })
                 });
-
                 const result = await response.json();
-
                 if (result.success) {
+                    // ✅ CRITICAL FIX - Build proper URL
+                    const baseUrl = window.location.origin;
+                    const fileName = result.filename || extractFilenameFromUrl(url);
+                    result.url = `${baseUrl}/btfstorage/files/${fileName}`;
+                    result.download = `${baseUrl}/btfstorage/files/${fileName}`;
+                    result.filename = fileName;
+
                     showResults();
                     const fileItem = createUrlFileItem(result, url);
                     document.getElementById('filesList').appendChild(fileItem);
                     updateFileCounter(1);
-                    showToast('🚀 URL upload completed successfully!', 'success');
+                    showToast('🚀 URL upload completed!', 'success');
                 } else {
                     throw new Error(result.error || 'URL upload failed');
                 }
@@ -648,7 +577,6 @@
             }
         }
 
-        // Create Advanced File Item
         function createAdvancedFileItem(file) {
             const item = document.createElement('div');
             item.className = 'file-item';
@@ -660,7 +588,7 @@
                         <div class="file-meta">
                             ${formatBytes(file.size)} • ${file.type || 'Unknown type'} • 
                             <span class="file-status uploading">
-                                <i class="fas fa-spinner fa-spin"></i> Preparing upload...
+                                <i class="fas fa-spinner fa-spin"></i> Uploading...
                             </span>
                         </div>
                     </div>
@@ -668,9 +596,7 @@
                 <div class="progress-container">
                     <div class="progress-info">
                         <span class="progress-percent">0%</span>
-                        <span class="speed-indicator">
-                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
-                        </span>
+                        <span class="upload-speed">0 MB/s</span>
                         <span class="time-remaining">Calculating...</span>
                     </div>
                     <div class="progress-bar">
@@ -682,7 +608,6 @@
             return item;
         }
 
-        // Create URL File Item
         function createUrlFileItem(result, originalUrl) {
             const item = document.createElement('div');
             item.className = 'file-item';
@@ -695,14 +620,14 @@
                         <div class="file-meta">
                             ${formatBytes(result.size || 0)} • URL Upload • 
                             <span class="file-status completed">
-                                <i class="fas fa-check-circle"></i> Upload Complete
+                                <i class="fas fa-check-circle"></i> Complete
                             </span>
                         </div>
                     </div>
                 </div>
                 <div class="file-actions">
                     <a href="${result.url}" target="_blank" class="btn btn-primary">
-                        <i class="fas fa-eye"></i> View File
+                        <i class="fas fa-eye"></i> View
                     </a>
                     <a href="${result.download}" class="btn btn-success">
                         <i class="fas fa-download"></i> Download
@@ -710,15 +635,11 @@
                     <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
                         <i class="fas fa-copy"></i> Copy Link
                     </button>
-                    <button onclick="shareFile('${result.url}', '${filename}')" class="btn btn-outline">
-                        <i class="fas fa-share"></i> Share
-                    </button>
                 </div>
             `;
             return item;
         }
 
-        // Get File Elements
         function getFileElements(fileItem) {
             return {
                 progressFill: fileItem.querySelector('.progress-fill'),
@@ -730,30 +651,28 @@
             };
         }
 
-        // Update Progress with Advanced Metrics
         function updateProgress(elements, percent, speed, remaining) {
             elements.progressFill.style.width = percent + '%';
             elements.progressPercent.textContent = percent + '%';
             elements.uploadSpeed.textContent = formatBytes(speed) + '/s';
             elements.timeRemaining.textContent = remaining;
-
             if (percent < 100) {
                 elements.status.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Uploading... ${percent}%`;
                 elements.status.className = 'file-status uploading';
             }
         }
 
-        // Handle Upload Success
         function handleUploadSuccess(elements, result, file) {
-            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Upload Complete';
+            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
             elements.status.className = 'file-status completed';
             elements.progressFill.style.width = '100%';
             elements.progressPercent.textContent = '100%';
             elements.timeRemaining.textContent = 'Complete!';
 
+            // ✅ Use corrected URLs
             elements.actions.innerHTML = `
                 <a href="${result.url}" target="_blank" class="btn btn-primary">
-                    <i class="fas fa-eye"></i> View File
+                    <i class="fas fa-eye"></i> View
                 </a>
                 <a href="${result.download}" class="btn btn-success">
                     <i class="fas fa-download"></i> Download
@@ -761,27 +680,19 @@
                 <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
                     <i class="fas fa-copy"></i> Copy Link
                 </button>
-                <button onclick="shareFile('${result.url}', '${file.name}')" class="btn btn-outline">
-                    <i class="fas fa-share"></i> Share
-                </button>
-                <button onclick="deleteFile('${result.id}')" class="btn btn-outline" style="color: var(--error);">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
             `;
         }
 
-        // Handle Upload Error
         function handleUploadError(elements, error) {
             elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
             elements.status.className = 'file-status failed';
             elements.actions.innerHTML = `
-                <button onclick="retryUpload(this)" class="btn btn-outline">
-                    <i class="fas fa-redo"></i> Retry Upload
+                <button onclick="location.reload()" class="btn btn-outline">
+                    <i class="fas fa-redo"></i> Retry
                 </button>
             `;
         }
 
-        // Utility Functions
         function calculateSpeed(loaded, startTime) {
             const elapsed = (Date.now() - startTime) / 1000;
             return elapsed > 0 ? loaded / elapsed : 0;
@@ -796,8 +707,8 @@
         function formatTime(ms) {
             if (ms < 1000) return 'Less than 1s';
             if (ms < 60000) return Math.round(ms / 1000) + 's';
-            if (ms < 3600000) return Math.round(ms / 60000) + 'm ' + Math.round((ms % 60000) / 1000) + 's';
-            return Math.round(ms / 3600000) + 'h ' + Math.round((ms % 3600000) / 60000) + 'm';
+            if (ms < 3600000) return Math.round(ms / 60000) + 'm';
+            return Math.round(ms / 3600000) + 'h';
         }
 
         function formatBytes(bytes) {
@@ -808,112 +719,55 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Complete File Icon Function
         function getFileIcon(filename) {
             const ext = filename.split('.').pop()?.toLowerCase() || '';
             const iconMap = {
-                // Images
-                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 
-                'gif': 'fa-image', 'webp': 'fa-image', 'svg': 'fa-image',
-                'bmp': 'fa-image', 'tiff': 'fa-image', 'ico': 'fa-image',
-                // Videos
-                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 
-                'mov': 'fa-video', 'webm': 'fa-video', 'flv': 'fa-video',
-                'wmv': 'fa-video', 'm4v': 'fa-video', '3gp': 'fa-video',
-                // Audio
-                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music',
-                'aac': 'fa-music', 'ogg': 'fa-music', 'wma': 'fa-music',
-                'm4a': 'fa-music', 'opus': 'fa-music',
-                // Documents
+                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 'gif': 'fa-image', 'webp': 'fa-image',
+                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 'mov': 'fa-video', 'webm': 'fa-video',
+                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music', 'aac': 'fa-music',
                 'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
                 'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
-                'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
-                'txt': 'fa-file-alt', 'rtf': 'fa-file-alt',
-                // Archives
-                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', 
-                '7z': 'fa-file-archive', 'tar': 'fa-file-archive',
-                'gz': 'fa-file-archive', 'bz2': 'fa-file-archive',
-                // Code
-                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code',
-                'php': 'fa-file-code', 'py': 'fa-file-code', 'java': 'fa-file-code',
-                'cpp': 'fa-file-code', 'c': 'fa-file-code', 'json': 'fa-file-code',
-                'xml': 'fa-file-code', 'sql': 'fa-file-code'
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', '7z': 'fa-file-archive',
+                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code', 'php': 'fa-file-code'
             };
-
             return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
         }
 
-        // Enhanced Global Stats
         function updateGlobalStats() {
-            const stats = {
-                totalSize: formatBytes(totalSize),
-                avgSpeed: formatBytes(totalSpeed / Math.max(activeUploads, 1)) + '/s',
-                timeRemaining: calculateGlobalTimeRemaining(),
-                filesCount: uploadStats.completed
-            };
-
-            Object.entries(stats).forEach(([key, value]) => {
-                const element = document.getElementById(key);
-                if (element) element.textContent = value;
-            });
-
-            // Show/hide stats dashboard
-            const dashboard = document.getElementById('statsDashboard');
+            document.getElementById('totalSize').textContent = formatBytes(totalSize);
+            document.getElementById('avgSpeed').textContent = formatBytes(totalSpeed / Math.max(activeUploads, 1)) + '/s';
+            document.getElementById('filesCount').textContent = uploadStats.completed;
             if (activeUploads > 0 || uploadStats.total > 0) {
-                dashboard.style.display = 'grid';
+                document.getElementById('statsDashboard').style.display = 'grid';
             }
         }
 
-        function calculateGlobalTimeRemaining() {
-            if (activeUploads === 0) return 'Complete';
-            return 'Calculating...';
-        }
-
-        function startStatsUpdater() {
-            setInterval(updateGlobalStats, 1000);
-        }
-
-        // Show Results Section
         function showResults() {
-            const results = document.getElementById('results');
-            results.classList.add('show');
+            document.getElementById('results').classList.add('show');
         }
 
-        // Update File Counter
         function updateFileCounter(count) {
             fileCounter += count;
-            const resultsCount = document.getElementById('resultsCount');
-            if (resultsCount) {
-                resultsCount.textContent = `${fileCounter} files uploaded`;
-            }
+            document.getElementById('resultsCount').textContent = `${fileCounter} files uploaded`;
         }
 
-        // Update Total Size
         function updateTotalSize(size) {
             totalSize += size;
         }
 
-        // Extract filename from URL
         function extractFilenameFromUrl(url) {
             try {
                 const urlObj = new URL(url);
-                const pathname = urlObj.pathname;
-                const filename = pathname.split('/').pop();
+                const filename = urlObj.pathname.split('/').pop();
                 return filename || 'downloaded-file';
-            } catch (e) {
+            } catch {
                 return 'downloaded-file';
             }
         }
 
-        // Toast System
         function showToast(message, type = 'success', duration = 4000) {
             const toast = document.getElementById('toast');
-            const icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️'
-            };
-
+            const icons = { success: '✅', error: '❌', warning: '⚠️' };
             toast.innerHTML = `
                 <div class="toast-icon">${icons[type] || '💡'}</div>
                 <div class="toast-content">
@@ -921,90 +775,27 @@
                     <div class="toast-message">${message}</div>
                 </div>
             `;
-
             toast.className = `toast ${type}`;
             setTimeout(() => toast.classList.add('show'), 100);
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
+            setTimeout(() => toast.classList.remove('show'), duration);
         }
 
-        // Copy to Clipboard
         async function copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
-                showToast('Link copied to clipboard!', 'success');
-            } catch (err) {
-                // Fallback
+                showToast('Link copied!', 'success');
+            } catch {
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                showToast('Link copied to clipboard!', 'success');
+                showToast('Link copied!', 'success');
             }
         }
 
-        // Share File
-        async function shareFile(url, filename) {
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: `${filename} - MARYA VAULT`,
-                        text: `Check out this file: ${filename}`,
-                        url: url
-                    });
-                } catch (err) {
-                    copyToClipboard(url);
-                }
-            } else {
-                copyToClipboard(url);
-            }
-        }
-
-        // Delete File (placeholder)
-        async function deleteFile(fileId) {
-            if (confirm('Are you sure you want to delete this file?')) {
-                try {
-                    const response = await fetch(`/delete/${fileId}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        showToast('File deleted successfully!', 'success');
-                        // Remove file item from DOM
-                        const fileItem = event.target.closest('.file-item');
-                        if (fileItem) fileItem.remove();
-                    } else {
-                        throw new Error('Failed to delete file');
-                    }
-                } catch (error) {
-                    showToast(`Delete failed: ${error.message}`, 'error');
-                }
-            }
-        }
-
-        // Retry Upload (placeholder)
-        function retryUpload(button) {
-            const fileItem = button.closest('.file-item');
-            const fileName = fileItem.querySelector('.file-name').textContent;
-            showToast(`Retrying upload for ${fileName}...`, 'warning');
-
-            // Reset file item status
-            const elements = getFileElements(fileItem);
-            elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retrying...';
-            elements.status.className = 'file-status uploading';
-            elements.actions.innerHTML = '';
-
-            // Here you would implement the retry logic
-            setTimeout(() => {
-                showToast('Retry functionality not implemented yet', 'warning');
-            }, 2000);
-        }
-
-        console.log('🎉 MARYA VAULT ULTIMATE - System Ready!');
+        console.log('🎉 System Ready!');
     </script>
 </body>
 </html>
