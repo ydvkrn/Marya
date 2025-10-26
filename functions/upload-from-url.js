@@ -1,19 +1,15 @@
-// 🚀 ULTIMATE MARYA VAULT - ADVANCED URL UPLOAD SYSTEM
-// Enhanced to match the advanced upload system (FIXED & COMPLETE)
+// functions/upload-from-url.js
+// ðŸŒ ULTRA-ROBUST URL UPLOAD - HTTP 500 FIX
 
-// Main handler for the request
 export async function onRequest(context) {
   const { request, env } = context;
 
-  console.log('🌐 === ULTIMATE URL UPLOAD START === 🌐');
-  console.log('📅 Timestamp:', new Date().toISOString());
+  console.log('ðŸŒ URL UPLOAD STARTED:', new Date().toISOString());
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-URL-Type, X-Download-Options',
-    'Access-Control-Expose-Headers': 'X-Download-ID, X-Processing-Time, X-Download-Stats',
-    'Access-Control-Max-Age': '86400'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
   };
 
   if (request.method === 'OPTIONS') {
@@ -21,532 +17,393 @@ export async function onRequest(context) {
   }
 
   if (request.method !== 'POST') {
-    return createJsonResponse({
-      success: false,
-      error: 'Method not allowed - Use POST only'
-    }, 405, corsHeaders);
+    return jsonResponse({ success: false, error: 'Only POST allowed' }, 405, corsHeaders);
   }
 
-  const startTime = Date.now();
-  const downloadId = generateAdvancedDownloadId();
-
   try {
-    // 🔧 Enhanced environment validation
-    const envValidation = await validateAdvancedEnvironment(env);
-    if (!envValidation.success) {
-      throw new Error(`Environment validation failed: ${envValidation.error}`);
+    // Validate environment
+    if (!env.BOT_TOKEN || !env.CHAT_ID || !env.FILES_KV) {
+      throw new Error('Server configuration error - Missing credentials');
     }
 
-    const { kvNamespaces, botTokens, channelId } = envValidation;
+    // Get URL from request
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      throw new Error('Invalid JSON in request body');
+    }
 
-    // 📥 Process URL input
-    const { url } = await request.json();
+    const { url } = body;
 
     if (!url || !url.trim()) {
       throw new Error('No URL provided');
     }
 
-    const cleanUrl = url.trim();
-    console.log('🔗 Processing URL:', cleanUrl.substring(0, 100) + '...');
+    console.log('ðŸŒ Downloading from:', url);
 
-    // 🔍 Advanced URL validation
-    const urlValidation = validateAdvancedUrl(cleanUrl);
-    if (!urlValidation.valid) {
-      throw new Error(urlValidation.error);
+    // Validate URL
+    let urlObj;
+    try {
+      urlObj = new URL(url);
+    } catch {
+      throw new Error('Invalid URL format');
     }
 
-    console.log('✅ URL validation passed:', urlValidation.type);
-
-    // 📊 Get file information
-    const fileInfo = await getAdvancedFileInfo(cleanUrl);
-    console.log('📁 File info retrieved:', {
-      size: formatFileSize(fileInfo.size),
-      type: fileInfo.contentType,
-      filename: fileInfo.filename
-    });
-
-    // ✅ Validate file size
-    const maxFileSize = calculateMaxFileSize(kvNamespaces.length);
-    if (fileInfo.size > 0 && fileInfo.size > maxFileSize) {
-        throw new Error(`File too large: ${formatFileSize(fileInfo.size)} (max: ${formatFileSize(maxFileSize)})`);
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      throw new Error('Only HTTP/HTTPS URLs are supported');
     }
 
-    // ⬇️ Enhanced download with progress tracking
-    console.log('⬇️ Starting enhanced download...');
-    const downloadResult = await downloadAdvancedFile(cleanUrl, fileInfo);
+    // Download with retry
+    let downloadResponse;
+    let lastError;
+    const maxDownloadRetries = 3;
 
-    if (!downloadResult.success) {
-      throw new Error(`Download failed: ${downloadResult.error}`);
-    }
+    for (let attempt = 1; attempt <= maxDownloadRetries; attempt++) {
+      try {
+        console.log(`ðŸ”„ Download attempt ${attempt}/${maxDownloadRetries}`);
 
-    const { arrayBuffer, actualSize, downloadTime } = downloadResult;
-    console.log(`✅ Download completed: ${formatFileSize(actualSize)} in ${formatTime(downloadTime)}`);
+        const downloadPromise = fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': '*/*'
+          }
+        });
 
-    // 📁 Create enhanced file object
-    const file = new File([arrayBuffer], fileInfo.filename, { 
-      type: fileInfo.contentType,
-      lastModified: Date.now()
-    });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Download timeout (120s)')), 120000)
+        );
 
-    // 📊 Generate advanced metadata
-    const metadata = await generateAdvancedFileMetadata(file);
-    metadata.sourceUrl = cleanUrl.length > 200 ? cleanUrl.substring(0, 200) + '...' : cleanUrl;
-    metadata.downloadStats = {
-      downloadTime: downloadTime,
-      downloadSpeed: actualSize / (downloadTime / 1000),
-      sourceServer: extractServerInfo(cleanUrl),
-      userAgent: 'MARYA-VAULT/3.0 Advanced Downloader'
-    };
+        downloadResponse = await Promise.race([downloadPromise, timeoutPromise]);
 
-    // 🆔 Generate advanced file ID
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).slice(2, 10);
-    const category = metadata.category.charAt(0).toUpperCase();
-    const sizeIndicator = file.size > 500 * 1024 * 1024 ? 'L' : 'M';
-    const fileId = `${category}${sizeIndicator}${timestamp}${random}`;
-    const extension = fileInfo.filename.includes('.') ? fileInfo.filename.slice(fileInfo.filename.lastIndexOf('.')) : '';
+        if (downloadResponse.ok) {
+          break;
+        }
 
-    console.log(`🆔 Advanced file ID: ${fileId}${extension}`);
+        throw new Error(`HTTP ${downloadResponse.status}`);
 
-    // 🧩 Calculate optimal chunking strategy
-    const chunkingStrategy = calculateOptimalChunkingStrategy(file.size, kvNamespaces.length, metadata);
-    console.log(`🧩 Chunking strategy:`, {
-      totalChunks: chunkingStrategy.totalChunks,
-      chunkSize: formatFileSize(chunkingStrategy.chunkSize),
-      distribution: chunkingStrategy.distribution,
-      parallelUploads: chunkingStrategy.parallelUploads
-    });
+      } catch (error) {
+        console.error(`âŒ Download attempt ${attempt} failed:`, error.message);
+        lastError = error;
 
-    // 🚀 Execute advanced chunked upload
-    const uploadResult = await executeAdvancedChunkedUpload(
-      file, 
-      fileId, 
-      chunkingStrategy, 
-      kvNamespaces, 
-      botTokens, 
-      channelId,
-      downloadId
-    );
-
-    // 📈 Create comprehensive metadata
-    const masterMetadata = createAdvancedMasterMetadata(
-      file, 
-      fileId, 
-      extension, 
-      chunkingStrategy, 
-      uploadResult, 
-      metadata,
-      startTime
-    );
-
-    masterMetadata.source = {
-      type: 'url_upload',
-      originalUrl: cleanUrl,
-      downloadTime: downloadTime,
-      downloadSpeed: actualSize / (downloadTime / 1000),
-      serverInfo: extractServerInfo(cleanUrl),
-      downloadId: downloadId
-    };
-
-    await kvNamespaces[0].kv.put(fileId, JSON.stringify(masterMetadata));
-    console.log(`💾 Master metadata stored`);
-
-    // 🔗 Generate advanced URLs
-    const baseUrl = new URL(request.url).origin;
-    const urls = generateAdvancedUrls(baseUrl, fileId, extension, metadata);
-
-    // 📊 Calculate comprehensive metrics
-    const totalProcessingTime = Date.now() - startTime;
-    const overallSpeed = file.size / (totalProcessingTime / 1000);
-    const efficiency = calculateUrlUploadEfficiency(downloadTime, uploadResult.processingTime, file.size);
-
-    // 🎉 Create ultimate response
-    const responseData = {
-      success: true,
-      message: '🌐 Ultimate URL upload completed!',
-      source: {
-        originalUrl: cleanUrl.length > 100 ? cleanUrl.substring(0, 100) + '...' : cleanUrl,
-        downloadTimeFormatted: formatTime(downloadTime),
-        downloadSpeedFormatted: formatFileSize(actualSize / (downloadTime / 1000)) + '/s'
-      },
-      file: {
-        id: fileId,
-        filename: fileInfo.filename,
-        size: file.size,
-        sizeFormatted: formatFileSize(file.size),
-        extension: extension
-      },
-      processing: {
-        totalTimeFormatted: formatTime(totalProcessingTime),
-        overallSpeedFormatted: formatFileSize(overallSpeed) + '/s',
-      },
-      urls: urls,
-    };
-
-    return new Response(JSON.stringify(responseData, null, 2), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        ...corsHeaders 
+        if (attempt < maxDownloadRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+        }
       }
-    });
+    }
+
+    if (!downloadResponse || !downloadResponse.ok) {
+      throw new Error(`Download failed: ${lastError?.message || 'Unknown error'}`);
+    }
+
+    // Get filename
+    let filename = 'download';
+    const contentDisposition = downloadResponse.headers.get('Content-Disposition');
+
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[*]?=([^;\n\r"']+)/);
+      if (match) {
+        filename = match[1].replace(/['"]/g, '').trim();
+      }
+    }
+
+    if (filename === 'download') {
+      const urlPath = urlObj.pathname;
+      const urlFilename = urlPath.split('/').pop();
+      if (urlFilename && urlFilename.length > 0) {
+        filename = urlFilename;
+      }
+    }
+
+    // Get content type
+    const contentType = downloadResponse.headers.get('Content-Type') || 'application/octet-stream';
+
+    // Add extension if missing
+    if (!filename.includes('.')) {
+      const ext = getExtFromMimeType(contentType);
+      if (ext) filename += ext;
+    }
+
+    // Download content
+    console.log('ðŸ“¥ Downloading content...');
+
+    const arrayBuffer = await downloadResponse.arrayBuffer();
+    const fileSize = arrayBuffer.byteLength;
+
+    console.log(`âœ… Downloaded: ${filename} (${formatBytes(fileSize)})`);
+
+    // Validate size
+    if (fileSize === 0) {
+      throw new Error('Downloaded file is empty');
+    }
+
+    if (fileSize > 2147483648) {
+      throw new Error(`File too large: ${formatBytes(fileSize)} (max 2GB)`);
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 8);
+    const fileId = `${timestamp}${random}`;
+
+    const ext = filename.includes('.') ? filename.substring(filename.lastIndexOf('.')) : '';
+    const baseName = filename.substring(0, filename.lastIndexOf('.') || filename.length);
+    const sanitized = baseName.toLowerCase().replace(/[^a-z0-9-]/g, '_').substring(0, 40);
+    const finalFilename = `${sanitized}_${fileId}${ext}`;
+
+    console.log('ðŸ†” Generated filename:', finalFilename);
+
+    // Create File object
+    const file = new File([arrayBuffer], filename, { type: contentType });
+
+    // Determine upload strategy
+    const CHUNK_THRESHOLD = 50 * 1024 * 1024;
+    const CHUNK_SIZE = 10 * 1024 * 1024;
+    const needsChunking = fileSize > CHUNK_THRESHOLD;
+
+    console.log(`ðŸ“Š Upload strategy: ${needsChunking ? 'CHUNKED' : 'SINGLE'}`);
+
+    let result;
+
+    if (needsChunking) {
+      result = await uploadChunked(file, finalFilename, env, CHUNK_SIZE);
+    } else {
+      result = await uploadSingle(file, finalFilename, env);
+    }
+
+    console.log('âœ… URL upload completed');
+
+    return jsonResponse({
+      success: true,
+      filename: finalFilename,
+      id: fileId,
+      originalName: filename,
+      size: fileSize,
+      contentType: contentType,
+      uploadType: needsChunking ? 'chunked' : 'single',
+      chunks: result.chunks || 0,
+      sourceUrl: url,
+      uploadedAt: new Date().toISOString()
+    }, 200, corsHeaders);
 
   } catch (error) {
-    console.error('💥 URL UPLOAD ERROR:', error);
-    const processingTime = Date.now() - startTime;
-    return createJsonResponse({
+    console.error('âŒ URL UPLOAD ERROR:', error.message);
+    console.error('Stack:', error.stack);
+
+    return jsonResponse({
       success: false,
-      error: error.message,
-      downloadId: downloadId,
-      timestamp: new Date().toISOString(),
-      processingTime: processingTime,
-      errorCode: getErrorCode(error),
-      troubleshooting: generateUrlTroubleshootingTips(error),
+      error: error.message || 'URL upload failed',
+      details: error.stack?.split('\n')[0]
     }, 500, corsHeaders);
   }
 }
 
+// Single upload
+async function uploadSingle(file, filename, env) {
+  console.log('ðŸ“¤ Starting SINGLE upload...');
 
-// #############################################################
-// #################### UTILITY FUNCTIONS ######################
-// #############################################################
+  const maxRetries = 3;
+  let lastError;
 
-/**
- * 🔧 Advanced Environment Validation
- */
-async function validateAdvancedEnvironment(env) {
-    const requiredVars = ['BOT_TOKEN', 'CHANNEL_ID'];
-    const missing = requiredVars.filter(key => !env[key]);
-    if (missing.length > 0) {
-        return { success: false, error: `Missing env variables: ${missing.join(', ')}` };
-    }
-    const kvNamespaces = [];
-    for (let i = 1; i <= 7; i++) {
-        const kvKey = i === 1 ? 'FILES_KV' : `FILES_KV${i}`;
-        if (env[kvKey]) {
-            kvNamespaces.push({ kv: env[kvKey], name: kvKey, index: i - 1 });
-        }
-    }
-    const botTokens = [];
-    for (let i = 1; i <= 4; i++) {
-        const tokenKey = i === 1 ? 'BOT_TOKEN' : `BOT_TOKEN${i}`;
-        if (env[tokenKey]) {
-            botTokens.push({ token: env[tokenKey], name: tokenKey, index: i - 1 });
-        }
-    }
-    if (kvNamespaces.length === 0) {
-        return { success: false, error: 'No KV namespaces configured' };
-    }
-    return {
-        success: true,
-        kvNamespaces,
-        botTokens,
-        channelId: env.CHANNEL_ID,
-    };
-}
-
-/**
- * 🔍 Advanced URL Validation
- */
-function validateAdvancedUrl(url) {
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        return { valid: false, error: 'URL must start with http:// or https://' };
-    }
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-        const parsedUrl = new URL(url);
-        const suspiciousPatterns = ['localhost', '127.0.0.1'];
-        if (suspiciousPatterns.some(pattern => parsedUrl.hostname.includes(pattern))) {
-            return { valid: false, error: 'Local URLs are not allowed' };
-        }
-        let urlType = 'generic';
-        if (parsedUrl.hostname.includes('workers.dev')) urlType = 'cloudflare_worker';
-        return { valid: true, type: urlType, hostname: parsedUrl.hostname };
-    } catch (urlError) {
-        return { valid: false, error: `Invalid URL format: ${urlError.message}` };
-    }
-}
+      console.log(`ðŸ”„ Upload attempt ${attempt}/${maxRetries}`);
 
-/**
- * 📊 Get Advanced File Information from URL
- */
-async function getAdvancedFileInfo(url) {
-    try {
-        const headResponse = await fetch(url, {
-            method: 'HEAD',
-            headers: { 'User-Agent': 'MARYA-VAULT/3.0' },
-            signal: AbortSignal.timeout(30000)
-        });
-        let size = 0;
-        let contentType = 'application/octet-stream';
-        let filename = 'download';
-        if (headResponse.ok) {
-            size = parseInt(headResponse.headers.get('Content-Length') || '0');
-            contentType = headResponse.headers.get('Content-Type') || contentType;
-            const disposition = headResponse.headers.get('Content-Disposition');
-            if (disposition && disposition.includes('filename')) {
-                const match = disposition.match(/filename[*]?=([^;]+)/);
-                if (match) filename = decodeURIComponent(match[1].replace(/['"]/g, '').trim());
-            }
-        }
-        if (filename === 'download') {
-            const urlPath = new URL(url).pathname;
-            const urlFilename = urlPath.split('/').pop();
-            if (urlFilename) filename = decodeURIComponent(urlFilename);
-        }
-        filename = filename.replace(/[<>:"/\\|?*]/g, '_').trim();
-        if (!filename.includes('.') && contentType) {
-            const ext = getExtensionFromMimeType(contentType);
-            if (ext) filename += ext;
-        }
-        return { size, contentType, filename };
-    } catch (error) {
-        console.warn('⚠️ HEAD request failed, proceeding without file info:', error.message);
-        let filename = 'download';
-        try {
-            const urlPath = new URL(url).pathname;
-            const urlFilename = urlPath.split('/').pop();
-            if (urlFilename) filename = decodeURIComponent(urlFilename);
-        } catch (e) {
-            filename = `download_${Date.now()}`;
-        }
-        return { size: 0, contentType: 'application/octet-stream', filename: filename.replace(/[<>:"/\\|?*]/g, '_').trim() };
-    }
-}
+      const formData = new FormData();
+      formData.append('chat_id', env.CHAT_ID);
+      formData.append('document', file);
+      formData.append('caption', `ðŸŒ URL: ${file.name}\nSize: ${formatBytes(file.size)}`);
 
-/**
- * ⬇️ Advanced File Download from URL
- */
-async function downloadAdvancedFile(url, fileInfo) {
-    const downloadStartTime = Date.now();
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'User-Agent': 'MARYA-VAULT/3.0' }
-        });
-        if (!response.ok) {
-            throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+      const response = await fetch(
+        `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
+        {
+          method: 'POST',
+          body: formData
         }
-        const arrayBuffer = await response.arrayBuffer();
-        const downloadTime = Date.now() - downloadStartTime;
-        return {
-            success: true,
-            arrayBuffer,
-            actualSize: arrayBuffer.byteLength,
-            downloadTime
-        };
-    } catch (error) {
-        return { success: false, error: error.message, downloadTime: Date.now() - downloadStartTime };
-    }
-}
+      );
 
-/**
- * 📊 Generate Advanced File Metadata
- */
-async function generateAdvancedFileMetadata(file) {
-    const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.') + 1).toLowerCase() : '';
-    const categories = {
-        video: ['mp4', 'mkv', 'webm'],
-        audio: ['mp3', 'wav', 'ogg'],
-        image: ['jpg', 'jpeg', 'png', 'gif'],
-        document: ['pdf', 'doc', 'docx', 'txt'],
-        archive: ['zip', 'rar', '7z']
-    };
-    let category = 'other';
-    for (const cat in categories) {
-        if (categories[cat].includes(extension)) {
-            category = cat;
-            break;
-        }
-    }
-    const hash = generateFileHash(file.name, file.size);
-    return {
-        category,
-        extension,
-        hash,
-        isVideo: category === 'video',
-        isLarge: file.size > 500 * 1024 * 1024,
-        quality: determineFileQuality(file.name, file.size),
-    };
-}
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-/**
- * 🧩 Calculate Optimal Chunking Strategy
- */
-function calculateOptimalChunkingStrategy(fileSize, kvCount, metadata) {
-    let baseChunkSize = 20 * 1024 * 1024; // Default 20MB
-    if (metadata.isVideo) baseChunkSize = 25 * 1024 * 1024;
-    else if (fileSize > 1024 * 1024 * 1024) baseChunkSize = 30 * 1024 * 1024;
-    const totalChunks = Math.ceil(fileSize / baseChunkSize);
-    const distribution = {};
-    for (let i = 0; i < totalChunks; i++) {
-        const kvIndex = i % kvCount;
-        distribution[kvIndex] = (distribution[kvIndex] || 0) + 1;
-    }
-    return {
-        strategy: totalChunks === 1 ? 'single' : 'chunked',
-        chunkSize: baseChunkSize,
-        totalChunks,
-        distribution,
-        parallelUploads: Math.min(5, kvCount),
-    };
-}
+      const data = await response.json();
 
-/**
- * 🚀 Execute Advanced Chunked Upload
- */
-async function executeAdvancedChunkedUpload(file, fileId, strategy, kvNamespaces, botTokens, channelId, uploadId) {
-    const startTime = Date.now();
-    const results = [];
-    const chunkQueue = [];
-    for (let i = 0; i < strategy.totalChunks; i++) {
-        const start = i * strategy.chunkSize;
-        const end = Math.min(start + strategy.chunkSize, file.size);
-        const chunk = file.slice(start, end);
-        const chunkFile = new File([chunk], `${file.name}.chunk${i.toString().padStart(3, '0')}`);
-        chunkQueue.push({
-            index: i,
-            file: chunkFile,
-            kvNamespace: kvNamespaces[i % kvNamespaces.length],
-            botToken: botTokens[i % botTokens.length].token,
-        });
-    }
-    for (let i = 0; i < chunkQueue.length; i += strategy.parallelUploads) {
-        const batch = chunkQueue.slice(i, i + strategy.parallelUploads);
-        const batchPromises = batch.map(info => uploadAdvancedChunkWithRetry(info.file, fileId, info.index, info.botToken, channelId, info.kvNamespace, 3));
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...batchResults);
-    }
-    const totalTime = Date.now() - startTime;
-    return {
-        results,
-        totalRetries: 0, // Simplified for this fix
-        bottlenecks: [], // Simplified
-        processingTime: totalTime,
-        successRate: (results.length / strategy.totalChunks) * 100,
-        kvDistribution: [...new Set(results.map(r => r.kvNamespace))],
-    };
-}
+      if (!data.ok || !data.result?.document?.file_id) {
+        throw new Error('Invalid Telegram response');
+      }
 
-/**
- * 🔄 Advanced Chunk Upload with Retry Logic
- */
-async function uploadAdvancedChunkWithRetry(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace, maxRetries = 3) {
-    let lastError;
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            return await uploadSingleAdvancedChunk(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace);
-        } catch (error) {
-            lastError = error;
-            console.warn(`⚠️ Chunk ${chunkIndex} attempt ${attempt} failed: ${error.message}`);
-            if (attempt < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-            }
-        }
-    }
-    throw new Error(`Chunk ${chunkIndex} failed after ${maxRetries} attempts: ${lastError.message}`);
-}
+      const telegramFileId = data.result.document.file_id;
 
-/**
- * 📤 Upload Single Advanced Chunk
- */
-async function uploadSingleAdvancedChunk(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
-    const telegramForm = new FormData();
-    telegramForm.append('chat_id', channelId);
-    telegramForm.append('document', chunkFile);
-    const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
-        method: 'POST',
-        body: telegramForm
-    });
-    if (!telegramResponse.ok) throw new Error(`Telegram API error ${telegramResponse.status}`);
-    const telegramData = await telegramResponse.json();
-    if (!telegramData.ok) throw new Error(`Telegram API rejected: ${telegramData.description}`);
-    const telegramFileId = telegramData.result.document.file_id;
-    const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
-    if (!getFileResponse.ok) throw new Error(`GetFile API error ${getFileResponse.status}`);
-    const getFileData = await getFileResponse.json();
-    if (!getFileData.ok) throw new Error(`GetFile failed: ${getFileData.description}`);
-    const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-    const chunkKey = `${fileId}_chunk_${chunkIndex.toString().padStart(3, '0')}`;
-    const chunkMetadata = {
-        telegramFileId,
-        directUrl,
-        size: chunkFile.size,
-        index: chunkIndex,
-        parentFileId: fileId,
-        kvNamespace: kvNamespace.name,
-        uploadedAt: Date.now()
-    };
-    await kvNamespace.kv.put(chunkKey, JSON.stringify(chunkMetadata));
-    return {
-        telegramFileId,
-        directUrl,
-        size: chunkFile.size,
-        chunkKey,
-        kvNamespace: kvNamespace.name
-    };
-}
-
-/**
- * 📋 Create Advanced Master Metadata
- */
-function createAdvancedMasterMetadata(file, fileId, extension, chunkingStrategy, uploadResult, metadata, startTime) {
-    const processingTime = Date.now() - startTime;
-    return {
-        fileId,
-        filename: file.name,
-        extension,
+      const metadata = {
+        filename: filename,
+        originalName: file.name,
         size: file.size,
-        contentType: file.type,
-        category: metadata.category,
-        hash: metadata.hash,
-        type: 'advanced_multi_kv_chunked',
-        totalChunks: chunkingStrategy.totalChunks,
-        chunkSize: chunkingStrategy.chunkSize,
-        uploadedAt: Date.now(),
-        processingTime,
-        chunks: uploadResult.results.map((result, index) => ({
-            index,
-            kvNamespace: result.kvNamespace,
-            chunkKey: result.chunkKey,
-            telegramFileId: result.telegramFileId,
-            size: result.size,
-        })),
-        version: '3.0.0'
-    };
-}
+        contentType: file.type || 'application/octet-stream',
+        uploadType: 'single',
+        telegramFileId: telegramFileId,
+        uploadedAt: Date.now()
+      };
 
-/**
- * 🔗 Generate Advanced URLs
- */
-function generateAdvancedUrls(baseUrl, fileId, extension, metadata) {
-    const urls = {
-        stream: `${baseUrl}/btfstorage/file/${fileId}${extension}`,
-        download: `${baseUrl}/btfstorage/file/${fileId}${extension}?dl=1`,
-        info: `${baseUrl}/btfstorage/info/${fileId}`,
-    };
-    if (metadata.isVideo) {
-        urls.hls = `${baseUrl}/btfstorage/hls/${fileId}/master.m3u8`;
-        urls.thumbnail = `${baseUrl}/btfstorage/thumb/${fileId}.jpg`;
+      await env.FILES_KV.put(filename, JSON.stringify(metadata));
+
+      console.log('âœ… Single upload successful');
+      return { chunks: 0 };
+
+    } catch (error) {
+      console.error(`âŒ Attempt ${attempt} failed:`, error.message);
+      lastError = error;
+
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+      }
     }
-    return urls;
+  }
+
+  throw new Error(`Upload failed after ${maxRetries} attempts: ${lastError.message}`);
 }
 
-// Other Helper Functions
-function createJsonResponse(data, status = 200, headers = {}) {
-    return new Response(JSON.stringify(data, null, 2), {
-        status,
-        headers: { 'Content-Type': 'application/json', ...headers }
-    });
+// Chunked upload
+async function uploadChunked(file, filename, env, chunkSize) {
+  console.log('ðŸ§© Starting CHUNKED upload...');
+
+  const totalChunks = Math.ceil(file.size / chunkSize);
+  console.log(`ðŸ“Š Total chunks: ${totalChunks}`);
+
+  if (totalChunks > 200) {
+    throw new Error(`Too many chunks: ${totalChunks}`);
+  }
+
+  const chunks = [];
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, file.size);
+    const chunkBlob = file.slice(start, end);
+
+    console.log(`ðŸ“¤ Uploading chunk ${i + 1}/${totalChunks}`);
+
+    const chunkFilename = `${filename}.chunk${String(i).padStart(4, '0')}`;
+    const chunkFile = new File([chunkBlob], chunkFilename, { type: 'application/octet-stream' });
+
+    const chunkResult = await uploadChunkWithRetry(chunkFile, i, filename, env, 3);
+    chunks.push(chunkResult);
+
+    if (i < totalChunks - 1) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  }
+
+  const masterMetadata = {
+    filename: filename,
+    originalName: file.name,
+    size: file.size,
+    contentType: file.type || 'application/octet-stream',
+    uploadType: 'chunked',
+    totalChunks: totalChunks,
+    chunkSize: chunkSize,
+    chunks: chunks,
+    uploadedAt: Date.now()
+  };
+
+  await env.FILES_KV.put(filename, JSON.stringify(masterMetadata));
+
+  console.log('âœ… All chunks uploaded');
+  return { chunks: totalChunks };
 }
-function generateAdvancedDownloadId() { return `download_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`; }
-function calculateMaxFileSize(kvCount) { return kvCount * 150 * 1024 * 1024; }
-function formatFileSize(bytes) { if (bytes === 0) return '0 Bytes'; const i = Math.floor(Math.log(bytes) / Math.log(1024)); return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]; }
-function formatTime(ms) { if (ms < 1000) return `${ms}ms`; if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`; return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`; }
-function generateFileHash(filename, size) { let hash = 0; const str = filename + size; for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; } return Math.abs(hash).toString(36); }
-function determineFileQuality(filename) { const name = filename.toLowerCase(); if (name.includes('1080p')) return 'high'; if (name.includes('720p')) return 'medium'; if (name.includes('480p')) return 'standard'; return 'standard'; }
-function extractServerInfo(url) { try { const u = new URL(url); return { hostname: u.hostname, protocol: u.protocol }; } catch { return { hostname: 'unknown' }; } }
-function getExtensionFromMimeType(mimeType) { const map = { 'video/mp4': '.mp4', 'video/webm': '.webm', 'image/jpeg': '.jpg', 'application/zip': '.zip' }; return map[mimeType.toLowerCase()] || ''; }
-function calculateUrlUploadEfficiency(downloadTime, uploadTime, fileSize) { const totalTime = downloadTime + uploadTime; const baseline = (fileSize / (10 * 1024 * 1024)) * 1000; return Math.round((baseline / totalTime) * 100); }
-function getErrorCode(error) { const msg = error.message.toLowerCase(); if (msg.includes('file too large')) return 'FILE_TOO_LARGE'; if (msg.includes('telegram')) return 'TELEGRAM_API_ERROR'; if (msg.includes('timeout')) return 'TIMEOUT_ERROR'; return 'UNKNOWN_ERROR'; }
-function generateUrlTroubleshootingTips(error) { const code = getErrorCode(error); if (code === 'FILE_TOO_LARGE') return ['File exceeds max size limit']; if (code === 'TELEGRAM_API_ERROR') return ['Check bot token and channel ID']; if (code === 'TIMEOUT_ERROR') return ['Source server may be too slow']; return ['Check if URL is correct and public']; }
-function calculatePerformanceScore(uploadResult, processingTime) { const reliabilityScore = uploadResult.successRate; return Math.round(reliabilityScore); }
+
+// Upload chunk with retry
+async function uploadChunkWithRetry(chunkFile, index, parentFilename, env, maxRetries) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const formData = new FormData();
+      formData.append('chat_id', env.CHAT_ID);
+      formData.append('document', chunkFile);
+      formData.append('caption', `ðŸ§© Chunk ${index + 1}`);
+
+      const response = await fetch(
+        `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.ok || !data.result?.document?.file_id) {
+        throw new Error('Invalid response');
+      }
+
+      const telegramFileId = data.result.document.file_id;
+
+      const chunkKey = `${parentFilename}_chunk_${String(index).padStart(4, '0')}`;
+      const chunkMeta = {
+        parentFile: parentFilename,
+        index: index,
+        size: chunkFile.size,
+        telegramFileId: telegramFileId,
+        uploadedAt: Date.now()
+      };
+
+      await env.FILES_KV.put(chunkKey, JSON.stringify(chunkMeta));
+
+      console.log(`âœ… Chunk ${index + 1} uploaded`);
+
+      return {
+        index: index,
+        size: chunkFile.size,
+        telegramFileId: telegramFileId
+      };
+
+    } catch (error) {
+      console.error(`âŒ Chunk ${index + 1} attempt ${attempt} failed:`, error.message);
+      lastError = error;
+
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+
+  throw new Error(`Chunk ${index + 1} failed: ${lastError.message}`);
+}
+
+// Utilities
+function getExtFromMimeType(mimeType) {
+  const map = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'image/webp': '.webp',
+    'video/mp4': '.mp4',
+    'video/webm': '.webm',
+    'video/x-matroska': '.mkv',
+    'audio/mpeg': '.mp3',
+    'audio/wav': '.wav',
+    'application/pdf': '.pdf',
+    'application/zip': '.zip',
+    'text/plain': '.txt',
+  };
+  return map[mimeType] || '';
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function jsonResponse(data, status, headers) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: { ...headers, 'Content-Type': 'application/json' }
+  });
+}
