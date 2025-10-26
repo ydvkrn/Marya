@@ -77,10 +77,7 @@ export async function onRequest(context) {
             }
         } catch (e) {
             console.warn('HEAD request failed:', e.message);
-        }
-
-        // Fallback: Partial download to estimate size
-        if (fileSize === 0) {
+            // Fallback to range request
             try {
                 const rangeResponse = await fetch(fileUrl, {
                     headers: {
@@ -90,17 +87,15 @@ export async function onRequest(context) {
                     }
                 });
                 if (!rangeResponse.ok) {
-                    throw new Error(`Failed to access file: HTTP ${rangeResponse.status}`);
+                    throw new Error(`Range request failed: HTTP ${rangeResponse.status}`);
                 }
                 const contentRange = rangeResponse.headers.get('content-range');
                 if (contentRange) {
                     const match = contentRange.match(/\/(\d+)/);
-                    if (match) {
-                        fileSize = parseInt(match[1]);
-                    }
+                    if (match) fileSize = parseInt(match[1]);
                 }
-            } catch (e) {
-                console.warn('Range request failed:', e.message);
+            } catch (rangeError) {
+                console.warn('Range request failed:', rangeError.message);
             }
         }
 
@@ -136,7 +131,7 @@ export async function onRequest(context) {
         }
         if (fileSize !== 0 && fileBuffer.byteLength !== fileSize) {
             console.warn(`Size mismatch: Expected ${fileSize} bytes, got ${fileBuffer.byteLength} bytes`);
-            fileSize = fileBuffer.byteLength; // Update to actual size
+            fileSize = fileBuffer.byteLength;
         }
 
         // Chunking strategy
@@ -159,7 +154,6 @@ export async function onRequest(context) {
             const chunkKey = `${newFileId}_chunk_${i}`;
             const targetKV = kvNamespaces[i % kvNamespaces.length];
 
-            // Store chunk as ArrayBuffer
             const chunkPromise = targetKV.kv.put(chunkKey, chunkBuffer, {
                 metadata: {
                     index: i,
@@ -196,7 +190,8 @@ export async function onRequest(context) {
                 kvNamespace: result.kvNamespace,
                 chunkKey: result.chunkKey,
                 size: result.size
-            }))
+            })),
+            chunkSize: CHUNK_SIZE
         };
 
         await kvNamespaces[0].kv.put(newFileId, JSON.stringify(masterMetadata)).catch(e => {
