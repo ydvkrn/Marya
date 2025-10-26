@@ -65,6 +65,7 @@
             border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
             cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
             min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: auto; /* Ensure clicks are not blocked */
         }
         .dropzone:hover, .dropzone.dragover {
             border-color: var(--primary); background: var(--primary-light);
@@ -213,21 +214,10 @@
         }
         .storage-info {
             background: linear-gradient(135deg, var(--primary-light), var(--success-light));
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            text-align: center;
+            padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center;
         }
-        .storage-info-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--gray-700);
-            margin-bottom: 0.5rem;
-        }
-        .storage-info-desc {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-        }
+        .storage-info-title { font-size: 1rem; font-weight: 700; color: var(--gray-700); margin-bottom: 0.5rem; }
+        .storage-info-desc { font-size: 0.875rem; color: var(--gray-600); }
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .title { font-size: 2.5rem; }
@@ -454,6 +444,7 @@
             console.log('Handling files:', files.length);
             if (files.length === 0) {
                 showToast('No files selected', 'error');
+                isProcessing = false;
                 return;
             }
 
@@ -562,6 +553,11 @@
             const fileUrl = urlInput.value.trim();
             const filename = filenameInput.value.trim();
 
+            if (!fileUrl) {
+                showToast('Please enter a URL', 'error');
+                return;
+            }
+
             try {
                 new URL(fileUrl);
                 if (!fileUrl.match(/^https?:\/\/.+/)) {
@@ -598,9 +594,16 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
                 if (result.success && result.data) {
+                    if (result.data.size === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
                     showResults();
                     updateFileCounter(1);
                     totalSize += result.data.size;
@@ -626,13 +629,14 @@
                             <i class="fas fa-copy"></i> Copy Link
                         </button>
                     `;
-                    showToast('🚀 URL import completed!', 'success');
+                    showToast(`🚀 URL import completed: ${result.data.filename}`, 'success');
                     urlInput.value = '';
                     filenameInput.value = '';
                 } else {
                     throw new Error(result.error || 'Import failed');
                 }
             } catch (error) {
+                console.error('URL upload error:', error);
                 elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error.message}`;
                 elements.status.className = 'file-status failed';
                 showToast(`❌ Import failed: ${error.message}`, 'error');
@@ -641,6 +645,7 @@
                 filenameInput.disabled = false;
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import from URL';
+                isProcessing = false;
             }
         }
 
@@ -736,7 +741,6 @@
             elements.progressFill.style.width = '100%';
             elements.progressPercent.textContent = '100%';
 
-            // Adjust for /upload endpoint response format
             const viewUrl = data.urls?.view || data.url;
             const downloadUrl = data.urls?.download || data.download;
 
@@ -831,65 +835,6 @@
                 showToast('Link copied!', 'success');
             }
         }
-   // Add URL upload form
-async function uploadFromUrl() {
-    const urlInput = document.getElementById('urlInput');
-    const filenameInput = document.getElementById('filenameInput');
-    
-    const url = urlInput.value.trim();
-    if (!url) {
-        alert('Please enter a URL');
-        return;
-    }
-
-    try {
-        showProgress(true);
-        updateProgress(0, 'Fetching file from URL...');
-
-        const response = await fetch('/upload-from-url', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                url: url,
-                filename: filenameInput.value.trim() || null
-            })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            updateProgress(100, 'Upload completed!');
-            showToast(`✅ File uploaded: ${result.filename}`, 'success');
-            
-            // Add to file list
-            addFileToList(result);
-            
-            // Clear inputs
-            urlInput.value = '';
-            filenameInput.value = '';
-        } else {
-            throw new Error(result.error);
-        }
-
-    } catch (error) {
-        console.error('URL upload error:', error);
-        showToast(`❌ Upload failed: ${error.message}`, 'error');
-    } finally {
-        setTimeout(() => showProgress(false), 2000);
-    }
-}
-
-// Add to HTML
-/*
-<div class="url-upload-section">
-    <h3>Upload from URL</h3>
-    <input type="url" id="urlInput" placeholder="https://example.com/file.mp4" />
-    <input type="text" id="filenameInput" placeholder="Custom filename (optional)" />
-    <button onclick="uploadFromUrl()">Upload from URL</button>
-</div>
-*/
- </script>
+    </script>
 </body>
 </html>
