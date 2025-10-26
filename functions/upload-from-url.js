@@ -6,14 +6,16 @@ export async function onRequest(context) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type, Accept'
   };
 
   if (request.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
     return new Response(null, { headers: corsHeaders });
   }
 
   if (request.method !== 'POST') {
+    console.error(`Invalid method: ${request.method}`);
     return new Response(JSON.stringify({
       success: false,
       error: 'Method not allowed'
@@ -48,12 +50,22 @@ export async function onRequest(context) {
       throw new Error('No KV namespaces available');
     }
 
-    // ✅ Parse JSON body for URL upload, accept 'fileUrl' instead of 'url'
-    const body = await request.json();
-    const fileUrl = body.fileUrl; // Changed from 'url' to 'fileUrl'
+    // ✅ Parse JSON body with robust error handling
+    let body;
+    try {
+      const rawBody = await request.text();
+      console.log('Raw request body:', rawBody);
+      body = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError.message);
+      throw new Error('Invalid JSON body');
+    }
+
+    const fileUrl = body.fileUrl || body.url; // Accept both 'fileUrl' and 'url' for compatibility
     const customFilename = body.filename || null;
 
     if (!fileUrl) {
+      console.error('No URL provided in body:', body);
       throw new Error('No URL provided');
     }
 
@@ -64,6 +76,7 @@ export async function onRequest(context) {
     const fileResponse = await fetch(fileUrl);
 
     if (!fileResponse.ok) {
+      console.error(`Fetch failed: ${fileResponse.status} ${fileResponse.statusText}`);
       throw new Error(`Failed to fetch file: ${fileResponse.status} ${fileResponse.statusText}`);
     }
 
@@ -78,7 +91,6 @@ export async function onRequest(context) {
       if (disposition && disposition.includes('filename=')) {
         filename = disposition.split('filename=')[1].replace(/['"]/g, '');
       } else {
-        // Extract from URL
         const urlPath = new URL(fileUrl).pathname;
         filename = urlPath.split('/').pop() || `file_${Date.now()}`;
       }
@@ -179,7 +191,7 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    console.error('URL upload error:', error);
+    console.error('URL upload error:', error.message);
     return new Response(JSON.stringify({
       success: false,
       error: error.message
