@@ -525,8 +525,14 @@
             const fileUrl = urlInput.value.trim();
             const filename = filenameInput.value.trim();
 
-            if (!fileUrl) {
-                showToast('Please enter a file URL', 'error');
+            // Validate URL format
+            try {
+                new URL(fileUrl);
+                if (!fileUrl.match(/^https?:\/\/.+/)) {
+                    throw new Error('URL must start with http:// or https://');
+                }
+            } catch {
+                showToast('Please enter a valid URL (e.g., https://example.com/file.mp4)', 'error');
                 return;
             }
 
@@ -588,7 +594,7 @@
                     urlInput.value = '';
                     filenameInput.value = '';
                 } else {
-                    throw new Error(result.error?.message || 'Import failed');
+                    throw new Error(result.error || 'Import failed');
                 }
             } catch (error) {
                 elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error.message}`;
