@@ -9,19 +9,43 @@ const KV_NAMESPACES = [
 
 export default {
   async fetch(request, env, ctx) {
+    // Handle CORS preflight OPTIONS request
+    if (request.method === 'OPTIONS') {
+      console.log('Handling OPTIONS request for CORS');
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Max-Age': '86400'
+        }
+      });
+    }
+
+    // Handle POST request
     if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
+      console.error(`Invalid method: ${request.method}`);
+      return new Response(JSON.stringify({ success: false, error: `Method not allowed: ${request.method}` }), {
         status: 405,
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
     try {
+      console.log(`Processing POST request to /upload-from-url`);
       const { fileUrl, filename } = await request.json();
       if (!fileUrl) {
+        console.error('No URL provided in request');
         return new Response(JSON.stringify({ success: false, error: 'URL is required' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
         });
       }
 
@@ -31,7 +55,10 @@ export default {
         console.error(`Fetch failed: HTTP ${response.status} - ${response.statusText}`);
         return new Response(JSON.stringify({ success: false, error: `Failed to fetch file: HTTP ${response.status}` }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
         });
       }
 
@@ -40,14 +67,20 @@ export default {
         console.error('File is empty (Content-Length: 0)');
         return new Response(JSON.stringify({ success: false, error: 'File is empty' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
         });
       }
       if (contentLength > MAX_SIZE) {
         console.error(`File too large: ${contentLength} bytes`);
         return new Response(JSON.stringify({ success: false, error: 'File exceeds 175MB limit' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
         });
       }
 
@@ -65,7 +98,10 @@ export default {
         console.error('Downloaded file is empty');
         return new Response(JSON.stringify({ success: false, error: 'Downloaded file is empty' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
         });
       }
 
@@ -78,7 +114,10 @@ export default {
           console.error(`KV namespace ${KV_NAMESPACES[chunks.length % KV_NAMESPACES.length]} not found`);
           return new Response(JSON.stringify({ success: false, error: 'Internal server error: KV namespace missing' }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            }
           });
         }
         await kvNamespace.put(chunkId, chunk);
@@ -111,14 +150,20 @@ export default {
         }
       }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
 
     } catch (error) {
       console.error('Error in upload-from-url:', error.message, error.stack);
       return new Response(JSON.stringify({ success: false, error: `Internal server error: ${error.message}` }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
   }
