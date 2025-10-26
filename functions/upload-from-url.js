@@ -1,4 +1,3 @@
-// /functions/upload-from-url.js
 export async function onRequest(context) {
   const { request, env } = context;
 
@@ -49,9 +48,9 @@ export async function onRequest(context) {
       throw new Error('No KV namespaces available');
     }
 
-    // ✅ Parse JSON body for URL upload
+    // ✅ Parse JSON body for URL upload, accept 'fileUrl' instead of 'url'
     const body = await request.json();
-    const fileUrl = body.url;
+    const fileUrl = body.fileUrl; // Changed from 'url' to 'fileUrl'
     const customFilename = body.filename || null;
 
     if (!fileUrl) {
