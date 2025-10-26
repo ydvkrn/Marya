@@ -3,175 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 MARYA VAULT ULTIMATE - Professional Storage</title>
+    <title>🚀 MARYA VAULT ULTIMATE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2;
-            --success: #059669; --success-light: #d1fae5; --error: #dc2626; --warning: #f59e0b;
-            --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; 
-            --gray-300: #d1d5db; --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); 
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --success: #059669; --error: #dc2626; --warning: #f59e0b;
+            --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; 
+            --gray-200: #e5e7eb; --gray-600: #4b5563; --gray-900: #111827;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--white), var(--gray-50));
-            min-height: 100vh; color: var(--gray-900); line-height: 1.5; -webkit-font-smoothing: antialiased;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--white), var(--gray-50));
+            min-height: 100vh; color: var(--gray-900);
         }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .header { text-align: center; margin-bottom: 3rem; }
         .logo {
-            width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 30px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center;
-            box-shadow: var(--shadow-xl); position: relative; overflow: hidden;
-            animation: logoGlow 3s ease-in-out infinite alternate;
-        }
-        @keyframes logoGlow { 0% { box-shadow: var(--shadow-xl); } 100% { box-shadow: 0 25px 50px rgba(220, 38, 38, 0.3); } }
-        .logo::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
-            animation: shimmer 3s infinite;
-        }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        .title {
-            font-size: 4rem; font-weight: 900; margin-bottom: 1rem; letter-spacing: -0.02em;
+            width: 100px; height: 100px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            border-radius: 25px; margin: 0 auto 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);
         }
-        .subtitle { font-size: 1.25rem; color: var(--gray-600); font-weight: 500; max-width: 700px; margin: 0 auto; }
-        .tabs-container {
-            background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl);
-            padding: 2rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
-            position: relative; overflow: hidden;
+        .title { font-size: 3rem; font-weight: 900; color: var(--primary); margin-bottom: 0.5rem; }
+        .subtitle { font-size: 1.1rem; color: var(--gray-600); }
+        .upload-section {
+            background: var(--white); border-radius: 20px;
+            padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 2rem;
         }
-        .tabs-container::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        .tabs {
+            display: flex; gap: 1rem; margin-bottom: 2rem;
+            background: var(--gray-100); border-radius: 12px; padding: 0.5rem;
         }
-        .tabs { display: flex; margin-bottom: 2rem; background: var(--gray-100); border-radius: 12px; overflow: hidden; }
         .tab {
-            flex: 1; padding: 1rem 1.5rem; border: none; background: transparent; cursor: pointer;
-            font-size: 1rem; font-weight: 600; transition: all 0.3s; position: relative;
+            flex: 1; padding: 1rem; border: none; background: transparent;
+            cursor: pointer; font-weight: 600; border-radius: 8px; transition: all 0.3s;
         }
-        .tab.active { background: var(--primary); color: var(--white); }
-        .tab:not(.active):hover { background: var(--gray-200); }
+        .tab.active { background: var(--primary); color: white; }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeInUp 0.5s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content.active { display: block; }
         .dropzone {
-            border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
-            cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
-            min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 3px dashed var(--gray-200); border-radius: 15px;
+            padding: 3rem; text-align: center; cursor: pointer;
+            transition: all 0.3s; min-height: 300px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .dropzone:hover, .dropzone.dragover {
-            border-color: var(--primary); background: var(--primary-light);
-            transform: translateY(-3px); box-shadow: var(--shadow-lg);
-        }
-        .upload-icon { font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary); animation: float 6s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
-        .upload-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
-        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; }
+        .dropzone:hover { border-color: var(--primary); background: var(--primary-light); }
+        .upload-icon { font-size: 4rem; color: var(--primary); margin-bottom: 1rem; }
+        .url-section { display: flex; gap: 1rem; margin-bottom: 1rem; }
         .url-input {
-            flex: 1; padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
-            font-size: 1rem; outline: none; transition: border-color 0.3s; background: var(--white);
+            flex: 1; padding: 1rem; border: 2px solid var(--gray-200);
+            border-radius: 10px; font-size: 1rem;
         }
-        .url-input:focus { border-color: var(--primary); }
         .url-btn {
-            background: var(--primary); color: var(--white); padding: 1rem 2rem; border: none;
-            border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+            background: var(--primary); color: white; padding: 1rem 2rem;
+            border: none; border-radius: 10px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s;
         }
-        .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
-        .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
-        .file-type-badge {
-            background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border-radius: 25px;
-            font-size: 0.875rem; font-weight: 600; text-transform: uppercase;
+        .url-btn:hover { background: var(--primary-dark); }
+        .url-btn:disabled {
+            background: var(--gray-200); color: var(--gray-600); cursor: not-allowed;
         }
-        .file-type-badge i { margin-right: 0.5rem; }
         .file-item {
-            background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
-            box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
-            transition: all 0.4s ease;
+            background: white; border-radius: 15px; padding: 1.5rem;
+            margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
         }
-        .file-item::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
-            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
-        }
-        .file-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-        .file-header { display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 2rem; }
+        .file-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
         .file-icon {
-            width: 80px; height: 80px; border-radius: 15px; display: flex; align-items: center;
-            justify-content: center; font-size: 2rem; color: var(--white); flex-shrink: 0;
+            width: 60px; height: 60px; border-radius: 10px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.5rem;
         }
-        .file-details { flex: 1; min-width: 0; }
-        .file-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-all; }
-        .file-meta { color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem; }
-        .progress-container { margin: 2rem 0; }
-        .progress-info {
-            display: flex; justify-content: space-between; margin-bottom: 1rem;
-            font-size: 0.875rem; font-weight: 600;
-        }
-        .progress-bar {
-            width: 100%; height: 12px; background: var(--gray-200); border-radius: 10px;
-            overflow: hidden; position: relative;
-        }
-        .progress-fill {
-            height: 100%; border-radius: 10px; position: relative; transition: width 0.4s ease;
-            background: linear-gradient(90deg, var(--primary), var(--success));
-        }
-        .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; }
+        .file-size { color: var(--gray-600); font-size: 0.9rem; }
+        .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; margin-top: 0.5rem; }
         .file-status.uploading { color: var(--primary); }
         .file-status.completed { color: var(--success); }
         .file-status.failed { color: var(--error); }
-        .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+        .progress-bar {
+            width: 100%; height: 8px; background: var(--gray-200);
+            border-radius: 10px; overflow: hidden; margin-bottom: 1rem;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 0.3s;
+        }
+        .progress-info {
+            display: flex; justify-content: space-between; font-size: 0.875rem;
+            color: var(--gray-600); margin-bottom: 0.5rem;
+        }
+        .file-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
         .btn {
-            display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
-            border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
-            text-decoration: none; cursor: pointer; transition: all 0.3s; min-width: 140px;
-            justify-content: center;
+            padding: 0.75rem 1.5rem; border: none; border-radius: 8px;
+            font-weight: 600; cursor: pointer; transition: all 0.3s;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
         }
-        .btn i { font-size: 1rem; }
-        .btn-primary { background: var(--primary); color: var(--white); }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
-        .btn-success { background: var(--success); color: var(--white); }
-        .btn-success:hover { background: #047857; transform: translateY(-2px); }
-        .btn-outline {
-            background: var(--white); color: var(--gray-700); border: 2px solid var(--gray-300);
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: white; color: var(--gray-900); border: 2px solid var(--gray-200); }
+        .error-details {
+            background: #fff1f0; border: 1px solid #ffccc7; border-radius: 8px;
+            padding: 1rem; margin-top: 1rem; font-size: 0.875rem; color: #cf1322;
         }
-        .btn-outline:hover { background: var(--gray-50); border-color: var(--primary); }
         .toast {
-            position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px;
-            padding: 1.5rem; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);
-            z-index: 1000; transform: translateX(120%); transition: all 0.4s;
-            max-width: 400px; display: flex; align-items: center; gap: 1rem;
+            position: fixed; top: 2rem; right: 2rem; background: white;
+            padding: 1rem 1.5rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000; transform: translateX(120%); transition: all 0.3s; max-width: 400px;
         }
         .toast.show { transform: translateX(0); }
-        .toast.success { border-left: 5px solid var(--success); }
-        .toast.error { border-left: 5px solid var(--error); }
-        .toast-content { flex: 1; }
-        .toast-title { font-weight: 700; margin-bottom: 0.25rem; }
-        .results { display: none; }
-        .results.show { display: block; animation: fadeIn 0.6s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .title { font-size: 2.5rem; }
-            .file-header { flex-direction: column; align-items: center; text-align: center; }
-        }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--error); }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
+            <div class="logo">
+                <i class="fas fa-cloud" style="font-size: 3rem; color: white;"></i>
+            </div>
             <h1 class="title">🚀 MARYA VAULT</h1>
-            <p class="subtitle">Professional file storage with chunking support up to 2GB per file</p>
+            <p class="subtitle">Ultra-Fast Storage • Auto-Chunking • Up to 2GB</p>
         </header>
 
-        <section class="tabs-container">
+        <section class="upload-section">
             <div class="tabs">
                 <button class="tab active" onclick="showTab('file')">
                     <i class="fas fa-upload"></i> File Upload
@@ -182,51 +142,41 @@
             </div>
 
             <div class="tab-content active" id="file-content">
-                <label class="dropzone" id="dropzone" for="fileInput">
-                    <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
-                    <h2 class="upload-title">Drop your files here</h2>
-                    <p class="upload-description">or click to browse from your device</p>
-                    <div class="file-types">
-                        <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
-                        <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
-                        <span class="file-type-badge"><i class="fas fa-file"></i> Documents</span>
-                        <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
-                        <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
-                    </div>
+                <label class="dropzone" for="fileInput">
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <h2>Drop files here or click to browse</h2>
+                    <p style="color: var(--gray-600); margin-top: 0.5rem;">
+                        Auto-chunks files > 50MB • Supports up to 2GB
+                    </p>
                 </label>
-                <input type="file" id="fileInput" multiple accept="*/*" style="display: none;">
+                <input type="file" id="fileInput" multiple style="display: none;">
             </div>
 
             <div class="tab-content" id="url-content">
                 <div class="url-section">
                     <input type="url" id="urlInput" class="url-input" 
                            placeholder="Enter file URL (https://example.com/file.zip)">
-                    <button class="url-btn" onclick="uploadFromUrl()">
-                        <i class="fas fa-download"></i> Upload from URL
+                    <button class="url-btn" id="urlBtn" onclick="uploadFromUrl()">
+                        <i class="fas fa-download"></i> Upload
                     </button>
                 </div>
-                <div style="text-align: center; padding: 2rem; color: var(--gray-600);">
-                    <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"></i>
-                    <p>Paste any direct file URL to upload it to your vault. Supports all file types up to 2GB.</p>
-                </div>
+                <p style="text-align: center; color: var(--gray-600);">
+                    Paste any direct file URL • Auto-retry on failures • Up to 2GB
+                </p>
             </div>
         </section>
 
-        <section class="results" id="results">
-            <div id="filesList"></div>
-        </section>
+        <div id="filesList"></div>
     </div>
 
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 MARYA VAULT - System Ready');
+        console.log('🚀 MARYA VAULT - Ultra-Robust Version');
 
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
-            if (files.length > 0) {
-                files.forEach(file => uploadFile(file));
-            }
+            files.forEach(file => uploadFile(file));
             e.target.value = '';
         });
 
@@ -238,14 +188,13 @@
         }
 
         function uploadFile(file) {
-            console.log('📤 Uploading:', file.name, formatBytes(file.size));
+            console.log('📤 Starting upload:', file.name, formatBytes(file.size));
 
             if (file.size > 2147483648) {
                 showToast('File too large (max 2GB)', 'error');
                 return;
             }
 
-            showResults();
             const fileItem = createFileItem(file);
             document.getElementById('filesList').prepend(fileItem);
 
@@ -264,17 +213,14 @@
             });
 
             xhr.addEventListener('load', () => {
+                console.log('📥 Response:', xhr.status, xhr.responseText.substring(0, 200));
+
                 if (xhr.status === 200) {
                     try {
                         const result = JSON.parse(xhr.responseText);
 
-                        console.log('📥 Upload response:', result);
-
-                        // ✅ CRITICAL FIX - Check for filename in response
                         if (result.success && result.filename) {
-                            // ✅ BUILD CORRECT URL using filename from response
-                            const baseUrl = window.location.origin;
-                            const fileUrl = `${baseUrl}/btfstorage/file/${result.filename}`;
+                            const fileUrl = `${window.location.origin}/btfstorage/file/${result.filename}`;
 
                             console.log('✅ Upload success! URL:', fileUrl);
 
@@ -286,28 +232,23 @@
                                 chunks: result.chunks || 0
                             });
 
-                            const chunkInfo = result.chunks > 0 ? ` (${result.chunks} chunks)` : '';
-                            showToast(`✅ ${file.name} uploaded${chunkInfo}!`, 'success');
+                            showToast(`✅ ${file.name} uploaded!`, 'success');
                         } else {
-                            console.error('❌ Invalid response:', result);
                             throw new Error(result.error || 'No filename in response');
                         }
                     } catch (error) {
                         console.error('❌ Parse error:', error);
-                        handleUploadError(fileItem, error.message);
-                        showToast(`❌ Upload failed: ${file.name}`, 'error');
+                        handleUploadError(fileItem, error.message, xhr.responseText);
                     }
                 } else {
                     console.error('❌ HTTP error:', xhr.status);
-                    handleUploadError(fileItem, `HTTP ${xhr.status}`);
-                    showToast(`❌ Upload failed: ${file.name}`, 'error');
+                    handleUploadError(fileItem, `Server error: ${xhr.status}`, xhr.responseText);
                 }
             });
 
             xhr.addEventListener('error', () => {
                 console.error('❌ Network error');
-                handleUploadError(fileItem, 'Network error');
-                showToast(`❌ Network error: ${file.name}`, 'error');
+                handleUploadError(fileItem, 'Network error - Check connection');
             });
 
             xhr.open('POST', '/upload');
@@ -316,6 +257,7 @@
 
         async function uploadFromUrl() {
             const urlInput = document.getElementById('urlInput');
+            const urlBtn = document.getElementById('urlBtn');
             const url = urlInput.value.trim();
 
             if (!url) {
@@ -328,8 +270,10 @@
                 return;
             }
 
-            showToast('🌐 Starting URL upload...', 'success');
-            urlInput.disabled = true;
+            console.log('🌐 Starting URL upload:', url);
+
+            urlBtn.disabled = true;
+            urlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
 
             try {
                 const response = await fetch('/upload-from-url', {
@@ -338,19 +282,21 @@
                     body: JSON.stringify({ url })
                 });
 
-                const result = await response.json();
+                const responseText = await response.text();
+                console.log('📥 Response:', response.status, responseText.substring(0, 200));
 
-                console.log('📥 URL upload response:', result);
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch {
+                    throw new Error('Invalid response from server');
+                }
 
-                // ✅ CRITICAL FIX - Check for filename in response
                 if (result.success && result.filename) {
-                    // ✅ BUILD CORRECT URL using filename from response
-                    const baseUrl = window.location.origin;
-                    const fileUrl = `${baseUrl}/btfstorage/file/${result.filename}`;
+                    const fileUrl = `${window.location.origin}/btfstorage/file/${result.filename}`;
 
                     console.log('✅ URL upload success! URL:', fileUrl);
 
-                    showResults();
                     const fileItem = createCompletedFileItem({
                         url: fileUrl,
                         filename: result.originalName || 'download',
@@ -360,19 +306,17 @@
                     });
 
                     document.getElementById('filesList').prepend(fileItem);
-
-                    const chunkInfo = result.chunks > 0 ? ` (${result.chunks} chunks)` : '';
-                    showToast(`🚀 URL upload completed${chunkInfo}!`, 'success');
+                    showToast('🚀 URL upload completed!', 'success');
+                    urlInput.value = '';
                 } else {
-                    console.error('❌ Invalid response:', result);
-                    throw new Error(result.error || 'No filename in response');
+                    throw new Error(result.error || 'Upload failed');
                 }
             } catch (error) {
                 console.error('❌ URL upload error:', error);
                 showToast(`❌ URL upload failed: ${error.message}`, 'error');
             } finally {
-                urlInput.disabled = false;
-                urlInput.value = '';
+                urlBtn.disabled = false;
+                urlBtn.innerHTML = '<i class="fas fa-download"></i> Upload';
             }
         }
 
@@ -382,24 +326,20 @@
             div.innerHTML = `
                 <div class="file-header">
                     <div class="file-icon">${getFileIcon(file.name)}</div>
-                    <div class="file-details">
+                    <div class="file-info">
                         <div class="file-name">${file.name}</div>
-                        <div class="file-meta">
-                            ${formatBytes(file.size)} • 
-                            <span class="file-status uploading">
-                                <i class="fas fa-spinner fa-spin"></i> Uploading...
-                            </span>
+                        <div class="file-size">${formatBytes(file.size)}</div>
+                        <div class="file-status uploading">
+                            <i class="fas fa-spinner fa-spin"></i> Uploading...
                         </div>
                     </div>
                 </div>
-                <div class="progress-container">
-                    <div class="progress-info">
-                        <span class="progress-percent">0%</span>
-                        <span class="upload-speed">0 MB/s</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0%"></div>
-                    </div>
+                <div class="progress-info">
+                    <span class="progress-percent">0%</span>
+                    <span class="progress-speed">0 MB/s</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
                 </div>
                 <div class="file-actions"></div>
             `;
@@ -413,14 +353,11 @@
             div.innerHTML = `
                 <div class="file-header">
                     <div class="file-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="file-details">
+                    <div class="file-info">
                         <div class="file-name">${data.filename}</div>
-                        <div class="file-meta">
-                            ${formatBytes(data.size)} • 
-                            <span class="file-status completed">
-                                <i class="fas fa-check-circle"></i> Complete
-                            </span>
-                            ${uploadInfo}
+                        <div class="file-size">${formatBytes(data.size)}${uploadInfo}</div>
+                        <div class="file-status completed">
+                            <i class="fas fa-check-circle"></i> Complete
                         </div>
                     </div>
                 </div>
@@ -440,29 +377,24 @@
         }
 
         function updateProgress(fileItem, percent, speed) {
-            const progressFill = fileItem.querySelector('.progress-fill');
-            const progressPercent = fileItem.querySelector('.progress-percent');
-            const uploadSpeed = fileItem.querySelector('.upload-speed');
-
-            progressFill.style.width = percent + '%';
-            progressPercent.textContent = percent + '%';
-            uploadSpeed.textContent = formatBytes(speed) + '/s';
+            fileItem.querySelector('.progress-fill').style.width = percent + '%';
+            fileItem.querySelector('.progress-percent').textContent = percent + '%';
+            fileItem.querySelector('.progress-speed').textContent = formatBytes(speed) + '/s';
         }
 
         function handleUploadSuccess(fileItem, data) {
-            const progressContainer = fileItem.querySelector('.progress-container');
-            progressContainer.remove();
+            const progressBar = fileItem.querySelector('.progress-bar');
+            const progressInfo = fileItem.querySelector('.progress-info');
+            progressBar.remove();
+            progressInfo.remove();
 
             const icon = fileItem.querySelector('.file-icon i');
             icon.className = 'fas fa-check-circle';
 
             const status = fileItem.querySelector('.file-status');
-            status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
+            const uploadInfo = data.uploadType === 'chunked' ? ` (${data.chunks} chunks)` : '';
+            status.innerHTML = `<i class="fas fa-check-circle"></i> Complete${uploadInfo}`;
             status.className = 'file-status completed';
-
-            const uploadInfo = data.uploadType === 'chunked' ? ` • ${data.chunks} chunks` : '';
-            const meta = fileItem.querySelector('.file-meta');
-            meta.innerHTML = `${formatBytes(data.size)} • <span class="file-status completed"><i class="fas fa-check-circle"></i> Complete</span>${uploadInfo}`;
 
             const actions = fileItem.querySelector('.file-actions');
             actions.innerHTML = `
@@ -478,34 +410,41 @@
             `;
         }
 
-        function handleUploadError(fileItem, error) {
-            const progressContainer = fileItem.querySelector('.progress-container');
-            progressContainer.remove();
+        function handleUploadError(fileItem, errorMsg, responseText = '') {
+            const progressBar = fileItem.querySelector('.progress-bar');
+            const progressInfo = fileItem.querySelector('.progress-info');
+            progressBar?.remove();
+            progressInfo?.remove();
 
             const icon = fileItem.querySelector('.file-icon i');
             icon.className = 'fas fa-exclamation-triangle';
             icon.parentElement.style.background = 'var(--error)';
 
             const status = fileItem.querySelector('.file-status');
-            status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
+            status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${errorMsg}`;
             status.className = 'file-status failed';
-        }
 
-        function showResults() {
-            document.getElementById('results').classList.add('show');
+            if (responseText) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-details';
+                errorDiv.innerHTML = `
+                    <strong>Error Details:</strong><br>
+                    ${responseText.substring(0, 500)}
+                `;
+                fileItem.appendChild(errorDiv);
+            }
         }
 
         function getFileIcon(filename) {
             const ext = filename.split('.').pop()?.toLowerCase() || '';
-            const iconMap = {
+            const map = {
                 'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 'gif': 'fa-image',
-                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 'mov': 'fa-video',
-                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music',
-                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
-                'zip': 'fa-file-archive', 'rar': 'fa-file-archive',
-                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code'
+                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video',
+                'mp3': 'fa-music', 'wav': 'fa-music',
+                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word',
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive'
             };
-            return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
+            return `<i class="fas ${map[ext] || 'fa-file'}"></i>`;
         }
 
         function formatBytes(bytes) {
@@ -533,12 +472,7 @@
 
         function showToast(message, type) {
             const toast = document.getElementById('toast');
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <div class="toast-title">${type === 'success' ? '✅ Success' : '❌ Error'}</div>
-                    <div>${message}</div>
-                </div>
-            `;
+            toast.innerHTML = `<div><strong>${type === 'success' ? '✅ Success' : '❌ Error'}</strong><br>${message}</div>`;
             toast.className = `toast ${type}`;
             setTimeout(() => toast.classList.add('show'), 100);
             setTimeout(() => toast.classList.remove('show'), 4000);
