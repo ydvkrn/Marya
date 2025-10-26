@@ -9,15 +9,17 @@ const KV_NAMESPACES = [
 
 export default {
   async fetch(request, env, ctx) {
+    console.log(`Received request: ${request.method} ${request.url}`);
+
     // Handle CORS preflight OPTIONS request
     if (request.method === 'OPTIONS') {
-      console.log('Handling OPTIONS request for CORS');
+      console.log('Handling CORS OPTIONS request');
       return new Response(null, {
         status: 204,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Headers': 'Content-Type, Accept',
           'Access-Control-Max-Age': '86400'
         }
       });
@@ -25,21 +27,23 @@ export default {
 
     // Handle POST request
     if (request.method !== 'POST') {
-      console.error(`Invalid method: ${request.method}`);
+      console.error(`Invalid method: ${request.method} for ${request.url}`);
       return new Response(JSON.stringify({ success: false, error: `Method not allowed: ${request.method}` }), {
         status: 405,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Accept'
         }
       });
     }
 
     try {
-      console.log(`Processing POST request to /upload-from-url`);
+      console.log('Processing POST request to /upload-from-url');
       const { fileUrl, filename } = await request.json();
       if (!fileUrl) {
-        console.error('No URL provided in request');
+        console.error('No URL provided in request body');
         return new Response(JSON.stringify({ success: false, error: 'URL is required' }), {
           status: 400,
           headers: {
@@ -50,7 +54,11 @@ export default {
       }
 
       console.log(`Fetching URL: ${fileUrl}`);
-      const response = await fetch(fileUrl, { timeout: 30000 });
+      const response = await fetch(fileUrl, {
+        headers: { 'User-Agent': 'MaryaVault/1.0' },
+        redirect: 'follow',
+        timeout: 30000
+      });
       if (!response.ok) {
         console.error(`Fetch failed: HTTP ${response.status} - ${response.statusText}`);
         return new Response(JSON.stringify({ success: false, error: `Failed to fetch file: HTTP ${response.status}` }), {
