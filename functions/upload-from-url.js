@@ -51,15 +51,45 @@ export async function onRequest(context) {
         }
 
         // Fetch file metadata
-        const headResponse = await fetch(fileUrl, { method: 'HEAD' });
-        const fileSize = parseInt(headResponse.headers.get('content-length') || '0');
-        const contentType = headResponse.headers.get('content-type') || 'application/octet-stream';
-        const originalFilename = filename || extractFilenameFromUrl(fileUrl);
+        let fileSize = 0;
+        let contentType = 'application/octet-stream';
+        let originalFilename = filename || extractFilenameFromUrl(fileUrl);
+
+        // Try HEAD request for size and content-type
+        const headResponse = await fetch(fileUrl, { 
+            method: 'HEAD',
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+
+        if (headResponse.ok) {
+            fileSize = parseInt(headResponse.headers.get('content-length') || '0');
+            contentType = headResponse.headers.get('content-type') || contentType;
+        }
+
+        // Fallback: Download a small portion to estimate size if content-length is missing
+        if (fileSize === 0) {
+            const rangeResponse = await fetch(fileUrl, { 
+                headers: { 
+                    'Range': 'bytes=0-1023',
+                    'User-Agent': 'Mozilla/5.0'
+                }
+            });
+            if (!rangeResponse.ok) {
+                throw new Error(`Failed to access file: ${rangeResponse.status}`);
+            }
+            const contentRange = rangeResponse.headers.get('content-range');
+            if (contentRange) {
+                const match = contentRange.match(/\/(\d+)/);
+                if (match) fileSize = parseInt(match[1]);
+            }
+        }
 
         // Size validation - 175MB max
         const MAX_FILE_SIZE = 175 * 1024 * 1024;
-        if (fileSize > MAX_FILE_SIZE) {
-            throw new Error(`File too large: ${Math.round(fileSize / 1024 / 1024)}MB (max 175MB)`);
+        if (fileSize > MAX_FILE_SIZE || fileSize === 0) {
+            throw new Error(fileSize > MAX_FILE_SIZE 
+                ? `File too large: ${Math.round(fileSize / 1024 / 1024)}MB (max 175MB)`
+                : 'Unable to determine file size');
         }
 
         // Generate unique file ID
@@ -69,13 +99,18 @@ export async function onRequest(context) {
         const extension = originalFilename.includes('.') ? originalFilename.slice(originalFilename.lastIndexOf('.')) : '';
 
         // Download file
-        const fileResponse = await fetch(fileUrl);
+        const fileResponse = await fetch(fileUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
         if (!fileResponse.ok) {
             throw new Error(`Failed to download file: ${fileResponse.status}`);
         }
 
         const fileBlob = await fileResponse.blob();
         const fileBuffer = await fileBlob.arrayBuffer();
+        if (fileBuffer.byteLength !== fileSize) {
+            throw new Error('Downloaded file size does not match expected size');
+        }
 
         // Chunking strategy
         const CHUNK_SIZE = 20 * 1024 * 1024;
