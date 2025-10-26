@@ -269,7 +269,7 @@
                 </button>
             </div>
             <div class="tab-content active" id="file-content">
-                <label class="dropzone" id="dropzone" for="fileInput">
+                <label class="dropzone" id="dropzone">
                     <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
                     <h2 class="upload-title">Drop your files here</h2>
                     <p class="upload-description">or click to browse from your device • Max 175MB per file</p>
@@ -345,8 +345,10 @@
         let totalSize = 0;
         let totalChunks = 0;
         let uploadStats = { total: 0, completed: 0, failed: 0 };
+        let isProcessing = false;
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded, initializing system...');
             initializeSystem();
         });
 
@@ -357,6 +359,7 @@
         }
 
         function showTab(tabName) {
+            console.log(`Switching to tab: ${tabName}`);
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             event.target.classList.add('active');
@@ -366,31 +369,47 @@
         function setupFileUpload() {
             const fileInput = document.getElementById('fileInput');
             const dropzone = document.getElementById('dropzone');
-            let isProcessing = false;
 
-            fileInput.addEventListener('change', e => {
-                if (isProcessing) return;
-                isProcessing = true;
+            // Remove existing listeners to prevent duplicates
+            const newFileInput = fileInput.cloneNode(true);
+            fileInput.replaceWith(newFileInput);
+            const newDropzone = dropzone.cloneNode(true);
+            dropzone.replaceWith(newDropzone);
 
-                if (e.target.files.length > 0) {
-                    handleFiles(Array.from(e.target.files));
-                    fileInput.value = '';
+            // Re-select elements after cloning
+            const updatedFileInput = document.getElementById('fileInput');
+            const updatedDropzone = document.getElementById('dropzone');
+
+            // Add event listeners
+            updatedDropzone.addEventListener('click', () => {
+                console.log('Dropzone clicked');
+                if (!isProcessing) {
+                    updatedFileInput.click();
+                } else {
+                    console.log('Dropzone click ignored: isProcessing = true');
                 }
-
-                setTimeout(() => { isProcessing = false; }, 100);
             });
 
-            dropzone.addEventListener('click', e => {
-                if (!isProcessing) {
-                    fileInput.click();
+            updatedFileInput.addEventListener('change', (e) => {
+                console.log('File input changed, files selected:', e.target.files.length);
+                if (isProcessing) {
+                    console.log('File selection ignored: isProcessing = true');
+                    return;
                 }
+                isProcessing = true;
+                handleFiles(Array.from(e.target.files));
+                e.target.value = ''; // Clear input
+                setTimeout(() => { isProcessing = false; }, 100);
             });
         }
 
         function setupUrlUpload() {
             const urlInput = document.getElementById('urlInput');
             urlInput.addEventListener('keypress', e => {
-                if (e.key === 'Enter') uploadFromUrl();
+                if (e.key === 'Enter') {
+                    console.log('Enter pressed in URL input');
+                    uploadFromUrl();
+                }
             });
         }
 
@@ -403,16 +422,26 @@
             });
 
             ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+                dropzone.addEventListener(eventName, () => {
+                    console.log(`${eventName} on dropzone`);
+                    dropzone.classList.add('dragover');
+                }, false);
             });
 
             ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+                dropzone.addEventListener(eventName, () => {
+                    console.log(`${eventName} on dropzone`);
+                    dropzone.classList.remove('dragover');
+                }, false);
             });
 
             dropzone.addEventListener('drop', e => {
-                const files = Array.from(e.dataTransfer.files);
-                if (files.length > 0) handleFiles(files);
+                console.log('Files dropped:', e.dataTransfer.files.length);
+                if (!isProcessing) {
+                    handleFiles(Array.from(e.dataTransfer.files));
+                } else {
+                    console.log('Drop ignored: isProcessing = true');
+                }
             }, false);
 
             function preventDefaults(e) {
@@ -422,6 +451,7 @@
         }
 
         function handleFiles(files) {
+            console.log('Handling files:', files.length);
             if (files.length === 0) {
                 showToast('No files selected', 'error');
                 return;
@@ -440,7 +470,10 @@
                 return true;
             });
 
-            if (validFiles.length === 0) return;
+            if (validFiles.length === 0) {
+                isProcessing = false;
+                return;
+            }
 
             showResults();
             updateFileCounter(validFiles.length);
@@ -451,6 +484,7 @@
         }
 
         function uploadFile(file) {
+            console.log(`Starting upload for file: ${file.name}`);
             const fileItem = createAdvancedFileItem(file);
             document.getElementById('filesList').prepend(fileItem);
 
@@ -504,6 +538,7 @@
                     showToast(`❌ Upload failed: ${file.name}`, 'error');
                 }
                 updateStats();
+                isProcessing = false;
             });
 
             xhr.addEventListener('error', () => {
@@ -511,6 +546,7 @@
                 handleUploadError(elements, 'Network error');
                 showToast(`🔥 Network error: ${file.name}`, 'error');
                 updateStats();
+                isProcessing = false;
             });
 
             xhr.open('POST', '/upload');
@@ -518,6 +554,7 @@
         }
 
         async function uploadFromUrl() {
+            console.log('Starting URL upload');
             const urlInput = document.getElementById('urlInput');
             const filenameInput = document.getElementById('filenameInput');
             const uploadBtn = document.getElementById('urlUploadBtn');
@@ -525,7 +562,6 @@
             const fileUrl = urlInput.value.trim();
             const filename = filenameInput.value.trim();
 
-            // Validate URL format
             try {
                 new URL(fileUrl);
                 if (!fileUrl.match(/^https?:\/\/.+/)) {
@@ -651,8 +687,8 @@
                         <div class="file-meta">
                             ${formatBytes(data.size)} • URL Import • 
                             ${data.storage?.totalChunks || 0} chunks • 
-                            <span class="file-status completed">
-                                <i class="fas fa-check-circle"></i> Complete
+                            <span class="file-status uploading">
+                                <i class="fas fa-spinner fa-spin"></i> Importing...
                             </span>
                         </div>
                     </div>
@@ -700,14 +736,18 @@
             elements.progressFill.style.width = '100%';
             elements.progressPercent.textContent = '100%';
 
+            // Adjust for /upload endpoint response format
+            const viewUrl = data.urls?.view || data.url;
+            const downloadUrl = data.urls?.download || data.download;
+
             elements.actions.innerHTML = `
-                <a href="${data.urls.view}" target="_blank" class="btn btn-primary">
+                <a href="${viewUrl}" target="_blank" class="btn btn-primary">
                     <i class="fas fa-eye"></i> View
                 </a>
-                <a href="${data.urls.download}" class="btn btn-success">
+                <a href="${downloadUrl}" class="btn btn-success">
                     <i class="fas fa-download"></i> Download
                 </a>
-                <button onclick="copyToClipboard('${data.urls.view}')" class="btn btn-outline">
+                <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline">
                     <i class="fas fa-copy"></i> Copy Link
                 </button>
             `;
@@ -759,6 +799,7 @@
         }
 
         function showToast(message, type = 'success', duration = 4000) {
+            console.log(`Showing toast: ${message} (${type})`);
             const toast = document.getElementById('toast');
             const icons = { success: '✅', error: '❌', warning: '⚠️' };
 
@@ -776,6 +817,7 @@
         }
 
         async function copyToClipboard(text) {
+            console.log(`Copying to clipboard: ${text}`);
             try {
                 await navigator.clipboard.writeText(text);
                 showToast('Link copied to clipboard!', 'success');
