@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 MARYA VAULT ULTIMATE -Professional Storage</title>
+    <title>🚀 MARYA VAULT ULTIMATE - Professional Storage</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -85,18 +85,21 @@
         .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
 
         /* URL Input Section */
-        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; }
-        .url-input {
-            flex: 1; padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
+        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: stretch; }
+        .url-input-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+        .url-input, .filename-input {
+            padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
             font-size: 1rem; outline: none; transition: border-color 0.3s;
             background: var(--white); box-shadow: var(--shadow-sm);
         }
-        .url-input:focus { border-color: var(--primary); }
+        .url-input:focus, .filename-input:focus { border-color: var(--primary); }
         .url-btn {
             background: var(--primary); color: var(--white); padding: 1rem 2rem; border: none;
             border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;
         }
         .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .url-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* Advanced File Type Badges */
         .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
@@ -119,11 +122,8 @@
         }
         .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
         .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; text-transform: uppercase; }
-        .stat-trend { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; }
-        .trend-up { color: var(--success); }
-        .trend-down { color: var(--error); }
 
-        /* Enhanced Progress System */
+        /* Enhanced File Item */
         .file-item {
             background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
             box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
@@ -148,7 +148,7 @@
         .progress-container { margin: 2rem 0; }
         .progress-info {
             display: flex; justify-content: space-between; margin-bottom: 1rem;
-            font-size: 0.875rem; font-weight: 600;
+            font-size: 0.875rem; font-weight: 600; flex-wrap: wrap; gap: 0.5rem;
         }
         .progress-bar {
             width: 100%; height: 12px; background: var(--gray-200); border-radius: 10px;
@@ -167,7 +167,7 @@
         @keyframes progressShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .speed-indicator {
             display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--success);
-            margin-top: 0.5rem; font-weight: 600;
+            font-weight: 600;
         }
 
         /* Status Indicators */
@@ -175,7 +175,6 @@
         .file-status.uploading { color: var(--primary); }
         .file-status.completed { color: var(--success); }
         .file-status.failed { color: var(--error); }
-        .file-status.processing { color: var(--warning); }
 
         /* Action Buttons */
         .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
@@ -213,11 +212,12 @@
         .toast.error { border-left: 5px solid var(--error); }
         .toast.warning { border-left: 5px solid var(--warning); }
         .toast-icon {
-            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 1rem; font-weight: 600; flex-shrink: 0;
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1.25rem; font-weight: 600; flex-shrink: 0;
         }
         .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
         .toast.error .toast-icon { background: var(--primary-light); color: var(--error); }
+        .toast.warning .toast-icon { background: #fef3c7; color: var(--warning); }
         .toast-content { flex: 1; }
         .toast-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
         .toast-message { font-size: 0.875rem; color: var(--gray-600); }
@@ -233,26 +233,27 @@
         .results-title { font-size: 2rem; font-weight: 800; color: var(--gray-900); }
         .results-count {
             background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem;
-            border-radius: 25px; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.5px;
+            border-radius: 25px; font-size: 0.875rem; font-weight: 700;
         }
 
-        /* Enhanced Features Section */
-        .features-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;
-            margin: 3rem 0; padding: 2rem; background: var(--gray-50); border-radius: 20px;
+        /* Storage Info */
+        .storage-info {
+            background: linear-gradient(135deg, var(--primary-light), var(--success-light));
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
         }
-        .feature-card {
-            background: var(--white); padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow-sm);
-            text-align: center; transition: all 0.3s; border: 1px solid var(--gray-100);
+        .storage-info-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
         }
-        .feature-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
-        .feature-icon { 
-            font-size: 3rem; color: var(--primary); margin-bottom: 1rem;
-            background: var(--primary-light); width: 80px; height: 80px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+        .storage-info-desc {
+            font-size: 0.875rem;
+            color: var(--gray-600);
         }
-        .feature-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .feature-desc { font-size: 0.875rem; color: var(--gray-600); line-height: 1.4; }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -261,12 +262,13 @@
             .tabs-container { padding: 1.5rem; }
             .dropzone { padding: 3rem 1.5rem; min-height: 280px; }
             .url-section { flex-direction: column; }
+            .url-btn { width: 100%; justify-content: center; }
             .stats-dashboard { grid-template-columns: repeat(2, 1fr); }
             .file-header { flex-direction: column; align-items: center; text-align: center; }
             .file-actions { flex-direction: column; }
             .btn { width: 100%; }
             .results-header { flex-direction: column; gap: 1rem; text-align: center; }
-            .features-grid { grid-template-columns: 1fr; }
+            .toast { top: 1rem; right: 1rem; left: 1rem; max-width: none; }
         }
     </style>
 </head>
@@ -276,8 +278,18 @@
         <header class="header">
             <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
             <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
-            <p class="subtitle">Professional file storage with advanced chunking, real-time progress tracking, and enterprise-grade features up to 2GB per file.</p>
+            <p class="subtitle">Professional multi-KV file storage with chunking, auto-refresh URLs, and enterprise features. Upload up to 175MB per file.</p>
         </header>
+
+        <!-- Storage Info Banner -->
+        <div class="storage-info">
+            <div class="storage-info-title">
+                <i class="fas fa-database"></i> Multi-KV Storage System
+            </div>
+            <div class="storage-info-desc">
+                7 KV Namespaces • 20MB Chunks • Auto URL Refresh • Permanent Links
+            </div>
+        </div>
 
         <!-- Advanced Tab System -->
         <section class="tabs-container">
@@ -286,10 +298,7 @@
                     <i class="fas fa-upload"></i> File Upload
                 </button>
                 <button class="tab" onclick="showTab('url')">
-                    <i class="fas fa-link"></i> URL Upload
-                </button>
-                <button class="tab" onclick="showTab('batch')">
-                    <i class="fas fa-layer-group"></i> Batch Upload
+                    <i class="fas fa-link"></i> Telegram URL
                 </button>
             </div>
 
@@ -298,7 +307,7 @@
                 <label class="dropzone" id="dropzone" for="fileInput">
                     <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
                     <h2 class="upload-title">Drop your files here</h2>
-                    <p class="upload-description">or click to browse from your device</p>
+                    <p class="upload-description">or click to browse from your device • Max 175MB per file</p>
                     <div class="file-types">
                         <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
                         <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
@@ -312,26 +321,34 @@
 
             <!-- URL Upload Tab -->
             <div class="tab-content" id="url-content">
+                <div class="storage-info" style="margin-bottom: 1.5rem; text-align: left;">
+                    <div class="storage-info-title" style="margin-bottom: 0.75rem;">
+                        <i class="fas fa-info-circle"></i> Telegram URL Upload
+                    </div>
+                    <div class="storage-info-desc">
+                        • Paste Telegram file URL or file_id<br>
+                        • Direct import from api.telegram.org<br>
+                        • Auto-chunking for large files<br>
+                        • Permanent storage with auto-refresh
+                    </div>
+                </div>
                 <div class="url-section">
-                    <input type="url" id="urlInput" class="url-input" placeholder="Enter file URL (https://example.com/file.zip)">
-                    <button class="url-btn" onclick="uploadFromUrl()">
-                        <i class="fas fa-download"></i> Upload from URL
+                    <div class="url-input-group">
+                        <input type="text" id="urlInput" class="url-input" 
+                               placeholder="Telegram URL or file_id (e.g., https://api.telegram.org/file/bot.../file.mp4)">
+                        <input type="text" id="filenameInput" class="filename-input" 
+                               placeholder="Filename (optional, e.g., video.mp4)">
+                    </div>
+                    <button class="url-btn" id="urlUploadBtn" onclick="uploadFromUrl()">
+                        <i class="fas fa-cloud-download-alt"></i> Import from Telegram
                     </button>
                 </div>
-                <div style="text-align: center; padding: 2rem; color: var(--gray-600);">
-                    <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"></i>
-                    <p>Paste any direct file URL to upload it to your vault. Supports all file types up to 2GB.</p>
+                <div style="text-align: center; padding: 1.5rem; color: var(--gray-600); font-size: 0.875rem;">
+                    <strong>Supported formats:</strong><br>
+                    • Direct Telegram file URL: https://api.telegram.org/file/bot.../file.ext<br>
+                    • Telegram file_id: AgACAgQAAxkBAAIBY...<br>
+                    • Files will be automatically chunked and stored across multiple KV namespaces
                 </div>
-            </div>
-
-            <!-- Batch Upload Tab -->
-            <div class="tab-content" id="batch-content">
-                <label class="dropzone" id="batchDropzone" for="batchInput">
-                    <div class="upload-icon"><i class="fas fa-layer-group"></i></div>
-                    <h2 class="upload-title">Batch Upload Multiple Files</h2>
-                    <p class="upload-description">Upload up to 10 files simultaneously</p>
-                </label>
-                <input type="file" id="batchInput" multiple accept="*/*" style="display: none;">
             </div>
         </section>
 
@@ -340,22 +357,18 @@
             <div class="stat-card">
                 <div class="stat-value" id="totalSize">0 MB</div>
                 <div class="stat-label">Total Size</div>
-                <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i></div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="avgSpeed">0 MB/s</div>
-                <div class="stat-label">Avg Speed</div>
-                <div class="stat-trend trend-up"><i class="fas fa-tachometer-alt"></i></div>
+                <div class="stat-label">Upload Speed</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="timeRemaining">--</div>
-                <div class="stat-label">Time Remaining</div>
-                <div class="stat-trend"><i class="fas fa-clock"></i></div>
+                <div class="stat-value" id="totalChunks">0</div>
+                <div class="stat-label">Total Chunks</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="filesCount">0</div>
-                <div class="stat-label">Files Uploaded</div>
-                <div class="stat-trend trend-up"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-label">Files Processed</div>
             </div>
         </section>
 
@@ -367,66 +380,30 @@
             </div>
             <div id="filesList"></div>
         </section>
-
-        <!-- Advanced Features Grid -->
-        <section class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                <div class="feature-title">Lightning Fast</div>
-                <div class="feature-desc">Advanced chunking with parallel uploads for maximum speed</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                <div class="feature-title">Enterprise Security</div>
-                <div class="feature-desc">End-to-end encryption with secure Telegram storage</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-globe"></i></div>
-                <div class="feature-title">Global CDN</div>
-                <div class="feature-desc">Worldwide access with edge computing optimization</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
-                <div class="feature-title">Mobile Optimized</div>
-                <div class="feature-desc">Perfect experience on all devices and screen sizes</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-link"></i></div>
-                <div class="feature-title">URL Upload</div>
-                <div class="feature-desc">Direct upload from any URL with progress tracking</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="feature-title">Real-time Analytics</div>
-                <div class="feature-desc">Detailed upload statistics and performance metrics</div>
-            </div>
-        </section>
     </div>
 
     <!-- Enhanced Toast System -->
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 MARYA VAULT ULTIMATE - Loading Advanced System...');
+        console.log('🚀 MARYA VAULT ULTIMATE - Multi-KV System Loading...');
 
         // Global variables
         let fileCounter = 0;
         let totalSize = 0;
-        let totalSpeed = 0;
-        let activeUploads = 0;
+        let totalChunks = 0;
         let uploadStats = { total: 0, completed: 0, failed: 0 };
 
+        // Initialize system
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Initializing Ultimate File Uploader');
+            console.log('✅ DOM Ready - Initializing Ultimate File System');
             initializeSystem();
         });
 
         function initializeSystem() {
             setupFileUpload();
             setupUrlUpload();
-            setupBatchUpload();
             setupDragDrop();
-            startStatsUpdater();
         }
 
         // Tab Management
@@ -460,45 +437,27 @@
             });
         }
 
-        // Batch Upload Setup
-        function setupBatchUpload() {
-            const batchInput = document.getElementById('batchInput');
-            const batchDropzone = document.getElementById('batchDropzone');
-
-            batchInput.addEventListener('change', e => {
-                if (e.target.files.length > 0) {
-                    const files = Array.from(e.target.files).slice(0, 10); // Max 10 files
-                    handleFiles(files, true);
-                    batchInput.value = '';
-                }
-            });
-
-            batchDropzone.addEventListener('click', () => batchInput.click());
-        }
-
         // Enhanced Drag & Drop
         function setupDragDrop() {
-            const dropzones = [document.getElementById('dropzone'), document.getElementById('batchDropzone')];
+            const dropzone = document.getElementById('dropzone');
 
-            dropzones.forEach(dropzone => {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropzone.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false);
-                });
-
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
-                });
-
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
-                });
-
-                dropzone.addEventListener('drop', e => {
-                    const files = Array.from(e.dataTransfer.files);
-                    if (files.length > 0) handleFiles(files, dropzone.id === 'batchDropzone');
-                }, false);
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
             });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+            });
+
+            dropzone.addEventListener('drop', e => {
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length > 0) handleFiles(files);
+            }, false);
 
             function preventDefaults(e) {
                 e.preventDefault();
@@ -506,19 +465,24 @@
             }
         }
 
-        // Handle Files with Advanced Processing
-        function handleFiles(files, isBatch = false) {
-            console.log(`🔄 Processing ${files.length} file(s) - Batch mode: ${isBatch}`);
+        // Handle Files
+        function handleFiles(files) {
+            console.log(`🔄 Processing ${files.length} file(s)`);
 
             if (files.length === 0) {
                 showToast('No files selected', 'error');
                 return;
             }
 
-            // Validate files
+            // Validate files - 175MB max (7 KV x 25MB)
+            const MAX_SIZE = 175 * 1024 * 1024;
             const validFiles = files.filter(file => {
-                if (file.size > 2147483648) { // 2GB
-                    showToast(`File "${file.name}" is too large (max 2GB)`, 'error');
+                if (file.size > MAX_SIZE) {
+                    showToast(`File "${file.name}" is too large (max 175MB)`, 'error');
+                    return false;
+                }
+                if (file.size === 0) {
+                    showToast(`File "${file.name}" is empty`, 'error');
                     return false;
                 }
                 return true;
@@ -528,58 +492,61 @@
 
             showResults();
             updateFileCounter(validFiles.length);
-            updateTotalSize(validFiles.reduce((sum, file) => sum + file.size, 0));
 
-            // Process files with delay for better UX
             validFiles.forEach((file, index) => {
-                setTimeout(() => uploadFile(file, isBatch), index * 100);
+                setTimeout(() => uploadFile(file), index * 100);
             });
         }
 
-        // Advanced File Upload with Real-time Stats
-        function uploadFile(file, isBatch = false) {
+        // Advanced File Upload
+        function uploadFile(file) {
             console.log(`⬆️ Starting upload: ${file.name} (${formatBytes(file.size)})`);
 
             const fileItem = createAdvancedFileItem(file);
-            document.getElementById('filesList').appendChild(fileItem);
+            document.getElementById('filesList').prepend(fileItem);
 
             const elements = getFileElements(fileItem);
-
-            activeUploads++;
             uploadStats.total++;
+            updateTotalSize(file.size);
 
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
             formData.append('file', file);
             const startTime = Date.now();
+            let lastLoaded = 0;
+            let lastTime = startTime;
 
-            // Enhanced progress tracking
             xhr.upload.addEventListener('progress', e => {
                 if (e.lengthComputable) {
                     const percent = Math.round((e.loaded / e.total) * 100);
-                    const speed = calculateSpeed(e.loaded, startTime);
-                    const remaining = calculateTimeRemaining(e.loaded, e.total, speed);
+                    const currentTime = Date.now();
+                    const timeDiff = (currentTime - lastTime) / 1000;
+                    const loadedDiff = e.loaded - lastLoaded;
+                    const speed = timeDiff > 0 ? loadedDiff / timeDiff : 0;
 
-                    updateProgress(elements, percent, speed, remaining);
-                    updateGlobalStats();
+                    lastLoaded = e.loaded;
+                    lastTime = currentTime;
+
+                    updateProgress(elements, percent, speed);
+                    updateStats();
                 }
             });
 
             xhr.addEventListener('load', () => {
-                activeUploads--;
-
                 if (xhr.status === 200) {
                     try {
                         const result = JSON.parse(xhr.responseText);
-                        if (result.success) {
-                            handleUploadSuccess(elements, result, file);
+                        if (result.success && result.data) {
+                            handleUploadSuccess(elements, result.data, file);
                             uploadStats.completed++;
+                            totalChunks += result.data.storage?.totalChunks || 0;
                             showToast(`✅ ${file.name} uploaded successfully!`, 'success');
                         } else {
-                            throw new Error(result.error || 'Upload failed');
+                            throw new Error(result.error?.message || 'Upload failed');
                         }
                     } catch (parseError) {
-                        handleUploadError(elements, 'Invalid server response');
+                        console.error('Parse error:', parseError);
+                        handleUploadError(elements, 'Invalid response');
                         uploadStats.failed++;
                         showToast(`❌ Upload failed: ${file.name}`, 'error');
                     }
@@ -588,63 +555,72 @@
                     uploadStats.failed++;
                     showToast(`❌ Upload failed: ${file.name}`, 'error');
                 }
-
-                updateGlobalStats();
+                updateStats();
             });
 
             xhr.addEventListener('error', () => {
-                activeUploads--;
                 uploadStats.failed++;
                 handleUploadError(elements, 'Network error');
                 showToast(`🔥 Network error: ${file.name}`, 'error');
-                updateGlobalStats();
+                updateStats();
             });
 
             xhr.open('POST', '/upload');
             xhr.send(formData);
         }
 
-        // URL Upload with Enhanced Validation
+        // URL Upload
         async function uploadFromUrl() {
             const urlInput = document.getElementById('urlInput');
-            const url = urlInput.value.trim();
+            const filenameInput = document.getElementById('filenameInput');
+            const uploadBtn = document.getElementById('urlUploadBtn');
+            
+            const telegramUrl = urlInput.value.trim();
+            const filename = filenameInput.value.trim();
 
-            if (!url) {
-                showToast('Please enter a URL', 'error');
+            if (!telegramUrl) {
+                showToast('Please enter a Telegram URL or file_id', 'error');
                 return;
             }
 
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                showToast('URL must start with http:// or https://', 'error');
-                return;
-            }
-
-            showToast('🌐 Starting URL upload...', 'success');
+            showToast('🌐 Starting Telegram import...', 'success');
             urlInput.disabled = true;
+            filenameInput.disabled = true;
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
 
             try {
                 const response = await fetch('/upload-from-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url })
+                    body: JSON.stringify({ 
+                        telegramUrl: telegramUrl,
+                        filename: filename || undefined
+                    })
                 });
 
                 const result = await response.json();
 
-                if (result.success) {
+                if (result.success && result.data) {
                     showResults();
-                    const fileItem = createUrlFileItem(result, url);
-                    document.getElementById('filesList').appendChild(fileItem);
+                    const fileItem = createUrlFileItem(result.data);
+                    document.getElementById('filesList').prepend(fileItem);
                     updateFileCounter(1);
-                    showToast('🚀 URL upload completed successfully!', 'success');
+                    totalChunks += result.data.storage?.totalChunks || 0;
+                    showToast('🚀 Telegram import completed!', 'success');
+                    urlInput.value = '';
+                    filenameInput.value = '';
                 } else {
-                    throw new Error(result.error || 'URL upload failed');
+                    throw new Error(result.error?.message || 'Import failed');
                 }
             } catch (error) {
-                showToast(`❌ URL upload failed: ${error.message}`, 'error');
+                console.error('URL upload error:', error);
+                showToast(`❌ Import failed: ${error.message}`, 'error');
             } finally {
                 urlInput.disabled = false;
-                urlInput.value = '';
+                filenameInput.disabled = false;
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import from Telegram';
             }
         }
 
@@ -658,9 +634,9 @@
                     <div class="file-details">
                         <div class="file-name">${file.name}</div>
                         <div class="file-meta">
-                            ${formatBytes(file.size)} • ${file.type || 'Unknown type'} • 
+                            ${formatBytes(file.size)} • ${file.type || 'Unknown'} • 
                             <span class="file-status uploading">
-                                <i class="fas fa-spinner fa-spin"></i> Preparing upload...
+                                <i class="fas fa-spinner fa-spin"></i> Preparing...
                             </span>
                         </div>
                     </div>
@@ -671,7 +647,6 @@
                         <span class="speed-indicator">
                             <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
                         </span>
-                        <span class="time-remaining">Calculating...</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill"></div>
@@ -683,35 +658,32 @@
         }
 
         // Create URL File Item
-        function createUrlFileItem(result, originalUrl) {
+        function createUrlFileItem(data) {
             const item = document.createElement('div');
             item.className = 'file-item';
-            const filename = result.filename || extractFilenameFromUrl(originalUrl);
             item.innerHTML = `
                 <div class="file-header">
                     <div class="file-icon"><i class="fas fa-link"></i></div>
                     <div class="file-details">
-                        <div class="file-name">${filename}</div>
+                        <div class="file-name">${data.filename}</div>
                         <div class="file-meta">
-                            ${formatBytes(result.size || 0)} • URL Upload • 
+                            ${formatBytes(data.size)} • Telegram Import • 
+                            ${data.storage?.totalChunks || 0} chunks • 
                             <span class="file-status completed">
-                                <i class="fas fa-check-circle"></i> Upload Complete
+                                <i class="fas fa-check-circle"></i> Complete
                             </span>
                         </div>
                     </div>
                 </div>
                 <div class="file-actions">
-                    <a href="${result.url}" target="_blank" class="btn btn-primary">
-                        <i class="fas fa-eye"></i> View File
+                    <a href="${data.urls.view}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View
                     </a>
-                    <a href="${result.download}" class="btn btn-success">
+                    <a href="${data.urls.download}" class="btn btn-success">
                         <i class="fas fa-download"></i> Download
                     </a>
-                    <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
+                    <button onclick="copyToClipboard('${data.urls.view}')" class="btn btn-outline">
                         <i class="fas fa-copy"></i> Copy Link
-                    </button>
-                    <button onclick="shareFile('${result.url}', '${filename}')" class="btn btn-outline">
-                        <i class="fas fa-share"></i> Share
                     </button>
                 </div>
             `;
@@ -724,18 +696,16 @@
                 progressFill: fileItem.querySelector('.progress-fill'),
                 progressPercent: fileItem.querySelector('.progress-percent'),
                 uploadSpeed: fileItem.querySelector('.upload-speed'),
-                timeRemaining: fileItem.querySelector('.time-remaining'),
                 status: fileItem.querySelector('.file-status'),
                 actions: fileItem.querySelector('.file-actions')
             };
         }
 
-        // Update Progress with Advanced Metrics
-        function updateProgress(elements, percent, speed, remaining) {
+        // Update Progress
+        function updateProgress(elements, percent, speed) {
             elements.progressFill.style.width = percent + '%';
             elements.progressPercent.textContent = percent + '%';
             elements.uploadSpeed.textContent = formatBytes(speed) + '/s';
-            elements.timeRemaining.textContent = remaining;
 
             if (percent < 100) {
                 elements.status.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Uploading... ${percent}%`;
@@ -744,28 +714,21 @@
         }
 
         // Handle Upload Success
-        function handleUploadSuccess(elements, result, file) {
-            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Upload Complete';
+        function handleUploadSuccess(elements, data, file) {
+            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
             elements.status.className = 'file-status completed';
             elements.progressFill.style.width = '100%';
             elements.progressPercent.textContent = '100%';
-            elements.timeRemaining.textContent = 'Complete!';
 
             elements.actions.innerHTML = `
-                <a href="${result.url}" target="_blank" class="btn btn-primary">
-                    <i class="fas fa-eye"></i> View File
+                <a href="${data.urls.view}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> View
                 </a>
-                <a href="${result.download}" class="btn btn-success">
+                <a href="${data.urls.download}" class="btn btn-success">
                     <i class="fas fa-download"></i> Download
                 </a>
-                <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
+                <button onclick="copyToClipboard('${data.urls.view}')" class="btn btn-outline">
                     <i class="fas fa-copy"></i> Copy Link
-                </button>
-                <button onclick="shareFile('${result.url}', '${file.name}')" class="btn btn-outline">
-                    <i class="fas fa-share"></i> Share
-                </button>
-                <button onclick="deleteFile('${result.id}')" class="btn btn-outline" style="color: var(--error);">
-                    <i class="fas fa-trash"></i> Delete
                 </button>
             `;
         }
@@ -774,118 +737,25 @@
         function handleUploadError(elements, error) {
             elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
             elements.status.className = 'file-status failed';
-            elements.actions.innerHTML = `
-                <button onclick="retryUpload(this)" class="btn btn-outline">
-                    <i class="fas fa-redo"></i> Retry Upload
-                </button>
-            `;
         }
 
-        // Utility Functions
-        function calculateSpeed(loaded, startTime) {
-            const elapsed = (Date.now() - startTime) / 1000;
-            return elapsed > 0 ? loaded / elapsed : 0;
+        // Update Stats
+        function updateStats() {
+            document.getElementById('totalSize').textContent = formatBytes(totalSize);
+            document.getElementById('totalChunks').textContent = totalChunks;
+            document.getElementById('filesCount').textContent = uploadStats.completed;
+            document.getElementById('statsDashboard').style.display = 'grid';
         }
 
-        function calculateTimeRemaining(loaded, total, speed) {
-            if (speed === 0) return 'Calculating...';
-            const remaining = (total - loaded) / speed;
-            return remaining > 0 ? formatTime(remaining * 1000) : 'Almost done!';
-        }
-
-        function formatTime(ms) {
-            if (ms < 1000) return 'Less than 1s';
-            if (ms < 60000) return Math.round(ms / 1000) + 's';
-            if (ms < 3600000) return Math.round(ms / 60000) + 'm ' + Math.round((ms % 60000) / 1000) + 's';
-            return Math.round(ms / 3600000) + 'h ' + Math.round((ms % 3600000) / 60000) + 'm';
-        }
-
-        function formatBytes(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Complete File Icon Function
-        function getFileIcon(filename) {
-            const ext = filename.split('.').pop()?.toLowerCase() || '';
-            const iconMap = {
-                // Images
-                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 
-                'gif': 'fa-image', 'webp': 'fa-image', 'svg': 'fa-image',
-                'bmp': 'fa-image', 'tiff': 'fa-image', 'ico': 'fa-image',
-                // Videos
-                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 
-                'mov': 'fa-video', 'webm': 'fa-video', 'flv': 'fa-video',
-                'wmv': 'fa-video', 'm4v': 'fa-video', '3gp': 'fa-video',
-                // Audio
-                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music',
-                'aac': 'fa-music', 'ogg': 'fa-music', 'wma': 'fa-music',
-                'm4a': 'fa-music', 'opus': 'fa-music',
-                // Documents
-                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
-                'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
-                'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
-                'txt': 'fa-file-alt', 'rtf': 'fa-file-alt',
-                // Archives
-                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', 
-                '7z': 'fa-file-archive', 'tar': 'fa-file-archive',
-                'gz': 'fa-file-archive', 'bz2': 'fa-file-archive',
-                // Code
-                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code',
-                'php': 'fa-file-code', 'py': 'fa-file-code', 'java': 'fa-file-code',
-                'cpp': 'fa-file-code', 'c': 'fa-file-code', 'json': 'fa-file-code',
-                'xml': 'fa-file-code', 'sql': 'fa-file-code'
-            };
-
-            return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
-        }
-
-        // Enhanced Global Stats
-        function updateGlobalStats() {
-            const stats = {
-                totalSize: formatBytes(totalSize),
-                avgSpeed: formatBytes(totalSpeed / Math.max(activeUploads, 1)) + '/s',
-                timeRemaining: calculateGlobalTimeRemaining(),
-                filesCount: uploadStats.completed
-            };
-
-            Object.entries(stats).forEach(([key, value]) => {
-                const element = document.getElementById(key);
-                if (element) element.textContent = value;
-            });
-
-            // Show/hide stats dashboard
-            const dashboard = document.getElementById('statsDashboard');
-            if (activeUploads > 0 || uploadStats.total > 0) {
-                dashboard.style.display = 'grid';
-            }
-        }
-
-        function calculateGlobalTimeRemaining() {
-            if (activeUploads === 0) return 'Complete';
-            return 'Calculating...';
-        }
-
-        function startStatsUpdater() {
-            setInterval(updateGlobalStats, 1000);
-        }
-
-        // Show Results Section
+        // Show Results
         function showResults() {
-            const results = document.getElementById('results');
-            results.classList.add('show');
+            document.getElementById('results').classList.add('show');
         }
 
         // Update File Counter
         function updateFileCounter(count) {
             fileCounter += count;
-            const resultsCount = document.getElementById('resultsCount');
-            if (resultsCount) {
-                resultsCount.textContent = `${fileCounter} files uploaded`;
-            }
+            document.getElementById('resultsCount').textContent = `${fileCounter} files`;
         }
 
         // Update Total Size
@@ -893,26 +763,32 @@
             totalSize += size;
         }
 
-        // Extract filename from URL
-        function extractFilenameFromUrl(url) {
-            try {
-                const urlObj = new URL(url);
-                const pathname = urlObj.pathname;
-                const filename = pathname.split('/').pop();
-                return filename || 'downloaded-file';
-            } catch (e) {
-                return 'downloaded-file';
-            }
+        // Get File Icon
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop()?.toLowerCase() || '';
+            const iconMap = {
+                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 'gif': 'fa-image',
+                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 'mov': 'fa-video',
+                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music',
+                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive'
+            };
+            return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
+        }
+
+        // Format Bytes
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         // Toast System
         function showToast(message, type = 'success', duration = 4000) {
             const toast = document.getElementById('toast');
-            const icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️'
-            };
+            const icons = { success: '✅', error: '❌', warning: '⚠️' };
 
             toast.innerHTML = `
                 <div class="toast-icon">${icons[type] || '💡'}</div>
@@ -924,10 +800,7 @@
 
             toast.className = `toast ${type}`;
             setTimeout(() => toast.classList.add('show'), 100);
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
+            setTimeout(() => toast.classList.remove('show'), duration);
         }
 
         // Copy to Clipboard
@@ -936,72 +809,14 @@
                 await navigator.clipboard.writeText(text);
                 showToast('Link copied to clipboard!', 'success');
             } catch (err) {
-                // Fallback
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                showToast('Link copied to clipboard!', 'success');
+                showToast('Link copied!', 'success');
             }
-        }
-
-        // Share File
-        async function shareFile(url, filename) {
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: `${filename} - MARYA VAULT`,
-                        text: `Check out this file: ${filename}`,
-                        url: url
-                    });
-                } catch (err) {
-                    copyToClipboard(url);
-                }
-            } else {
-                copyToClipboard(url);
-            }
-        }
-
-        // Delete File (placeholder)
-        async function deleteFile(fileId) {
-            if (confirm('Are you sure you want to delete this file?')) {
-                try {
-                    const response = await fetch(`/delete/${fileId}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        showToast('File deleted successfully!', 'success');
-                        // Remove file item from DOM
-                        const fileItem = event.target.closest('.file-item');
-                        if (fileItem) fileItem.remove();
-                    } else {
-                        throw new Error('Failed to delete file');
-                    }
-                } catch (error) {
-                    showToast(`Delete failed: ${error.message}`, 'error');
-                }
-            }
-        }
-
-        // Retry Upload (placeholder)
-        function retryUpload(button) {
-            const fileItem = button.closest('.file-item');
-            const fileName = fileItem.querySelector('.file-name').textContent;
-            showToast(`Retrying upload for ${fileName}...`, 'warning');
-
-            // Reset file item status
-            const elements = getFileElements(fileItem);
-            elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retrying...';
-            elements.status.className = 'file-status uploading';
-            elements.actions.innerHTML = '';
-
-            // Here you would implement the retry logic
-            setTimeout(() => {
-                showToast('Retry functionality not implemented yet', 'warning');
-            }, 2000);
         }
 
         console.log('🎉 MARYA VAULT ULTIMATE - System Ready!');
