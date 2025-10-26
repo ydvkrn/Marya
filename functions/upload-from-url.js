@@ -19,7 +19,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Accept',
+          'Access-Control-Allow-Headers': 'Content-Type, Accept, Origin, X-Requested-With',
           'Access-Control-Max-Age': '86400'
         }
       });
@@ -34,22 +34,28 @@ export default {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Accept'
+          'Access-Control-Allow-Headers': 'Content-Type, Accept, Origin, X-Requested-With'
         }
       });
     }
 
     try {
       console.log('Processing POST request to /upload-from-url');
+      const contentType = request.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.error(`Invalid Content-Type: ${contentType}`);
+        return new Response(JSON.stringify({ success: false, error: 'Content-Type must be application/json' }), {
+          status: 415,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+
       const { fileUrl, filename } = await request.json();
       if (!fileUrl) {
         console.error('No URL provided in request body');
         return new Response(JSON.stringify({ success: false, error: 'URL is required' }), {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
         });
       }
 
@@ -63,10 +69,7 @@ export default {
         console.error(`Fetch failed: HTTP ${response.status} - ${response.statusText}`);
         return new Response(JSON.stringify({ success: false, error: `Failed to fetch file: HTTP ${response.status}` }), {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
         });
       }
 
@@ -75,24 +78,18 @@ export default {
         console.error('File is empty (Content-Length: 0)');
         return new Response(JSON.stringify({ success: false, error: 'File is empty' }), {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
         });
       }
       if (contentLength > MAX_SIZE) {
         console.error(`File too large: ${contentLength} bytes`);
         return new Response(JSON.stringify({ success: false, error: 'File exceeds 175MB limit' }), {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
         });
       }
 
-      const contentType = response.headers.get('content-type') || 'application/octet-stream';
+      const contentTypeResponse = response.headers.get('content-type') || 'application/octet-stream';
       const urlParts = new URL(fileUrl).pathname.split('/');
       const originalFilename = filename || urlParts[urlParts.length - 1] || 'downloaded_file';
       const fileId = nanoid(14);
@@ -106,10 +103,7 @@ export default {
         console.error('Downloaded file is empty');
         return new Response(JSON.stringify({ success: false, error: 'Downloaded file is empty' }), {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
         });
       }
 
@@ -122,10 +116,7 @@ export default {
           console.error(`KV namespace ${KV_NAMESPACES[chunks.length % KV_NAMESPACES.length]} not found`);
           return new Response(JSON.stringify({ success: false, error: 'Internal server error: KV namespace missing' }), {
             status: 500,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*'
-            }
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
           });
         }
         await kvNamespace.put(chunkId, chunk);
@@ -136,7 +127,7 @@ export default {
       const metadata = {
         filename: storedFilename,
         size: buffer.byteLength,
-        contentType,
+        contentType: contentTypeResponse,
         chunks,
         createdAt: new Date().toISOString()
       };
