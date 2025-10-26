@@ -61,7 +61,7 @@ export async function onRequest(context) {
       throw new Error('Invalid JSON body');
     }
 
-    const fileUrl = body.fileUrl || body.url; // Accept both 'fileUrl' and 'url'
+    const fileUrl = body.fileUrl || body.url;
     const customFilename = body.filename || null;
 
     if (!fileUrl) {
@@ -84,15 +84,24 @@ export async function onRequest(context) {
 
     // Get file info
     const contentLength = parseInt(fileResponse.headers.get('content-length') || '0');
-    const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
+    console.log('Fetch headers:', {
+      status: fileResponse.status,
+      contentLength: contentLength,
+      contentType: fileResponse.headers.get('content-type'),
+      disposition: fileResponse.headers.get('content-disposition')
+    });
+
+    // Convert response to blob/file
+    const fileBlob = await fileResponse.blob();
+    console.log('Blob size:', fileBlob.size);
 
     // ✅ Check for empty file
-    if (contentLength === 0) {
-      console.error('Fetched file is empty');
-      throw new Error('Fetched file is empty');
+    if (fileBlob.size === 0) {
+      console.error('Blob is empty after fetch');
+      throw new Error('Downloaded file is empty');
     }
 
-    // Extract filename from URL or Content-Disposition header
+    const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
     let filename = customFilename;
     if (!filename) {
       const disposition = fileResponse.headers.get('content-disposition');
@@ -106,25 +115,17 @@ export async function onRequest(context) {
 
     console.log('File info:', {
       filename: filename,
-      size: contentLength,
+      size: fileBlob.size,
       type: contentType
     });
 
     // ✅ Size validation - 7 KV namespaces × 25MB = 175MB max
     const MAX_FILE_SIZE = 175 * 1024 * 1024;
-    if (contentLength > MAX_FILE_SIZE) {
-      throw new Error(`File too large: ${Math.round(contentLength / 1024 / 1024)}MB (max 175MB)`);
+    if (fileBlob.size > MAX_FILE_SIZE) {
+      throw new Error(`File too large: ${Math.round(fileBlob.size / 1024 / 1024)}MB (max 175MB)`);
     }
 
-    // Convert response to blob/file
-    const fileBlob = await fileResponse.blob();
     const file = new File([fileBlob], filename, { type: contentType });
-
-    // ✅ Verify blob size
-    if (file.size === 0) {
-      console.error('Blob is empty after fetch');
-      throw new Error('Downloaded file is empty');
-    }
 
     // Generate unique file ID
     const timestamp = Date.now().toString(36);
@@ -133,7 +134,7 @@ export async function onRequest(context) {
     const extension = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '';
 
     // ✅ Chunking strategy
-    const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB per chunk
+    const CHUNK_SIZE = 20 * 1024 * 1024;
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     if (totalChunks > kvNamespaces.length) {
@@ -151,7 +152,7 @@ export async function onRequest(context) {
       const chunk = file.slice(start, end);
 
       const chunkFile = new File([chunk], `${filename}.part${i}`, { type: contentType });
-      const targetKV = kvNamespaces[i % kvNamespaces.length]; // Round-robin distribution
+      const targetKV = kvNamespaces[i % kvNamespaces.length];
 
       const chunkPromise = uploadChunkToKV(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV);
       chunkPromises.push(chunkPromise);
@@ -221,11 +222,9 @@ export async function onRequest(context) {
   }
 }
 
-// ✅ Upload chunk to specific KV namespace
 async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
   console.log(`Uploading chunk ${chunkIndex} to ${kvNamespace.name}...`);
 
-  // Upload to Telegram
   const telegramForm = new FormData();
   telegramForm.append('chat_id', channelId);
   telegramForm.append('document', chunkFile);
@@ -249,7 +248,6 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   const telegramFileId = telegramData.result.document.file_id;
   console.log(`Chunk ${chunkIndex} uploaded to Telegram, file_id: ${telegramFileId}`);
 
-  // Get file URL
   const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
 
   if (!getFileResponse.ok) {
@@ -266,7 +264,6 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
   console.log(`Chunk ${chunkIndex} direct URL: ${directUrl}`);
 
-  // ✅ Store chunk with auto-refresh metadata
   const chunkKey = `${fileId}_chunk_${chunkIndex}`;
   const chunkMetadata = {
     telegramFileId: telegramFileId,
