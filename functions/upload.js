@@ -1,5 +1,5 @@
 // functions/upload.js
-// ðŸš€ ADVANCED FILE UPLOAD with Chunking & Retry Logic
+// ADVANCED FILE UPLOAD with Chunking & Retry Logic
 
 export async function onRequest(context) {
   const { request, env } = context;
