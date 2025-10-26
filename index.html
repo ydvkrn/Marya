@@ -21,8 +21,6 @@
             min-height: 100vh; color: var(--gray-900); line-height: 1.5; -webkit-font-smoothing: antialiased;
         }
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-
-        /* Header with Enhanced Logo */
         .header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
         .logo {
             width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -44,8 +42,6 @@
             text-shadow: 2px 2px 4px rgba(220, 38, 38, 0.1);
         }
         .subtitle { font-size: 1.25rem; color: var(--gray-600); font-weight: 500; max-width: 700px; margin: 0 auto; }
-
-        /* Advanced Tab System */
         .tabs-container {
             background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl);
             padding: 2rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
@@ -65,8 +61,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeInUp 0.5s ease; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Enhanced Dropzone */
         .dropzone {
             border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
             cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
@@ -83,8 +77,6 @@
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
         .upload-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
         .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
-
-        /* URL Input Section */
         .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: stretch; }
         .url-input-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
         .url-input, .filename-input {
@@ -100,8 +92,6 @@
         }
         .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
         .url-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* Advanced File Type Badges */
         .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
         .file-type-badge {
             background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border-radius: 25px;
@@ -110,8 +100,6 @@
         }
         .file-type-badge:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
         .file-type-badge i { margin-right: 0.5rem; }
-
-        /* Real-time Stats Dashboard */
         .stats-dashboard {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
             margin-bottom: 2rem; padding: 1.5rem; background: var(--gray-50); border-radius: 15px;
@@ -122,8 +110,6 @@
         }
         .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
         .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; text-transform: uppercase; }
-
-        /* Enhanced File Item */
         .file-item {
             background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
             box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
@@ -143,8 +129,6 @@
         .file-details { flex: 1; min-width: 0; }
         .file-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-all; }
         .file-meta { color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem; }
-
-        /* Advanced Progress Bar */
         .progress-container { margin: 2rem 0; }
         .progress-info {
             display: flex; justify-content: space-between; margin-bottom: 1rem;
@@ -169,14 +153,10 @@
             display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--success);
             font-weight: 600;
         }
-
-        /* Status Indicators */
         .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; }
         .file-status.uploading { color: var(--primary); }
         .file-status.completed { color: var(--success); }
         .file-status.failed { color: var(--error); }
-
-        /* Action Buttons */
         .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
         .btn {
             display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
@@ -199,8 +179,6 @@
             box-shadow: var(--shadow-sm);
         }
         .btn-outline:hover { background: var(--gray-50); border-color: var(--primary); }
-
-        /* Enhanced Toast System */
         .toast {
             position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px;
             padding: 1.5rem; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);
@@ -221,8 +199,6 @@
         .toast-content { flex: 1; }
         .toast-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
         .toast-message { font-size: 0.875rem; color: var(--gray-600); }
-
-        /* Results Section */
         .results { display: none; }
         .results.show { display: block; animation: fadeIn 0.6s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -235,8 +211,6 @@
             background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem;
             border-radius: 25px; font-size: 0.875rem; font-weight: 700;
         }
-
-        /* Storage Info */
         .storage-info {
             background: linear-gradient(135deg, var(--primary-light), var(--success-light));
             padding: 1.5rem;
@@ -254,8 +228,6 @@
             font-size: 0.875rem;
             color: var(--gray-600);
         }
-
-        /* Responsive */
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .title { font-size: 2.5rem; }
@@ -274,14 +246,11 @@
 </head>
 <body>
     <div class="container">
-        <!-- Enhanced Header -->
         <header class="header">
             <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
             <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
             <p class="subtitle">Professional multi-KV file storage with chunking, auto-refresh URLs, and enterprise features. Upload up to 175MB per file.</p>
         </header>
-
-        <!-- Storage Info Banner -->
         <div class="storage-info">
             <div class="storage-info-title">
                 <i class="fas fa-database"></i> Multi-KV Storage System
@@ -290,8 +259,6 @@
                 7 KV Namespaces • 20MB Chunks • Auto URL Refresh • Permanent Links
             </div>
         </div>
-
-        <!-- Advanced Tab System -->
         <section class="tabs-container">
             <div class="tabs">
                 <button class="tab active" onclick="showTab('file')">
@@ -301,8 +268,6 @@
                     <i class="fas fa-link"></i> Telegram URL
                 </button>
             </div>
-
-            <!-- File Upload Tab -->
             <div class="tab-content active" id="file-content">
                 <label class="dropzone" id="dropzone" for="fileInput">
                     <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
@@ -318,8 +283,6 @@
                 </label>
                 <input type="file" id="fileInput" multiple accept="*/*" style="display: none;">
             </div>
-
-            <!-- URL Upload Tab -->
             <div class="tab-content" id="url-content">
                 <div class="storage-info" style="margin-bottom: 1.5rem; text-align: left;">
                     <div class="storage-info-title" style="margin-bottom: 0.75rem;">
@@ -351,8 +314,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- Real-time Stats Dashboard -->
         <section class="stats-dashboard" id="statsDashboard" style="display: none;">
             <div class="stat-card">
                 <div class="stat-value" id="totalSize">0 MB</div>
@@ -371,8 +332,6 @@
                 <div class="stat-label">Files Processed</div>
             </div>
         </section>
-
-        <!-- Enhanced Results Section -->
         <section class="results" id="results">
             <div class="results-header">
                 <h2 class="results-title">📁 Your Files</h2>
@@ -381,22 +340,14 @@
             <div id="filesList"></div>
         </section>
     </div>
-
-    <!-- Enhanced Toast System -->
     <div id="toast" class="toast"></div>
-
     <script>
-        console.log('🚀 MARYA VAULT ULTIMATE - Multi-KV System Loading...');
-
-        // Global variables
         let fileCounter = 0;
         let totalSize = 0;
         let totalChunks = 0;
         let uploadStats = { total: 0, completed: 0, failed: 0 };
 
-        // Initialize system
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Initializing Ultimate File System');
             initializeSystem();
         });
 
@@ -406,7 +357,6 @@
             setupDragDrop();
         }
 
-        // Tab Management
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -414,22 +364,30 @@
             document.getElementById(tabName + '-content').classList.add('active');
         }
 
-        // File Upload Setup
         function setupFileUpload() {
             const fileInput = document.getElementById('fileInput');
             const dropzone = document.getElementById('dropzone');
+            let isProcessing = false;
 
             fileInput.addEventListener('change', e => {
+                if (isProcessing) return;
+                isProcessing = true;
+
                 if (e.target.files.length > 0) {
                     handleFiles(Array.from(e.target.files));
                     fileInput.value = '';
                 }
+
+                setTimeout(() => { isProcessing = false; }, 100);
             });
 
-            dropzone.addEventListener('click', () => fileInput.click());
+            dropzone.addEventListener('click', e => {
+                if (!isProcessing) {
+                    fileInput.click();
+                }
+            });
         }
 
-        // URL Upload Setup
         function setupUrlUpload() {
             const urlInput = document.getElementById('urlInput');
             urlInput.addEventListener('keypress', e => {
@@ -437,7 +395,6 @@
             });
         }
 
-        // Enhanced Drag & Drop
         function setupDragDrop() {
             const dropzone = document.getElementById('dropzone');
 
@@ -465,16 +422,12 @@
             }
         }
 
-        // Handle Files
         function handleFiles(files) {
-            console.log(`🔄 Processing ${files.length} file(s)`);
-
             if (files.length === 0) {
                 showToast('No files selected', 'error');
                 return;
             }
 
-            // Validate files - 175MB max (7 KV x 25MB)
             const MAX_SIZE = 175 * 1024 * 1024;
             const validFiles = files.filter(file => {
                 if (file.size > MAX_SIZE) {
@@ -498,10 +451,7 @@
             });
         }
 
-        // Advanced File Upload
         function uploadFile(file) {
-            console.log(`⬆️ Starting upload: ${file.name} (${formatBytes(file.size)})`);
-
             const fileItem = createAdvancedFileItem(file);
             document.getElementById('filesList').prepend(fileItem);
 
@@ -545,7 +495,6 @@
                             throw new Error(result.error?.message || 'Upload failed');
                         }
                     } catch (parseError) {
-                        console.error('Parse error:', parseError);
                         handleUploadError(elements, 'Invalid response');
                         uploadStats.failed++;
                         showToast(`❌ Upload failed: ${file.name}`, 'error');
@@ -569,12 +518,11 @@
             xhr.send(formData);
         }
 
-        // URL Upload
         async function uploadFromUrl() {
             const urlInput = document.getElementById('urlInput');
             const filenameInput = document.getElementById('filenameInput');
             const uploadBtn = document.getElementById('urlUploadBtn');
-            
+
             const telegramUrl = urlInput.value.trim();
             const filename = filenameInput.value.trim();
 
@@ -582,6 +530,16 @@
                 showToast('Please enter a Telegram URL or file_id', 'error');
                 return;
             }
+
+            const fileItem = createUrlFileItem({
+                filename: filename || 'Importing...',
+                size: 0,
+                storage: { totalChunks: 0 }
+            });
+            document.getElementById('filesList').prepend(fileItem);
+            const elements = getFileElements(fileItem);
+            elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+            elements.actions.innerHTML = '';
 
             showToast('🌐 Starting Telegram import...', 'success');
             urlInput.disabled = true;
@@ -603,10 +561,30 @@
 
                 if (result.success && result.data) {
                     showResults();
-                    const fileItem = createUrlFileItem(result.data);
-                    document.getElementById('filesList').prepend(fileItem);
                     updateFileCounter(1);
-                    totalChunks += result.data.storage?.totalChunks || 0;
+                    totalSize += result.data.size;
+                    totalChunks += result.data.chunks || 0;
+                    updateStats();
+
+                    fileItem.querySelector('.file-name').textContent = result.data.filename;
+                    fileItem.querySelector('.file-meta').innerHTML = `
+                        ${formatBytes(result.data.size)} • Telegram Import • 
+                        ${result.data.chunks || 0} chunks • 
+                        <span class="file-status completed">
+                            <i class="fas fa-check-circle"></i> Complete
+                        </span>
+                    `;
+                    fileItem.querySelector('.file-actions').innerHTML = `
+                        <a href="${result.data.url}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="${result.data.download}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <button onclick="copyToClipboard('${result.data.url}')" class="btn btn-outline">
+                            <i class="fas fa-copy"></i> Copy Link
+                        </button>
+                    `;
                     showToast('🚀 Telegram import completed!', 'success');
                     urlInput.value = '';
                     filenameInput.value = '';
@@ -614,7 +592,8 @@
                     throw new Error(result.error?.message || 'Import failed');
                 }
             } catch (error) {
-                console.error('URL upload error:', error);
+                elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error.message}`;
+                elements.status.className = 'file-status failed';
                 showToast(`❌ Import failed: ${error.message}`, 'error');
             } finally {
                 urlInput.disabled = false;
@@ -624,7 +603,6 @@
             }
         }
 
-        // Create Advanced File Item
         function createAdvancedFileItem(file) {
             const item = document.createElement('div');
             item.className = 'file-item';
@@ -657,7 +635,6 @@
             return item;
         }
 
-        // Create URL File Item
         function createUrlFileItem(data) {
             const item = document.createElement('div');
             item.className = 'file-item';
@@ -675,22 +652,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="file-actions">
-                    <a href="${data.urls.view}" target="_blank" class="btn btn-primary">
-                        <i class="fas fa-eye"></i> View
-                    </a>
-                    <a href="${data.urls.download}" class="btn btn-success">
-                        <i class="fas fa-download"></i> Download
-                    </a>
-                    <button onclick="copyToClipboard('${data.urls.view}')" class="btn btn-outline">
-                        <i class="fas fa-copy"></i> Copy Link
-                    </button>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-percent">0%</span>
+                        <span class="speed-indicator">
+                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
+                        </span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
                 </div>
+                <div class="file-actions"></div>
             `;
             return item;
         }
 
-        // Get File Elements
         function getFileElements(fileItem) {
             return {
                 progressFill: fileItem.querySelector('.progress-fill'),
@@ -701,7 +678,6 @@
             };
         }
 
-        // Update Progress
         function updateProgress(elements, percent, speed) {
             elements.progressFill.style.width = percent + '%';
             elements.progressPercent.textContent = percent + '%';
@@ -713,7 +689,6 @@
             }
         }
 
-        // Handle Upload Success
         function handleUploadSuccess(elements, data, file) {
             elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
             elements.status.className = 'file-status completed';
@@ -733,13 +708,11 @@
             `;
         }
 
-        // Handle Upload Error
         function handleUploadError(elements, error) {
             elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
             elements.status.className = 'file-status failed';
         }
 
-        // Update Stats
         function updateStats() {
             document.getElementById('totalSize').textContent = formatBytes(totalSize);
             document.getElementById('totalChunks').textContent = totalChunks;
@@ -747,23 +720,19 @@
             document.getElementById('statsDashboard').style.display = 'grid';
         }
 
-        // Show Results
         function showResults() {
             document.getElementById('results').classList.add('show');
         }
 
-        // Update File Counter
         function updateFileCounter(count) {
             fileCounter += count;
             document.getElementById('resultsCount').textContent = `${fileCounter} files`;
         }
 
-        // Update Total Size
         function updateTotalSize(size) {
             totalSize += size;
         }
 
-        // Get File Icon
         function getFileIcon(filename) {
             const ext = filename.split('.').pop()?.toLowerCase() || '';
             const iconMap = {
@@ -776,7 +745,6 @@
             return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
         }
 
-        // Format Bytes
         function formatBytes(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024;
@@ -785,7 +753,6 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Toast System
         function showToast(message, type = 'success', duration = 4000) {
             const toast = document.getElementById('toast');
             const icons = { success: '✅', error: '❌', warning: '⚠️' };
@@ -803,7 +770,6 @@
             setTimeout(() => toast.classList.remove('show'), duration);
         }
 
-        // Copy to Clipboard
         async function copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -818,8 +784,6 @@
                 showToast('Link copied!', 'success');
             }
         }
-
-        console.log('🎉 MARYA VAULT ULTIMATE - System Ready!');
     </script>
 </body>
 </html>
