@@ -33,7 +33,7 @@ export async function onRequest(context) {
         ].filter(item => item.kv);
 
         if (kvNamespaces.length === 0) {
-            throw new Error('No KV namespaces available');
+            throw new Error('No KV namespaces configured');
         }
 
         const body = await request.json();
@@ -44,8 +44,12 @@ export async function onRequest(context) {
         }
 
         // Validate URL
+        let url;
         try {
-            new URL(fileUrl);
+            url = new URL(fileUrl);
+            if (!url.protocol.match(/^https?:/)) {
+                throw new Error('URL must use http or https protocol');
+            }
         } catch {
             throw new Error('Invalid URL format');
         }
@@ -56,40 +60,55 @@ export async function onRequest(context) {
         let originalFilename = filename || extractFilenameFromUrl(fileUrl);
 
         // Try HEAD request for size and content-type
-        const headResponse = await fetch(fileUrl, { 
-            method: 'HEAD',
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
-
-        if (headResponse.ok) {
-            fileSize = parseInt(headResponse.headers.get('content-length') || '0');
-            contentType = headResponse.headers.get('content-type') || contentType;
-        }
-
-        // Fallback: Download a small portion to estimate size if content-length is missing
-        if (fileSize === 0) {
-            const rangeResponse = await fetch(fileUrl, { 
-                headers: { 
-                    'Range': 'bytes=0-1023',
-                    'User-Agent': 'Mozilla/5.0'
+        try {
+            const headResponse = await fetch(fileUrl, {
+                method: 'HEAD',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; FileUploader/1.0)',
+                    'Accept': '*/*'
                 }
             });
-            if (!rangeResponse.ok) {
-                throw new Error(`Failed to access file: ${rangeResponse.status}`);
+
+            if (headResponse.ok) {
+                fileSize = parseInt(headResponse.headers.get('content-length') || '0');
+                contentType = headResponse.headers.get('content-type') || contentType;
             }
-            const contentRange = rangeResponse.headers.get('content-range');
-            if (contentRange) {
-                const match = contentRange.match(/\/(\d+)/);
-                if (match) fileSize = parseInt(match[1]);
+        } catch (e) {
+            console.warn('HEAD request failed:', e.message);
+        }
+
+        // Fallback: Partial download to estimate size
+        if (fileSize === 0) {
+            try {
+                const rangeResponse = await fetch(fileUrl, {
+                    headers: {
+                        'Range': 'bytes=0-1023',
+                        'User-Agent': 'Mozilla/5.0 (compatible; FileUploader/1.0)',
+                        'Accept': '*/*'
+                    }
+                });
+                if (!rangeResponse.ok) {
+                    throw new Error(`Failed to access file: HTTP ${rangeResponse.status}`);
+                }
+                const contentRange = rangeResponse.headers.get('content-range');
+                if (contentRange) {
+                    const match = contentRange.match(/\/(\d+)/);
+                    if (match) {
+                        fileSize = parseInt(match[1]);
+                    }
+                }
+            } catch (e) {
+                console.warn('Range request failed:', e.message);
             }
         }
 
-        // Size validation - 175MB max
+        // Final size validation
         const MAX_FILE_SIZE = 175 * 1024 * 1024;
-        if (fileSize > MAX_FILE_SIZE || fileSize === 0) {
-            throw new Error(fileSize > MAX_FILE_SIZE 
-                ? `File too large: ${Math.round(fileSize / 1024 / 1024)}MB (max 175MB)`
-                : 'Unable to determine file size');
+        if (fileSize === 0) {
+            throw new Error('Unable to determine file size');
+        }
+        if (fileSize > MAX_FILE_SIZE) {
+            throw new Error(`File too large: ${Math.round(fileSize / 1024 / 1024)}MB (max 175MB)`);
         }
 
         // Generate unique file ID
@@ -100,16 +119,22 @@ export async function onRequest(context) {
 
         // Download file
         const fileResponse = await fetch(fileUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; FileUploader/1.0)',
+                'Accept': '*/*'
+            }
         });
         if (!fileResponse.ok) {
-            throw new Error(`Failed to download file: ${fileResponse.status}`);
+            throw new Error(`Failed to download file: HTTP ${fileResponse.status}`);
         }
 
-        const fileBlob = await fileResponse.blob();
-        const fileBuffer = await fileBlob.arrayBuffer();
+        const fileBuffer = await fileResponse.arrayBuffer();
+        if (fileBuffer.byteLength === 0) {
+            throw new Error('Downloaded file is empty');
+        }
         if (fileBuffer.byteLength !== fileSize) {
-            throw new Error('Downloaded file size does not match expected size');
+            console.warn(`Size mismatch: Expected ${fileSize} bytes, got ${fileBuffer.byteLength} bytes`);
+            fileSize = fileBuffer.byteLength; // Update to actual size
         }
 
         // Chunking strategy
@@ -126,23 +151,27 @@ export async function onRequest(context) {
             const start = i * CHUNK_SIZE;
             const end = Math.min(start + CHUNK_SIZE, fileBuffer.byteLength);
             const chunkBuffer = fileBuffer.slice(start, end);
-            const chunkBlob = new Blob([chunkBuffer]);
             const chunkKey = `${newFileId}_chunk_${i}`;
             const targetKV = kvNamespaces[i % kvNamespaces.length];
 
-            const chunkPromise = targetKV.kv.put(chunkKey, chunkBlob, {
+            // Convert chunk to ArrayBuffer explicitly to ensure KV compatibility
+            const chunkArrayBuffer = chunkBuffer instanceof ArrayBuffer ? chunkBuffer : await new Blob([chunkBuffer]).arrayBuffer();
+
+            const chunkPromise = targetKV.kv.put(chunkKey, chunkArrayBuffer, {
                 metadata: {
                     index: i,
                     parentFileId: newFileId,
-                    size: chunkBlob.size,
+                    size: chunkArrayBuffer.byteLength,
                     kvNamespace: targetKV.name,
                     uploadedAt: Date.now()
                 }
             }).then(() => ({
                 chunkKey,
-                size: chunkBlob.size,
+                size: chunkArrayBuffer.byteLength,
                 kvNamespace: targetKV.name
-            }));
+            })).catch(e => {
+                throw new Error(`Failed to store chunk ${i} in ${targetKV.name}: ${e.message}`);
+            });
 
             chunkPromises.push(chunkPromise);
         }
@@ -167,7 +196,9 @@ export async function onRequest(context) {
             }))
         };
 
-        await kvNamespaces[0].kv.put(newFileId, JSON.stringify(masterMetadata));
+        await kvNamespaces[0].kv.put(newFileId, JSON.stringify(masterMetadata)).catch(e => {
+            throw new Error(`Failed to store metadata: ${e.message}`);
+        });
 
         const baseUrl = new URL(request.url).origin;
         const customUrl = `${baseUrl}/btfstorage/file/${newFileId}${extension}`;
@@ -193,9 +224,10 @@ export async function onRequest(context) {
         });
 
     } catch (error) {
+        console.error('Error in upload-from-url:', error.message, error.stack);
         return new Response(JSON.stringify({
             success: false,
-            error: error.message
+            error: error.message || 'Failed to process URL upload'
         }), {
             status: 500,
             headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -207,7 +239,12 @@ function extractFilenameFromUrl(url) {
     try {
         const urlPath = new URL(url).pathname;
         const parts = urlPath.split('/');
-        return parts[parts.length - 1] || 'downloaded_file';
+        let filename = parts[parts.length - 1] || 'downloaded_file';
+        // Remove query parameters from filename
+        if (filename.includes('?')) {
+            filename = filename.split('?')[0];
+        }
+        return filename || 'downloaded_file';
     } catch {
         return 'downloaded_file';
     }
