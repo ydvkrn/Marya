@@ -72,6 +72,8 @@ export async function onRequest(context) {
             if (headResponse.ok) {
                 fileSize = parseInt(headResponse.headers.get('content-length') || '0');
                 contentType = headResponse.headers.get('content-type') || contentType;
+            } else {
+                throw new Error(`HEAD request failed: HTTP ${headResponse.status}`);
             }
         } catch (e) {
             console.warn('HEAD request failed:', e.message);
@@ -105,7 +107,7 @@ export async function onRequest(context) {
         // Final size validation
         const MAX_FILE_SIZE = 175 * 1024 * 1024;
         if (fileSize === 0) {
-            throw new Error('Unable to determine file size');
+            throw new Error('Unable to determine file size or file is empty');
         }
         if (fileSize > MAX_FILE_SIZE) {
             throw new Error(`File too large: ${Math.round(fileSize / 1024 / 1024)}MB (max 175MB)`);
@@ -132,7 +134,7 @@ export async function onRequest(context) {
         if (fileBuffer.byteLength === 0) {
             throw new Error('Downloaded file is empty');
         }
-        if (fileBuffer.byteLength !== fileSize) {
+        if (fileSize !== 0 && fileBuffer.byteLength !== fileSize) {
             console.warn(`Size mismatch: Expected ${fileSize} bytes, got ${fileBuffer.byteLength} bytes`);
             fileSize = fileBuffer.byteLength; // Update to actual size
         }
@@ -151,23 +153,24 @@ export async function onRequest(context) {
             const start = i * CHUNK_SIZE;
             const end = Math.min(start + CHUNK_SIZE, fileBuffer.byteLength);
             const chunkBuffer = fileBuffer.slice(start, end);
+            if (chunkBuffer.byteLength === 0) {
+                throw new Error(`Chunk ${i} is empty`);
+            }
             const chunkKey = `${newFileId}_chunk_${i}`;
             const targetKV = kvNamespaces[i % kvNamespaces.length];
 
-            // Convert chunk to ArrayBuffer explicitly to ensure KV compatibility
-            const chunkArrayBuffer = chunkBuffer instanceof ArrayBuffer ? chunkBuffer : await new Blob([chunkBuffer]).arrayBuffer();
-
-            const chunkPromise = targetKV.kv.put(chunkKey, chunkArrayBuffer, {
+            // Store chunk as ArrayBuffer
+            const chunkPromise = targetKV.kv.put(chunkKey, chunkBuffer, {
                 metadata: {
                     index: i,
                     parentFileId: newFileId,
-                    size: chunkArrayBuffer.byteLength,
+                    size: chunkBuffer.byteLength,
                     kvNamespace: targetKV.name,
                     uploadedAt: Date.now()
                 }
             }).then(() => ({
                 chunkKey,
-                size: chunkArrayBuffer.byteLength,
+                size: chunkBuffer.byteLength,
                 kvNamespace: targetKV.name
             })).catch(e => {
                 throw new Error(`Failed to store chunk ${i} in ${targetKV.name}: ${e.message}`);
@@ -240,7 +243,6 @@ function extractFilenameFromUrl(url) {
         const urlPath = new URL(url).pathname;
         const parts = urlPath.split('/');
         let filename = parts[parts.length - 1] || 'downloaded_file';
-        // Remove query parameters from filename
         if (filename.includes('?')) {
             filename = filename.split('?')[0];
         }
