@@ -831,6 +831,65 @@
                 showToast('Link copied!', 'success');
             }
         }
-    </script>
+   // Add URL upload form
+async function uploadFromUrl() {
+    const urlInput = document.getElementById('urlInput');
+    const filenameInput = document.getElementById('filenameInput');
+    
+    const url = urlInput.value.trim();
+    if (!url) {
+        alert('Please enter a URL');
+        return;
+    }
+
+    try {
+        showProgress(true);
+        updateProgress(0, 'Fetching file from URL...');
+
+        const response = await fetch('/upload-from-url', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: url,
+                filename: filenameInput.value.trim() || null
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            updateProgress(100, 'Upload completed!');
+            showToast(`✅ File uploaded: ${result.filename}`, 'success');
+            
+            // Add to file list
+            addFileToList(result);
+            
+            // Clear inputs
+            urlInput.value = '';
+            filenameInput.value = '';
+        } else {
+            throw new Error(result.error);
+        }
+
+    } catch (error) {
+        console.error('URL upload error:', error);
+        showToast(`❌ Upload failed: ${error.message}`, 'error');
+    } finally {
+        setTimeout(() => showProgress(false), 2000);
+    }
+}
+
+// Add to HTML
+/*
+<div class="url-upload-section">
+    <h3>Upload from URL</h3>
+    <input type="url" id="urlInput" placeholder="https://example.com/file.mp4" />
+    <input type="text" id="filenameInput" placeholder="Custom filename (optional)" />
+    <button onclick="uploadFromUrl()">Upload from URL</button>
+</div>
+*/
+ </script>
 </body>
 </html>
