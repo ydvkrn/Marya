@@ -65,7 +65,7 @@
             border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
             cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
             min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            pointer-events: auto; /* Ensure clicks are not blocked */
+            pointer-events: auto; z-index: 10; /* Ensure clicks are not blocked */
         }
         .dropzone:hover, .dropzone.dragover {
             border-color: var(--primary); background: var(--primary-light);
@@ -370,13 +370,15 @@
             const updatedFileInput = document.getElementById('fileInput');
             const updatedDropzone = document.getElementById('dropzone');
 
-            // Add event listeners
+            // Add debug click listener
             updatedDropzone.addEventListener('click', () => {
-                console.log('Dropzone clicked');
+                console.log('Dropzone clicked, isProcessing:', isProcessing);
                 if (!isProcessing) {
+                    console.log('Triggering file input click');
                     updatedFileInput.click();
                 } else {
                     console.log('Dropzone click ignored: isProcessing = true');
+                    showToast('Please wait, processing in progress', 'warning');
                 }
             });
 
@@ -384,12 +386,16 @@
                 console.log('File input changed, files selected:', e.target.files.length);
                 if (isProcessing) {
                     console.log('File selection ignored: isProcessing = true');
+                    showToast('Please wait, processing in progress', 'warning');
                     return;
                 }
                 isProcessing = true;
                 handleFiles(Array.from(e.target.files));
                 e.target.value = ''; // Clear input
-                setTimeout(() => { isProcessing = false; }, 100);
+                setTimeout(() => { 
+                    isProcessing = false; 
+                    console.log('isProcessing reset to false');
+                }, 100);
             });
         }
 
@@ -431,6 +437,7 @@
                     handleFiles(Array.from(e.dataTransfer.files));
                 } else {
                     console.log('Drop ignored: isProcessing = true');
+                    showToast('Please wait, processing in progress', 'warning');
                 }
             }, false);
 
@@ -526,7 +533,7 @@
                 } else {
                     handleUploadError(elements, `HTTP ${xhr.status}`);
                     uploadStats.failed++;
-                    showToast(`❌ Upload failed: ${file.name}`, 'error');
+                    showToast(`❌ Upload failed: ${file.name} (HTTP ${xhr.status})`, 'error');
                 }
                 updateStats();
                 isProcessing = false;
@@ -585,20 +592,28 @@
             uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
 
             try {
+                console.log('Sending POST request to /upload-from-url');
                 const response = await fetch('/upload-from-url', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ 
                         fileUrl: fileUrl,
                         filename: filename || undefined
                     })
                 });
 
+                console.log(`Response status: ${response.status}`);
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    const errorText = await response.text();
+                    console.error(`Fetch error: HTTP ${response.status} - ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
 
                 const result = await response.json();
+                console.log('Response received:', result);
 
                 if (result.success && result.data) {
                     if (result.data.size === 0) {
@@ -636,7 +651,7 @@
                     throw new Error(result.error || 'Import failed');
                 }
             } catch (error) {
-                console.error('URL upload error:', error);
+                console.error('URL upload error:', error.message);
                 elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error.message}`;
                 elements.status.className = 'file-status failed';
                 showToast(`❌ Import failed: ${error.message}`, 'error');
@@ -646,6 +661,7 @@
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import from URL';
                 isProcessing = false;
+                console.log('isProcessing reset to false after URL upload');
             }
         }
 
