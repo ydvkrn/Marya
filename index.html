@@ -249,14 +249,14 @@
         <header class="header">
             <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
             <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
-            <p class="subtitle">Professional multi-KV file storage with chunking, auto-refresh URLs, and enterprise features. Upload up to 175MB per file.</p>
+            <p class="subtitle">Professional multi-KV file storage with chunking and enterprise features. Upload up to 175MB per file.</p>
         </header>
         <div class="storage-info">
             <div class="storage-info-title">
                 <i class="fas fa-database"></i> Multi-KV Storage System
             </div>
             <div class="storage-info-desc">
-                7 KV Namespaces • 20MB Chunks • Auto URL Refresh • Permanent Links
+                7 KV Namespaces • 20MB Chunks • Permanent Links
             </div>
         </div>
         <section class="tabs-container">
@@ -265,7 +265,7 @@
                     <i class="fas fa-upload"></i> File Upload
                 </button>
                 <button class="tab" onclick="showTab('url')">
-                    <i class="fas fa-link"></i> Telegram URL
+                    <i class="fas fa-link"></i> URL Upload
                 </button>
             </div>
             <div class="tab-content active" id="file-content">
@@ -286,30 +286,29 @@
             <div class="tab-content" id="url-content">
                 <div class="storage-info" style="margin-bottom: 1.5rem; text-align: left;">
                     <div class="storage-info-title" style="margin-bottom: 0.75rem;">
-                        <i class="fas fa-info-circle"></i> Telegram URL Upload
+                        <i class="fas fa-info-circle"></i> URL Upload
                     </div>
                     <div class="storage-info-desc">
-                        • Paste Telegram file URL or file_id<br>
-                        • Direct import from api.telegram.org<br>
+                        • Paste any direct file URL<br>
+                        • Supports images, videos, documents, and more<br>
                         • Auto-chunking for large files<br>
-                        • Permanent storage with auto-refresh
+                        • Permanent storage across multiple KV namespaces
                     </div>
                 </div>
                 <div class="url-section">
                     <div class="url-input-group">
                         <input type="text" id="urlInput" class="url-input" 
-                               placeholder="Telegram URL or file_id (e.g., https://api.telegram.org/file/bot.../file.mp4)">
+                               placeholder="Direct file URL (e.g., https://example.com/file.mp4)">
                         <input type="text" id="filenameInput" class="filename-input" 
                                placeholder="Filename (optional, e.g., video.mp4)">
                     </div>
                     <button class="url-btn" id="urlUploadBtn" onclick="uploadFromUrl()">
-                        <i class="fas fa-cloud-download-alt"></i> Import from Telegram
+                        <i class="fas fa-cloud-download-alt"></i> Import from URL
                     </button>
                 </div>
                 <div style="text-align: center; padding: 1.5rem; color: var(--gray-600); font-size: 0.875rem;">
                     <strong>Supported formats:</strong><br>
-                    • Direct Telegram file URL: https://api.telegram.org/file/bot.../file.ext<br>
-                    • Telegram file_id: AgACAgQAAxkBAAIBY...<br>
+                    • Direct file URLs (e.g., https://example.com/file.ext)<br>
                     • Files will be automatically chunked and stored across multiple KV namespaces
                 </div>
             </div>
@@ -523,11 +522,11 @@
             const filenameInput = document.getElementById('filenameInput');
             const uploadBtn = document.getElementById('urlUploadBtn');
 
-            const telegramUrl = urlInput.value.trim();
+            const fileUrl = urlInput.value.trim();
             const filename = filenameInput.value.trim();
 
-            if (!telegramUrl) {
-                showToast('Please enter a Telegram URL or file_id', 'error');
+            if (!fileUrl) {
+                showToast('Please enter a file URL', 'error');
                 return;
             }
 
@@ -541,7 +540,7 @@
             elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
             elements.actions.innerHTML = '';
 
-            showToast('🌐 Starting Telegram import...', 'success');
+            showToast('🌐 Starting URL import...', 'success');
             urlInput.disabled = true;
             filenameInput.disabled = true;
             uploadBtn.disabled = true;
@@ -552,7 +551,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        telegramUrl: telegramUrl,
+                        fileUrl: fileUrl,
                         filename: filename || undefined
                     })
                 });
@@ -568,7 +567,7 @@
 
                     fileItem.querySelector('.file-name').textContent = result.data.filename;
                     fileItem.querySelector('.file-meta').innerHTML = `
-                        ${formatBytes(result.data.size)} • Telegram Import • 
+                        ${formatBytes(result.data.size)} • URL Import • 
                         ${result.data.chunks || 0} chunks • 
                         <span class="file-status completed">
                             <i class="fas fa-check-circle"></i> Complete
@@ -585,7 +584,7 @@
                             <i class="fas fa-copy"></i> Copy Link
                         </button>
                     `;
-                    showToast('🚀 Telegram import completed!', 'success');
+                    showToast('🚀 URL import completed!', 'success');
                     urlInput.value = '';
                     filenameInput.value = '';
                 } else {
@@ -599,7 +598,7 @@
                 urlInput.disabled = false;
                 filenameInput.disabled = false;
                 uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import from Telegram';
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import from URL';
             }
         }
 
@@ -644,7 +643,7 @@
                     <div class="file-details">
                         <div class="file-name">${data.filename}</div>
                         <div class="file-meta">
-                            ${formatBytes(data.size)} • Telegram Import • 
+                            ${formatBytes(data.size)} • URL Import • 
                             ${data.storage?.totalChunks || 0} chunks • 
                             <span class="file-status completed">
                                 <i class="fas fa-check-circle"></i> Complete
