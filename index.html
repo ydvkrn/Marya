@@ -370,7 +370,7 @@
             const updatedFileInput = document.getElementById('fileInput');
             const updatedDropzone = document.getElementById('dropzone');
 
-            // Add debug click listener
+            // Debug click listener
             updatedDropzone.addEventListener('click', () => {
                 console.log('Dropzone clicked, isProcessing:', isProcessing);
                 if (!isProcessing) {
@@ -592,8 +592,9 @@
             uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
 
             try {
-                console.log('Sending POST request to /upload-from-url');
-                const response = await fetch('/upload-from-url', {
+                const endpoint = 'https://marya-hosting.pages.dev/upload-from-url'; // Use full URL
+                console.log(`Sending POST request to ${endpoint}`);
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -606,14 +607,16 @@
                 });
 
                 console.log(`Response status: ${response.status}`);
+                const responseText = await response.text();
+                console.log(`Response body: ${responseText}`);
+
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`Fetch error: HTTP ${response.status} - ${errorText}`);
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    console.error(`Fetch error: HTTP ${response.status} - ${responseText}`);
+                    throw new Error(`HTTP ${response.status}: ${responseText}`);
                 }
 
-                const result = await response.json();
-                console.log('Response received:', result);
+                const result = JSON.parse(responseText);
+                console.log('Parsed response:', result);
 
                 if (result.success && result.data) {
                     if (result.data.size === 0) {
