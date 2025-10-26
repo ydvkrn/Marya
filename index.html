@@ -3,234 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 MARYA VAULT ULTIMATE - Professional Storage</title>
+    <title>🚀 MARYA VAULT ULTIMATE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2;
-            --success: #059669; --success-light: #d1fae5; --error: #dc2626; --warning: #f59e0b;
-            --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; 
-            --gray-300: #d1d5db; --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); 
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
-        }
+        :root { --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2; --success: #059669; --success-light: #d1fae5; --error: #dc2626; --warning: #f59e0b; --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827; --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.1); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--white), var(--gray-50));
-            min-height: 100vh; color: var(--gray-900); line-height: 1.5; -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--white), var(--gray-50)); min-height: 100vh; color: var(--gray-900); line-height: 1.5; }
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
-        .logo {
-            width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 30px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center;
-            box-shadow: var(--shadow-xl); position: relative; overflow: hidden;
-            animation: logoGlow 3s ease-in-out infinite alternate;
-        }
-        @keyframes logoGlow { 0% { box-shadow: var(--shadow-xl); } 100% { box-shadow: 0 25px 50px rgba(220, 38, 38, 0.3); } }
-        .logo::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
-            animation: shimmer 3s infinite;
-        }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        .title {
-            font-size: 4rem; font-weight: 900; margin-bottom: 1rem; letter-spacing: -0.02em;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            text-shadow: 2px 2px 4px rgba(220, 38, 38, 0.1);
-        }
-        .subtitle { font-size: 1.25rem; color: var(--gray-600); font-weight: 500; max-width: 700px; margin: 0 auto; }
-        .tabs-container {
-            background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl);
-            padding: 2rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
-            position: relative; overflow: hidden;
-        }
-        .tabs-container::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-        }
-        .tabs { display: flex; margin-bottom: 2rem; background: var(--gray-100); border-radius: 12px; overflow: hidden; }
-        .tab {
-            flex: 1; padding: 1rem 1.5rem; border: none; background: transparent; cursor: pointer;
-            font-size: 1rem; font-weight: 600; transition: all 0.3s; position: relative; overflow: hidden;
-        }
+        .header { text-align: center; margin-bottom: 3rem; }
+        .logo { width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 30px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-xl); }
+        .title { font-size: 4rem; font-weight: 900; margin-bottom: 1rem; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 1.25rem; color: var(--gray-600); max-width: 700px; margin: 0 auto; }
+        .tabs-container { background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl); padding: 2rem; margin-bottom: 3rem; }
+        .tabs { display: flex; margin-bottom: 2rem; background: var(--gray-100); border-radius: 12px; }
+        .tab { flex: 1; padding: 1rem; border: none; background: transparent; cursor: pointer; font-size: 1rem; font-weight: 600; }
         .tab.active { background: var(--primary); color: var(--white); }
         .tab:not(.active):hover { background: var(--gray-200); }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeInUp 0.5s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .dropzone {
-            border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
-            cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
-            min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            pointer-events: auto; z-index: 10; /* Ensure clicks are not blocked */
-        }
-        .dropzone:hover, .dropzone.dragover {
-            border-color: var(--primary); background: var(--primary-light);
-            transform: translateY(-3px); box-shadow: var(--shadow-lg);
-        }
-        .upload-icon { 
-            font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary);
-            animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
-        .upload-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
-        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: stretch; }
+        .tab-content.active { display: block; }
+        .dropzone { border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem; text-align: center; cursor: pointer; background: var(--gray-50); min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; z-index: 100; }
+        .dropzone:hover, .dropzone.dragover { border-color: var(--primary); background: var(--primary-light); }
+        .upload-icon { font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary); }
+        .upload-title { font-size: 2rem; font-weight: 700; }
+        .upload-description { font-size: 1.125rem; color: var(--gray-600); }
+        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; }
         .url-input-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-        .url-input, .filename-input {
-            padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
-            font-size: 1rem; outline: none; transition: border-color 0.3s;
-            background: var(--white); box-shadow: var(--shadow-sm);
-        }
+        .url-input, .filename-input { padding: 1rem; border: 2px solid var(--gray-200); border-radius: 12px; font-size: 1rem; }
         .url-input:focus, .filename-input:focus { border-color: var(--primary); }
-        .url-btn {
-            background: var(--primary); color: var(--white); padding: 1rem 2rem; border: none;
-            border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;
-        }
-        .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .url-btn { background: var(--primary); color: var(--white); padding: 1rem 2rem; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
         .url-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
-        .file-type-badge {
-            background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border-radius: 25px;
-            font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;
-            box-shadow: var(--shadow-sm); transition: all 0.3s; position: relative; overflow: hidden;
-        }
-        .file-type-badge:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .file-type-badge i { margin-right: 0.5rem; }
-        .stats-dashboard {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
-            margin-bottom: 2rem; padding: 1.5rem; background: var(--gray-50); border-radius: 15px;
-        }
-        .stat-card {
-            background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm);
-            text-align: center; position: relative; overflow: hidden;
-        }
-        .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
-        .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; text-transform: uppercase; }
-        .file-item {
-            background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
-            box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
-            transition: all 0.4s ease;
-        }
-        .file-item::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
-            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
-        }
-        .file-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-        .file-header { display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 2rem; }
-        .file-icon {
-            width: 80px; height: 80px; border-radius: 15px; display: flex; align-items: center;
-            justify-content: center; font-size: 2rem; color: var(--white); flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        }
-        .file-details { flex: 1; min-width: 0; }
-        .file-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-all; }
-        .file-meta { color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem; }
-        .progress-container { margin: 2rem 0; }
-        .progress-info {
-            display: flex; justify-content: space-between; margin-bottom: 1rem;
-            font-size: 0.875rem; font-weight: 600; flex-wrap: wrap; gap: 0.5rem;
-        }
-        .progress-bar {
-            width: 100%; height: 12px; background: var(--gray-200); border-radius: 10px;
-            overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .progress-fill {
-            height: 100%; border-radius: 10px; position: relative; transition: width 0.4s ease;
-            background: linear-gradient(90deg, var(--primary), var(--success));
-            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-        }
-        .progress-fill::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: progressShimmer 2s infinite;
-        }
-        @keyframes progressShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        .speed-indicator {
-            display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--success);
-            font-weight: 600;
-        }
-        .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .results { display: none; }
+        .results.show { display: block; }
+        .results-header { display: flex; justify-content: space-between; margin-bottom: 2rem; }
+        .results-title { font-size: 2rem; font-weight: 800; }
+        .results-count { background: var(--primary-light); color: var(--primary); padding: 0.75rem; border-radius: 25px; }
+        .file-item { background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-md); }
+        .file-header { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+        .file-icon { width: 80px; height: 80px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--white); background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+        .file-name { font-size: 1.25rem; font-weight: 700; }
+        .file-meta { color: var(--gray-600); font-size: 0.875rem; }
         .file-status.uploading { color: var(--primary); }
         .file-status.completed { color: var(--success); }
         .file-status.failed { color: var(--error); }
-        .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
-        .btn {
-            display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
-            border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
-            text-decoration: none; cursor: pointer; transition: all 0.3s; min-width: 140px;
-            justify-content: center; position: relative; overflow: hidden;
-        }
-        .btn::before {
-            content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.2);
-            transform: translateX(-100%); transition: transform 0.3s;
-        }
-        .btn:hover::before { transform: translateX(0); }
-        .btn i { font-size: 1rem; }
-        .btn-primary { background: var(--primary); color: var(--white); box-shadow: var(--shadow-sm); }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .file-actions { display: flex; gap: 1rem; }
+        .btn { padding: 1rem; border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: var(--white); }
         .btn-success { background: var(--success); color: var(--white); }
-        .btn-success:hover { background: #047857; transform: translateY(-2px); }
-        .btn-outline {
-            background: var(--white); color: var(--gray-700); border: 2px solid var(--gray-300);
-            box-shadow: var(--shadow-sm);
-        }
-        .btn-outline:hover { background: var(--gray-50); border-color: var(--primary); }
-        .toast {
-            position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px;
-            padding: 1.5rem; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);
-            z-index: 1000; transform: translateX(120%); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 400px; display: flex; align-items: center; gap: 1rem;
-        }
+        .btn-outline { background: var(--white); color: var(--gray-700); border: 2px solid var(--gray-300); }
+        .toast { position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px; padding: 1.5rem; box-shadow: var(--shadow-xl); z-index: 1000; transform: translateX(120%); transition: all 0.4s; max-width: 400px; }
         .toast.show { transform: translateX(0); }
         .toast.success { border-left: 5px solid var(--success); }
         .toast.error { border-left: 5px solid var(--error); }
         .toast.warning { border-left: 5px solid var(--warning); }
-        .toast-icon {
-            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 1.25rem; font-weight: 600; flex-shrink: 0;
-        }
+        .toast-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
         .toast.error .toast-icon { background: var(--primary-light); color: var(--error); }
         .toast.warning .toast-icon { background: #fef3c7; color: var(--warning); }
-        .toast-content { flex: 1; }
-        .toast-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
-        .toast-message { font-size: 0.875rem; color: var(--gray-600); }
-        .results { display: none; }
-        .results.show { display: block; animation: fadeIn 0.6s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .results-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;
-            padding: 1.5rem; background: var(--white); border-radius: 15px; box-shadow: var(--shadow-sm);
-        }
-        .results-title { font-size: 2rem; font-weight: 800; color: var(--gray-900); }
-        .results-count {
-            background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem;
-            border-radius: 25px; font-size: 0.875rem; font-weight: 700;
-        }
-        .storage-info {
-            background: linear-gradient(135deg, var(--primary-light), var(--success-light));
-            padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center;
-        }
-        .storage-info-title { font-size: 1rem; font-weight: 700; color: var(--gray-700); margin-bottom: 0.5rem; }
-        .storage-info-desc { font-size: 0.875rem; color: var(--gray-600); }
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .title { font-size: 2.5rem; }
-            .tabs-container { padding: 1.5rem; }
-            .dropzone { padding: 3rem 1.5rem; min-height: 280px; }
+            .dropzone { padding: 3rem; min-height: 280px; }
             .url-section { flex-direction: column; }
-            .url-btn { width: 100%; justify-content: center; }
-            .stats-dashboard { grid-template-columns: repeat(2, 1fr); }
-            .file-header { flex-direction: column; align-items: center; text-align: center; }
+            .url-btn { width: 100%; }
+            .file-header { flex-direction: column; align-items: center; }
             .file-actions { flex-direction: column; }
             .btn { width: 100%; }
-            .results-header { flex-direction: column; gap: 1rem; text-align: center; }
-            .toast { top: 1rem; right: 1rem; left: 1rem; max-width: none; }
         }
     </style>
 </head>
@@ -239,86 +77,29 @@
         <header class="header">
             <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
             <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
-            <p class="subtitle">Professional multi-KV file storage with chunking and enterprise features. Upload up to 175MB per file.</p>
+            <p class="subtitle">Professional multi-KV file storage. Upload up to 175MB per file.</p>
         </header>
-        <div class="storage-info">
-            <div class="storage-info-title">
-                <i class="fas fa-database"></i> Multi-KV Storage System
-            </div>
-            <div class="storage-info-desc">
-                7 KV Namespaces • 20MB Chunks • Permanent Links
-            </div>
-        </div>
         <section class="tabs-container">
             <div class="tabs">
-                <button class="tab active" onclick="showTab('file')">
-                    <i class="fas fa-upload"></i> File Upload
-                </button>
-                <button class="tab" onclick="showTab('url')">
-                    <i class="fas fa-link"></i> URL Upload
-                </button>
+                <button class="tab active" onclick="showTab('file')">File Upload</button>
+                <button class="tab" onclick="showTab('url')">URL Upload</button>
             </div>
             <div class="tab-content active" id="file-content">
                 <label class="dropzone" id="dropzone">
                     <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
                     <h2 class="upload-title">Drop your files here</h2>
-                    <p class="upload-description">or click to browse from your device • Max 175MB per file</p>
-                    <div class="file-types">
-                        <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
-                        <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
-                        <span class="file-type-badge"><i class="fas fa-file"></i> Documents</span>
-                        <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
-                        <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
-                    </div>
+                    <p class="upload-description">or click to browse • Max 175MB</p>
                 </label>
                 <input type="file" id="fileInput" multiple accept="*/*" style="display: none;">
             </div>
             <div class="tab-content" id="url-content">
-                <div class="storage-info" style="margin-bottom: 1.5rem; text-align: left;">
-                    <div class="storage-info-title" style="margin-bottom: 0.75rem;">
-                        <i class="fas fa-info-circle"></i> URL Upload
-                    </div>
-                    <div class="storage-info-desc">
-                        • Paste any direct file URL<br>
-                        • Supports images, videos, documents, and more<br>
-                        • Auto-chunking for large files<br>
-                        • Permanent storage across multiple KV namespaces
-                    </div>
-                </div>
                 <div class="url-section">
                     <div class="url-input-group">
-                        <input type="text" id="urlInput" class="url-input" 
-                               placeholder="Direct file URL (e.g., https://example.com/file.mp4)">
-                        <input type="text" id="filenameInput" class="filename-input" 
-                               placeholder="Filename (optional, e.g., video.mp4)">
+                        <input type="text" id="urlInput" class="url-input" placeholder="Direct file URL (e.g., https://example.com/file.mp4)">
+                        <input type="text" id="filenameInput" class="filename-input" placeholder="Filename (optional, e.g., video.mp4)">
                     </div>
-                    <button class="url-btn" id="urlUploadBtn" onclick="uploadFromUrl()">
-                        <i class="fas fa-cloud-download-alt"></i> Import from URL
-                    </button>
+                    <button class="url-btn" id="urlUploadBtn" onclick="uploadFromUrl()">Import from URL</button>
                 </div>
-                <div style="text-align: center; padding: 1.5rem; color: var(--gray-600); font-size: 0.875rem;">
-                    <strong>Supported formats:</strong><br>
-                    • Direct file URLs (e.g., https://example.com/file.ext)<br>
-                    • Files will be automatically chunked and stored across multiple KV namespaces
-                </div>
-            </div>
-        </section>
-        <section class="stats-dashboard" id="statsDashboard" style="display: none;">
-            <div class="stat-card">
-                <div class="stat-value" id="totalSize">0 MB</div>
-                <div class="stat-label">Total Size</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="avgSpeed">0 MB/s</div>
-                <div class="stat-label">Upload Speed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalChunks">0</div>
-                <div class="stat-label">Total Chunks</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="filesCount">0</div>
-                <div class="stat-label">Files Processed</div>
             </div>
         </section>
         <section class="results" id="results">
@@ -332,13 +113,10 @@
     <div id="toast" class="toast"></div>
     <script>
         let fileCounter = 0;
-        let totalSize = 0;
-        let totalChunks = 0;
-        let uploadStats = { total: 0, completed: 0, failed: 0 };
         let isProcessing = false;
 
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM fully loaded, initializing system...');
+            console.log('DOM loaded, initializing...');
             initializeSystem();
         });
 
@@ -357,49 +135,40 @@
         }
 
         function setupFileUpload() {
+            console.log('Setting up file upload');
             const fileInput = document.getElementById('fileInput');
             const dropzone = document.getElementById('dropzone');
 
-            // Remove existing listeners to prevent duplicates
-            const newFileInput = fileInput.cloneNode(true);
-            fileInput.replaceWith(newFileInput);
-            const newDropzone = dropzone.cloneNode(true);
-            dropzone.replaceWith(newDropzone);
+            // Clear existing listeners
+            dropzone.onclick = null;
+            fileInput.onchange = null;
 
-            // Re-select elements after cloning
-            const updatedFileInput = document.getElementById('fileInput');
-            const updatedDropzone = document.getElementById('dropzone');
-
-            // Debug click listener
-            updatedDropzone.addEventListener('click', () => {
+            dropzone.addEventListener('click', () => {
                 console.log('Dropzone clicked, isProcessing:', isProcessing);
+                alert('Dropzone clicked! Check Console.');
                 if (!isProcessing) {
-                    console.log('Triggering file input click');
-                    updatedFileInput.click();
+                    console.log('Triggering file input');
+                    fileInput.click();
                 } else {
-                    console.log('Dropzone click ignored: isProcessing = true');
                     showToast('Please wait, processing in progress', 'warning');
                 }
             });
 
-            updatedFileInput.addEventListener('change', (e) => {
-                console.log('File input changed, files selected:', e.target.files.length);
+            fileInput.addEventListener('change', (e) => {
+                console.log('File input changed, files:', e.target.files.length);
                 if (isProcessing) {
-                    console.log('File selection ignored: isProcessing = true');
                     showToast('Please wait, processing in progress', 'warning');
                     return;
                 }
                 isProcessing = true;
                 handleFiles(Array.from(e.target.files));
-                e.target.value = ''; // Clear input
-                setTimeout(() => { 
-                    isProcessing = false; 
-                    console.log('isProcessing reset to false');
-                }, 100);
+                e.target.value = '';
+                setTimeout(() => { isProcessing = false; console.log('isProcessing reset'); }, 100);
             });
         }
 
         function setupUrlUpload() {
+            console.log('Setting up URL upload');
             const urlInput = document.getElementById('urlInput');
             urlInput.addEventListener('keypress', e => {
                 if (e.key === 'Enter') {
@@ -410,41 +179,25 @@
         }
 
         function setupDragDrop() {
+            console.log('Setting up drag and drop');
             const dropzone = document.getElementById('dropzone');
-
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
+                dropzone.addEventListener(eventName, e => e.preventDefault());
             });
-
             ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => {
-                    console.log(`${eventName} on dropzone`);
-                    dropzone.classList.add('dragover');
-                }, false);
+                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'));
             });
-
             ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => {
-                    console.log(`${eventName} on dropzone`);
-                    dropzone.classList.remove('dragover');
-                }, false);
+                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'));
             });
-
             dropzone.addEventListener('drop', e => {
                 console.log('Files dropped:', e.dataTransfer.files.length);
                 if (!isProcessing) {
                     handleFiles(Array.from(e.dataTransfer.files));
                 } else {
-                    console.log('Drop ignored: isProcessing = true');
                     showToast('Please wait, processing in progress', 'warning');
                 }
-            }, false);
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            });
         }
 
         function handleFiles(files) {
@@ -454,11 +207,10 @@
                 isProcessing = false;
                 return;
             }
-
             const MAX_SIZE = 175 * 1024 * 1024;
             const validFiles = files.filter(file => {
                 if (file.size > MAX_SIZE) {
-                    showToast(`File "${file.name}" is too large (max 175MB)`, 'error');
+                    showToast(`File "${file.name}" too large (max 175MB)`, 'error');
                     return false;
                 }
                 if (file.size === 0) {
@@ -467,87 +219,64 @@
                 }
                 return true;
             });
-
             if (validFiles.length === 0) {
                 isProcessing = false;
                 return;
             }
-
             showResults();
             updateFileCounter(validFiles.length);
-
             validFiles.forEach((file, index) => {
                 setTimeout(() => uploadFile(file), index * 100);
             });
         }
 
         function uploadFile(file) {
-            console.log(`Starting upload for file: ${file.name}`);
-            const fileItem = createAdvancedFileItem(file);
+            console.log(`Uploading file: ${file.name}`);
+            const fileItem = createFileItem(file);
             document.getElementById('filesList').prepend(fileItem);
-
             const elements = getFileElements(fileItem);
-            uploadStats.total++;
-            updateTotalSize(file.size);
 
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
             formData.append('file', file);
-            const startTime = Date.now();
-            let lastLoaded = 0;
-            let lastTime = startTime;
-
-            xhr.upload.addEventListener('progress', e => {
-                if (e.lengthComputable) {
-                    const percent = Math.round((e.loaded / e.total) * 100);
-                    const currentTime = Date.now();
-                    const timeDiff = (currentTime - lastTime) / 1000;
-                    const loadedDiff = e.loaded - lastLoaded;
-                    const speed = timeDiff > 0 ? loadedDiff / timeDiff : 0;
-
-                    lastLoaded = e.loaded;
-                    lastTime = currentTime;
-
-                    updateProgress(elements, percent, speed);
-                    updateStats();
-                }
-            });
 
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200) {
                     try {
                         const result = JSON.parse(xhr.responseText);
                         if (result.success && result.data) {
-                            handleUploadSuccess(elements, result.data, file);
-                            uploadStats.completed++;
-                            totalChunks += result.data.storage?.totalChunks || 0;
-                            showToast(`✅ ${file.name} uploaded successfully!`, 'success');
+                            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
+                            elements.status.className = 'file-status completed';
+                            elements.actions.innerHTML = `
+                                <a href="${result.data.url}" target="_blank" class="btn btn-primary">View</a>
+                                <a href="${result.data.download}" class="btn btn-success">Download</a>
+                                <button onclick="copyToClipboard('${result.data.url}')" class="btn btn-outline">Copy Link</button>
+                            `;
+                            showToast(`✅ ${file.name} uploaded!`, 'success');
                         } else {
-                            throw new Error(result.error?.message || 'Upload failed');
+                            throw new Error(result.error || 'Upload failed');
                         }
-                    } catch (parseError) {
-                        handleUploadError(elements, 'Invalid response');
-                        uploadStats.failed++;
+                    } catch (e) {
+                        elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${e.message}`;
+                        elements.status.className = 'file-status failed';
                         showToast(`❌ Upload failed: ${file.name}`, 'error');
                     }
                 } else {
-                    handleUploadError(elements, `HTTP ${xhr.status}`);
-                    uploadStats.failed++;
+                    elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: HTTP ${xhr.status}`;
+                    elements.status.className = 'file-status failed';
                     showToast(`❌ Upload failed: ${file.name} (HTTP ${xhr.status})`, 'error');
                 }
-                updateStats();
                 isProcessing = false;
             });
 
             xhr.addEventListener('error', () => {
-                uploadStats.failed++;
-                handleUploadError(elements, 'Network error');
+                elements.status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed: Network error';
+                elements.status.className = 'file-status failed';
                 showToast(`🔥 Network error: ${file.name}`, 'error');
-                updateStats();
                 isProcessing = false;
             });
 
-            xhr.open('POST', '/upload');
+            xhr.open('POST', 'https://marya-hosting.pages.dev/upload');
             xhr.send(formData);
         }
 
@@ -556,7 +285,6 @@
             const urlInput = document.getElementById('urlInput');
             const filenameInput = document.getElementById('filenameInput');
             const uploadBtn = document.getElementById('urlUploadBtn');
-
             const fileUrl = urlInput.value.trim();
             const filename = filenameInput.value.trim();
 
@@ -567,85 +295,53 @@
 
             try {
                 new URL(fileUrl);
-                if (!fileUrl.match(/^https?:\/\/.+/)) {
-                    throw new Error('URL must start with http:// or https://');
-                }
             } catch {
-                showToast('Please enter a valid URL (e.g., https://example.com/file.mp4)', 'error');
+                showToast('Invalid URL', 'error');
                 return;
             }
 
-            const fileItem = createUrlFileItem({
-                filename: filename || 'Importing...',
-                size: 0,
-                storage: { totalChunks: 0 }
-            });
+            const fileItem = createFileItem({ name: filename || 'Importing...', size: 0 });
             document.getElementById('filesList').prepend(fileItem);
             const elements = getFileElements(fileItem);
             elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
-            elements.actions.innerHTML = '';
 
-            showToast('🌐 Starting URL import...', 'success');
             urlInput.disabled = true;
             filenameInput.disabled = true;
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
 
             try {
-                const endpoint = 'https://marya-hosting.pages.dev/upload-from-url'; // Use full URL
-                console.log(`Sending POST request to ${endpoint}`);
+                const endpoint = 'https://marya-hosting.pages.dev/upload-from-url';
+                console.log(`Sending POST to ${endpoint}`);
                 const response = await fetch(endpoint, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        fileUrl: fileUrl,
-                        filename: filename || undefined
-                    })
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ fileUrl, filename: filename || undefined })
                 });
-
                 console.log(`Response status: ${response.status}`);
                 const responseText = await response.text();
                 console.log(`Response body: ${responseText}`);
 
                 if (!response.ok) {
-                    console.error(`Fetch error: HTTP ${response.status} - ${responseText}`);
                     throw new Error(`HTTP ${response.status}: ${responseText}`);
                 }
 
                 const result = JSON.parse(responseText);
-                console.log('Parsed response:', result);
-
                 if (result.success && result.data) {
                     if (result.data.size === 0) {
                         throw new Error('Downloaded file is empty');
                     }
                     showResults();
                     updateFileCounter(1);
-                    totalSize += result.data.size;
-                    totalChunks += result.data.chunks || 0;
-                    updateStats();
-
                     fileItem.querySelector('.file-name').textContent = result.data.filename;
                     fileItem.querySelector('.file-meta').innerHTML = `
-                        ${formatBytes(result.data.size)} • URL Import • 
-                        ${result.data.chunks || 0} chunks • 
-                        <span class="file-status completed">
-                            <i class="fas fa-check-circle"></i> Complete
-                        </span>
+                        ${formatBytes(result.data.size)} • URL Import • ${result.data.chunks || 0} chunks • 
+                        <span class="file-status completed"><i class="fas fa-check-circle"></i> Complete</span>
                     `;
                     fileItem.querySelector('.file-actions').innerHTML = `
-                        <a href="${result.data.url}" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-eye"></i> View
-                        </a>
-                        <a href="${result.data.download}" class="btn btn-success">
-                            <i class="fas fa-download"></i> Download
-                        </a>
-                        <button onclick="copyToClipboard('${result.data.url}')" class="btn btn-outline">
-                            <i class="fas fa-copy"></i> Copy Link
-                        </button>
+                        <a href="${result.data.url}" target="_blank" class="btn btn-primary">View</a>
+                        <a href="${result.data.download}" class="btn btn-success">Download</a>
+                        <button onclick="copyToClipboard('${result.data.url}')" class="btn btn-outline">Copy Link</button>
                     `;
                     showToast(`🚀 URL import completed: ${result.data.filename}`, 'success');
                     urlInput.value = '';
@@ -662,70 +358,23 @@
                 urlInput.disabled = false;
                 filenameInput.disabled = false;
                 uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import from URL';
+                uploadBtn.innerHTML = 'Import from URL';
                 isProcessing = false;
-                console.log('isProcessing reset to false after URL upload');
             }
         }
 
-        function createAdvancedFileItem(file) {
+        function createFileItem(file) {
             const item = document.createElement('div');
             item.className = 'file-item';
             item.innerHTML = `
                 <div class="file-header">
-                    <div class="file-icon">${getFileIcon(file.name)}</div>
+                    <div class="file-icon"><i class="fas fa-file"></i></div>
                     <div class="file-details">
                         <div class="file-name">${file.name}</div>
                         <div class="file-meta">
-                            ${formatBytes(file.size)} • ${file.type || 'Unknown'} • 
-                            <span class="file-status uploading">
-                                <i class="fas fa-spinner fa-spin"></i> Preparing...
-                            </span>
+                            ${formatBytes(file.size || 0)} • ${file.size ? 'Local Upload' : 'URL Import'} • 
+                            <span class="file-status uploading"><i class="fas fa-spinner fa-spin"></i> Preparing...</span>
                         </div>
-                    </div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-info">
-                        <span class="progress-percent">0%</span>
-                        <span class="speed-indicator">
-                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
-                        </span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                    </div>
-                </div>
-                <div class="file-actions"></div>
-            `;
-            return item;
-        }
-
-        function createUrlFileItem(data) {
-            const item = document.createElement('div');
-            item.className = 'file-item';
-            item.innerHTML = `
-                <div class="file-header">
-                    <div class="file-icon"><i class="fas fa-link"></i></div>
-                    <div class="file-details">
-                        <div class="file-name">${data.filename}</div>
-                        <div class="file-meta">
-                            ${formatBytes(data.size)} • URL Import • 
-                            ${data.storage?.totalChunks || 0} chunks • 
-                            <span class="file-status uploading">
-                                <i class="fas fa-spinner fa-spin"></i> Importing...
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-info">
-                        <span class="progress-percent">0%</span>
-                        <span class="speed-indicator">
-                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
-                        </span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
                     </div>
                 </div>
                 <div class="file-actions"></div>
@@ -735,57 +384,9 @@
 
         function getFileElements(fileItem) {
             return {
-                progressFill: fileItem.querySelector('.progress-fill'),
-                progressPercent: fileItem.querySelector('.progress-percent'),
-                uploadSpeed: fileItem.querySelector('.upload-speed'),
                 status: fileItem.querySelector('.file-status'),
                 actions: fileItem.querySelector('.file-actions')
             };
-        }
-
-        function updateProgress(elements, percent, speed) {
-            elements.progressFill.style.width = percent + '%';
-            elements.progressPercent.textContent = percent + '%';
-            elements.uploadSpeed.textContent = formatBytes(speed) + '/s';
-
-            if (percent < 100) {
-                elements.status.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Uploading... ${percent}%`;
-                elements.status.className = 'file-status uploading';
-            }
-        }
-
-        function handleUploadSuccess(elements, data, file) {
-            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
-            elements.status.className = 'file-status completed';
-            elements.progressFill.style.width = '100%';
-            elements.progressPercent.textContent = '100%';
-
-            const viewUrl = data.urls?.view || data.url;
-            const downloadUrl = data.urls?.download || data.download;
-
-            elements.actions.innerHTML = `
-                <a href="${viewUrl}" target="_blank" class="btn btn-primary">
-                    <i class="fas fa-eye"></i> View
-                </a>
-                <a href="${downloadUrl}" class="btn btn-success">
-                    <i class="fas fa-download"></i> Download
-                </a>
-                <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline">
-                    <i class="fas fa-copy"></i> Copy Link
-                </button>
-            `;
-        }
-
-        function handleUploadError(elements, error) {
-            elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
-            elements.status.className = 'file-status failed';
-        }
-
-        function updateStats() {
-            document.getElementById('totalSize').textContent = formatBytes(totalSize);
-            document.getElementById('totalChunks').textContent = totalChunks;
-            document.getElementById('filesCount').textContent = uploadStats.completed;
-            document.getElementById('statsDashboard').style.display = 'grid';
         }
 
         function showResults() {
@@ -797,22 +398,6 @@
             document.getElementById('resultsCount').textContent = `${fileCounter} files`;
         }
 
-        function updateTotalSize(size) {
-            totalSize += size;
-        }
-
-        function getFileIcon(filename) {
-            const ext = filename.split('.').pop()?.toLowerCase() || '';
-            const iconMap = {
-                'jpg': 'fa-image', 'jpeg': 'fa-image', 'png': 'fa-image', 'gif': 'fa-image',
-                'mp4': 'fa-video', 'mkv': 'fa-video', 'avi': 'fa-video', 'mov': 'fa-video',
-                'mp3': 'fa-music', 'wav': 'fa-music', 'flac': 'fa-music',
-                'pdf': 'fa-file-pdf', 'doc': 'fa-file-word', 'docx': 'fa-file-word',
-                'zip': 'fa-file-archive', 'rar': 'fa-file-archive'
-            };
-            return `<i class="fas ${iconMap[ext] || 'fa-file'}"></i>`;
-        }
-
         function formatBytes(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024;
@@ -822,36 +407,23 @@
         }
 
         function showToast(message, type = 'success', duration = 4000) {
-            console.log(`Showing toast: ${message} (${type})`);
+            console.log(`Toast: ${message} (${type})`);
             const toast = document.getElementById('toast');
-            const icons = { success: '✅', error: '❌', warning: '⚠️' };
-
             toast.innerHTML = `
-                <div class="toast-icon">${icons[type] || '💡'}</div>
-                <div class="toast-content">
-                    <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                    <div class="toast-message">${message}</div>
-                </div>
+                <div class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</div>
+                <div class="toast-content">${message}</div>
             `;
-
             toast.className = `toast ${type}`;
             setTimeout(() => toast.classList.add('show'), 100);
             setTimeout(() => toast.classList.remove('show'), duration);
         }
 
         async function copyToClipboard(text) {
-            console.log(`Copying to clipboard: ${text}`);
             try {
                 await navigator.clipboard.writeText(text);
-                showToast('Link copied to clipboard!', 'success');
-            } catch (err) {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
                 showToast('Link copied!', 'success');
+            } catch {
+                showToast('Failed to copy link', 'error');
             }
         }
     </script>
