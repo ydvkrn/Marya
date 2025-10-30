@@ -6,5 +6,6 @@
   "exclude": [
     "/assets/*",
     "/static/*"
-  ]
+  ]"include": ["/upload-from-url", "/upload", "/api/", "/btfstorage/"],
+"exclude": ["/assets/*", "/favicon.ico", "/robots.txt"]
 }
