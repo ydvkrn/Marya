@@ -1,10 +1,16 @@
 {
   "version": 1,
   "include": [
-    "/*"
+    "/btfstorage/*"
   ],
   "exclude": [
     "/assets/*",
-    "/static/*"
+    "/static/*",
+    "/*.html",
+    "/*.css",
+    "/*.js",
+    "/*.jpg",
+    "/*.png",
+    "/*.ico"
   ]
 }
