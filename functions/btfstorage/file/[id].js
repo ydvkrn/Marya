@@ -1,284 +1,308 @@
 // functions/btfstorage/file/[id].js
-// ✅ Fully Tested & Debugged - Fast Streaming
+// ⚡ Production-Ready Fast Streaming Handler
 
 const MIME_TYPES = {
   'mp4': 'video/mp4', 'mkv': 'video/x-matroska', 'avi': 'video/x-msvideo',
-  'mov': 'video/quicktime', 'webm': 'video/webm', 'mp3': 'audio/mpeg',
-  'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
-  'pdf': 'application/pdf', 'm3u8': 'application/x-mpegURL'
+  'mov': 'video/quicktime', 'm4v': 'video/mp4', 'wmv': 'video/x-ms-wmv',
+  'flv': 'video/x-flv', '3gp': 'video/3gpp', 'webm': 'video/webm',
+  'ogv': 'video/ogg', 'mp3': 'audio/mpeg', 'wav': 'audio/wav',
+  'aac': 'audio/mp4', 'm4a': 'audio/mp4', 'ogg': 'audio/ogg',
+  'flac': 'audio/flac', 'wma': 'audio/x-ms-wma', 'jpg': 'image/jpeg',
+  'jpeg': 'image/jpeg', 'png': 'image/png', 'gif': 'image/gif',
+  'webp': 'image/webp', 'svg': 'image/svg+xml', 'bmp': 'image/bmp',
+  'tiff': 'image/tiff', 'pdf': 'application/pdf',
+  'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'txt': 'text/plain', 'zip': 'application/zip',
+  'rar': 'application/x-rar-compressed', 'm3u8': 'application/x-mpegURL',
+  'ts': 'video/mp2t', 'mpd': 'application/dash+xml'
 };
-
-// 🔧 DEBUG MODE - Set to true for detailed logs, false for production
-const DEBUG = true;
-
-function log(...args) {
-  if (DEBUG) console.log('🔍', ...args);
-}
 
 export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
 
-  log('=== REQUEST START ===');
-  log('File ID:', fileId);
-  log('URL:', request.url);
-  log('Method:', request.method);
-
-  // CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers': 'Range',
-        'Access-Control-Max-Age': '86400'
+        'Access-Control-Allow-Headers': 'Range, Content-Type',
+        'Access-Control-Max-Age': '86400',
+        'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges'
       }
     });
   }
 
   try {
-    // Parse file ID and extension
     let actualId = fileId;
     let extension = '';
-    
+    let isHlsPlaylist = false;
+    let isHlsSegment = false;
+    let segmentIndex = -1;
+
     if (fileId.includes('.')) {
-      const lastDot = fileId.lastIndexOf('.');
-      actualId = fileId.substring(0, lastDot);
-      extension = fileId.substring(lastDot + 1).toLowerCase();
-      log('Parsed ID:', actualId, 'Extension:', extension);
+      const parts = fileId.split('.');
+      extension = parts.pop().toLowerCase();
+      actualId = parts.join('.');
+
+      if (extension === 'm3u8') {
+        isHlsPlaylist = true;
+      } else if (extension === 'ts' && actualId.includes('-')) {
+        const segParts = actualId.split('-');
+        const lastPart = segParts[segParts.length - 1];
+        if (!isNaN(parseInt(lastPart))) {
+          segmentIndex = parseInt(segParts.pop(), 10);
+          actualId = segParts.join('-');
+          isHlsSegment = true;
+        }
+      } else {
+        actualId = fileId.substring(0, fileId.lastIndexOf('.'));
+        extension = fileId.substring(fileId.lastIndexOf('.') + 1).toLowerCase();
+      }
     }
 
-    // Get metadata from KV
-    log('Fetching metadata from KV...');
     const metadataString = await env.FILES_KV.get(actualId);
-    
     if (!metadataString) {
-      log('❌ File not found in KV:', actualId);
       return errorResponse('File not found', 404);
     }
 
     const metadata = JSON.parse(metadataString);
-    log('✅ Metadata loaded:', metadata.filename, Math.round(metadata.size/1024/1024) + 'MB');
+    if (!metadata.filename || !metadata.size) {
+      return errorResponse('Invalid metadata', 400);
+    }
+
+    metadata.telegramFileId = metadata.telegramFileId || metadata.fileIdCode;
+
+    if (!metadata.telegramFileId && (!metadata.chunks || metadata.chunks.length === 0)) {
+      return errorResponse('Missing file source', 400);
+    }
 
     const mimeType = metadata.contentType || MIME_TYPES[extension] || 'application/octet-stream';
-    log('MIME Type:', mimeType);
 
-    // Route to handler
+    if (isHlsPlaylist) {
+      return handleHlsPlaylist(request, env, metadata, actualId);
+    }
+
+    if (isHlsSegment && segmentIndex >= 0) {
+      return handleHlsSegment(request, env, metadata, segmentIndex);
+    }
+
     if (metadata.telegramFileId && (!metadata.chunks || metadata.chunks.length === 0)) {
-      log('→ Routing to SINGLE FILE handler');
-      return await handleSingleFile(request, env, metadata, mimeType);
+      return handleSingleFile(request, env, metadata, mimeType);
     }
 
     if (metadata.chunks && metadata.chunks.length > 0) {
-      log('→ Routing to CHUNKED FILE handler');
-      return await handleChunkedFile(request, env, metadata, mimeType);
+      return handleChunkedFile(request, env, metadata, mimeType);
     }
 
-    log('❌ Invalid metadata structure');
-    return errorResponse('Invalid file configuration', 400);
+    return errorResponse('Invalid configuration', 400);
 
   } catch (error) {
-    log('❌ FATAL ERROR:', error.message);
-    log('Stack:', error.stack);
-    return errorResponse('Server error: ' + error.message, 500);
+    return errorResponse(error.message, 500);
   }
 }
 
-/**
- * Handle single file streaming
- */
+async function handleHlsPlaylist(request, env, metadata, actualId) {
+  if (!metadata.chunks || metadata.chunks.length === 0) {
+    return errorResponse('HLS not supported', 400);
+  }
+
+  const chunks = metadata.chunks;
+  const segmentDuration = 6;
+  const baseUrl = new URL(request.url).origin;
+
+  let playlist = '#EXTM3U
+#EXT-X-VERSION:3
+';
+  playlist += `#EXT-X-TARGETDURATION:${segmentDuration}
+`;
+  playlist += '#EXT-X-MEDIA-SEQUENCE:0
+#EXT-X-PLAYLIST-TYPE:VOD
+';
+
+  for (let i = 0; i < chunks.length; i++) {
+    playlist += `#EXTINF:${segmentDuration.toFixed(1)},
+`;
+    playlist += `${baseUrl}/btfstorage/file/${actualId}-${i}.ts
+`;
+  }
+
+  playlist += '#EXT-X-ENDLIST
+';
+
+  return new Response(playlist, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/x-mpegURL',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-cache'
+    }
+  });
+}
+
+async function handleHlsSegment(request, env, metadata, segmentIndex) {
+  if (!metadata.chunks || segmentIndex >= metadata.chunks.length || segmentIndex < 0) {
+    return errorResponse('Segment not found', 404);
+  }
+
+  try {
+    const chunkData = await loadChunk(env, metadata.chunks[segmentIndex]);
+
+    return new Response(chunkData, {
+      status: 200,
+      headers: {
+        'Content-Type': 'video/mp2t',
+        'Content-Length': chunkData.byteLength.toString(),
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Accept-Ranges': 'bytes'
+      }
+    });
+  } catch (error) {
+    return errorResponse(error.message, 500);
+  }
+}
+
 async function handleSingleFile(request, env, metadata, mimeType) {
-  log('📥 Single file streaming started');
-  
   const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
-  
+
   if (botTokens.length === 0) {
-    log('❌ No bot tokens configured');
     return errorResponse('Service unavailable', 503);
   }
 
-  log('🤖 Available bots:', botTokens.length);
-
-  for (let i = 0; i < botTokens.length; i++) {
-    const botToken = botTokens[i];
-    log(`🤖 Trying bot ${i + 1}/${botTokens.length}`);
-
+  for (const botToken of botTokens) {
     try {
-      // Get file info from Telegram
-      const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(metadata.telegramFileId)}`;
-      log('📡 Telegram API call...');
+      const getFileResponse = await fetch(
+        `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(metadata.telegramFileId)}`,
+        { signal: AbortSignal.timeout(15000) }
+      );
+
+      const getFileData = await getFileResponse.json();
+      if (!getFileData.ok || !getFileData.result?.file_path) continue;
+
+      const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
       
-      const getFileRes = await fetch(getFileUrl);
-      const fileData = await getFileRes.json();
-
-      if (!fileData.ok) {
-        log(`❌ Bot ${i + 1} error:`, fileData.description);
-        continue;
-      }
-
-      if (!fileData.result || !fileData.result.file_path) {
-        log(`❌ Bot ${i + 1} no file_path`);
-        continue;
-      }
-
-      const directUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
-      log('✅ Direct URL obtained');
-
-      // Handle range request
+      const requestHeaders = {};
       const rangeHeader = request.headers.get('Range');
-      const fetchHeaders = {};
-      
-      if (rangeHeader) {
-        fetchHeaders['Range'] = rangeHeader;
-        log('📍 Range request:', rangeHeader);
-      }
+      if (rangeHeader) requestHeaders['Range'] = rangeHeader;
 
-      // Fetch from Telegram
-      log('⬇️ Fetching from Telegram...');
-      const telegramRes = await fetch(directUrl, { headers: fetchHeaders });
+      const telegramResponse = await fetch(directUrl, {
+        headers: requestHeaders,
+        signal: AbortSignal.timeout(30000)
+      });
 
-      if (!telegramRes.ok) {
-        log(`❌ Telegram fetch failed: ${telegramRes.status}`);
-        continue;
-      }
+      if (!telegramResponse.ok) continue;
 
-      log('✅ Telegram response OK, status:', telegramRes.status);
-
-      // Build response headers
       const responseHeaders = new Headers();
+      ['content-length', 'content-range', 'accept-ranges'].forEach(header => {
+        const value = telegramResponse.headers.get(header);
+        if (value) responseHeaders.set(header, value);
+      });
+
       responseHeaders.set('Content-Type', mimeType);
       responseHeaders.set('Accept-Ranges', 'bytes');
       responseHeaders.set('Access-Control-Allow-Origin', '*');
-      responseHeaders.set('Cache-Control', 'public, max-age=86400');
-      responseHeaders.set('Content-Disposition', 'inline');
+      responseHeaders.set('Cache-Control', 'public, max-age=31536000');
 
-      // Copy important headers
-      const contentLength = telegramRes.headers.get('content-length');
-      const contentRange = telegramRes.headers.get('content-range');
-      
-      if (contentLength) responseHeaders.set('Content-Length', contentLength);
-      if (contentRange) responseHeaders.set('Content-Range', contentRange);
+      const url = new URL(request.url);
+      if (url.searchParams.has('dl') || url.searchParams.has('download')) {
+        responseHeaders.set('Content-Disposition', `attachment; filename="${metadata.filename}"`);
+      } else {
+        responseHeaders.set('Content-Disposition', 'inline');
+      }
 
-      log('📤 Streaming to client...');
-      log('=== REQUEST SUCCESS ===');
-
-      return new Response(telegramRes.body, {
-        status: telegramRes.status,
+      return new Response(telegramResponse.body, {
+        status: telegramResponse.status,
         headers: responseHeaders
       });
 
     } catch (error) {
-      log(`❌ Bot ${i + 1} exception:`, error.message);
       continue;
     }
   }
 
-  log('❌ All bots failed');
-  return errorResponse('All streaming servers failed', 503);
+  return errorResponse('All servers failed', 503);
 }
 
-/**
- * Handle chunked file streaming
- */
 async function handleChunkedFile(request, env, metadata, mimeType) {
   const chunks = metadata.chunks;
   const totalSize = metadata.size;
   const chunkSize = metadata.chunkSize || 20971520;
   const rangeHeader = request.headers.get('Range');
+  const url = new URL(request.url);
+  const isDownload = url.searchParams.has('dl') || url.searchParams.has('download');
 
-  log('🧩 Chunked file - Total:', chunks.length, 'chunks');
-  log('📦 Chunk size:', Math.round(chunkSize/1024/1024) + 'MB');
-
-  // Handle range requests
   if (rangeHeader) {
-    log('📍 Range request detected');
-    return await handleRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize);
+    return handleRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize);
   }
 
-  // Full file streaming
-  log('📥 Full file streaming');
-  return await handleFullStream(env, metadata, mimeType, totalSize);
+  if (isDownload) {
+    return handleFullDownload(env, metadata, mimeType, totalSize);
+  }
+
+  return handleSmartStream(env, metadata, mimeType, totalSize);
 }
 
-/**
- * Handle full file streaming
- */
-async function handleFullStream(env, metadata, mimeType, totalSize) {
+async function handleSmartStream(env, metadata, mimeType, totalSize) {
   const chunks = metadata.chunks;
+  const maxInitialChunks = Math.min(3, chunks.length);
   let chunkIndex = 0;
-
-  log('🔄 Starting full stream, chunks:', chunks.length);
 
   const stream = new ReadableStream({
     async pull(controller) {
-      if (chunkIndex >= chunks.length) {
-        log('✅ Stream complete');
+      if (chunkIndex >= maxInitialChunks) {
         controller.close();
         return;
       }
 
       try {
-        log(`⬇️ Loading chunk ${chunkIndex + 1}/${chunks.length}`);
         const chunkData = await loadChunk(env, chunks[chunkIndex]);
         controller.enqueue(new Uint8Array(chunkData));
-        log(`✅ Chunk ${chunkIndex + 1} sent:`, Math.round(chunkData.byteLength/1024/1024) + 'MB');
         chunkIndex++;
       } catch (error) {
-        log(`❌ Chunk ${chunkIndex + 1} failed:`, error.message);
         controller.error(error);
       }
-    },
-
-    cancel(reason) {
-      log('⚠️ Stream cancelled:', reason);
     }
   });
 
+  const estimatedSize = Math.min(maxInitialChunks * (metadata.chunkSize || 20971520), totalSize);
+
   return new Response(stream, {
-    status: 200,
+    status: 206,
     headers: {
       'Content-Type': mimeType,
-      'Content-Length': totalSize.toString(),
+      'Content-Length': estimatedSize.toString(),
+      'Content-Range': `bytes 0-${estimatedSize - 1}/${totalSize}`,
       'Accept-Ranges': 'bytes',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'public, max-age=86400',
+      'Cache-Control': 'public, max-age=31536000',
       'Content-Disposition': 'inline'
     }
   });
 }
 
-/**
- * Handle range requests for chunked files
- */
 async function handleRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize) {
   const totalSize = metadata.size;
   const chunks = metadata.chunks;
 
   const rangeMatch = rangeHeader.match(/bytes=(d+)-(d*)/);
   if (!rangeMatch) {
-    log('❌ Invalid range format');
     return errorResponse('Invalid range', 416);
   }
 
   const start = parseInt(rangeMatch[1], 10);
   let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : totalSize - 1;
-  
+
   if (end >= totalSize) end = totalSize - 1;
-  
   if (start >= totalSize || start > end) {
-    log('❌ Range not satisfiable');
     return errorResponse('Range not satisfiable', 416);
   }
 
   const requestedSize = end - start + 1;
-  log(`📍 Range: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB)`);
-
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
   const neededChunks = chunks.slice(startChunk, endChunk + 1);
-
-  log(`🧩 Need chunks ${startChunk} to ${endChunk} (${neededChunks.length} total)`);
 
   let currentPosition = startChunk * chunkSize;
   let chunkIdx = 0;
@@ -286,7 +310,6 @@ async function handleRangeRequest(request, env, metadata, rangeHeader, mimeType,
   const stream = new ReadableStream({
     async pull(controller) {
       if (chunkIdx >= neededChunks.length) {
-        log('✅ Range stream complete');
         controller.close();
         return;
       }
@@ -299,15 +322,12 @@ async function handleRangeRequest(request, env, metadata, rangeHeader, mimeType,
         const chunkEnd = Math.min(uint8Array.length, end - currentPosition + 1);
 
         if (chunkStart < chunkEnd) {
-          const slice = uint8Array.slice(chunkStart, chunkEnd);
-          controller.enqueue(slice);
-          log(`✅ Range chunk ${chunkIdx + 1} sent: ${slice.length} bytes`);
+          controller.enqueue(uint8Array.slice(chunkStart, chunkEnd));
         }
 
         currentPosition += chunkSize;
         chunkIdx++;
       } catch (error) {
-        log(`❌ Range chunk ${chunkIdx + 1} failed:`, error.message);
         controller.error(error);
       }
     }
@@ -321,96 +341,107 @@ async function handleRangeRequest(request, env, metadata, rangeHeader, mimeType,
       'Content-Range': `bytes ${start}-${end}/${totalSize}`,
       'Accept-Ranges': 'bytes',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'public, max-age=86400',
+      'Cache-Control': 'public, max-age=31536000',
       'Content-Disposition': 'inline'
     }
   });
 }
 
-/**
- * Load single chunk
- */
+async function handleFullDownload(env, metadata, mimeType, totalSize) {
+  const chunks = metadata.chunks;
+  let chunkIndex = 0;
+
+  const stream = new ReadableStream({
+    async pull(controller) {
+      if (chunkIndex >= chunks.length) {
+        controller.close();
+        return;
+      }
+
+      try {
+        const chunkData = await loadChunk(env, chunks[chunkIndex]);
+        controller.enqueue(new Uint8Array(chunkData));
+        chunkIndex++;
+      } catch (error) {
+        controller.error(error);
+      }
+    }
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      'Content-Type': mimeType,
+      'Content-Length': totalSize.toString(),
+      'Content-Disposition': `attachment; filename="${metadata.filename}"`,
+      'Accept-Ranges': 'bytes',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=31536000'
+    }
+  });
+}
+
 async function loadChunk(env, chunkInfo) {
   const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
   const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
 
-  log(`📦 Loading chunk: ${chunkKey}`);
-
-  // Get chunk metadata
-  const metaStr = await kvNamespace.get(chunkKey);
-  if (!metaStr) {
-    throw new Error('Chunk not found: ' + chunkKey);
+  const metadataString = await kvNamespace.get(chunkKey);
+  if (!metadataString) {
+    throw new Error('Chunk not found');
   }
 
-  const chunkMeta = JSON.parse(metaStr);
-  const fileId = chunkMeta.telegramFileId || chunkMeta.fileIdCode;
+  const chunkMetadata = JSON.parse(metadataString);
+  chunkMetadata.telegramFileId = chunkMetadata.telegramFileId || chunkMetadata.fileIdCode;
 
-  if (!fileId) {
-    throw new Error('No fileId in chunk metadata: ' + chunkKey);
-  }
-
-  // Try cached URL first
-  if (chunkMeta.directUrl) {
+  if (chunkMetadata.directUrl) {
     try {
-      const res = await fetch(chunkMeta.directUrl);
-      if (res.ok) {
-        log(`✅ Cache hit: ${chunkKey}`);
-        return await res.arrayBuffer();
+      const response = await fetch(chunkMetadata.directUrl, { 
+        signal: AbortSignal.timeout(25000) 
+      });
+      if (response.ok) {
+        return response.arrayBuffer();
       }
-    } catch (e) {
-      log(`⚠️ Cache miss: ${chunkKey}`);
+    } catch (error) {
+      // URL expired, continue to refresh
     }
   }
 
-  // Refresh URL from Telegram
-  log(`🔄 Refreshing URL for: ${chunkKey}`);
   const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
 
-  for (let i = 0; i < botTokens.length; i++) {
-    const botToken = botTokens[i];
-
+  for (const botToken of botTokens) {
     try {
-      const getFileRes = await fetch(
-        `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`
+      const getFileResponse = await fetch(
+        `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
+        { signal: AbortSignal.timeout(12000) }
       );
 
-      const fileData = await getFileRes.json();
-      if (!fileData.ok || !fileData.result || !fileData.result.file_path) {
-        continue;
-      }
+      const getFileData = await getFileResponse.json();
+      if (!getFileData.ok || !getFileData.result?.file_path) continue;
 
-      const freshUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
-      const res = await fetch(freshUrl);
+      const freshUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+      const response = await fetch(freshUrl, { signal: AbortSignal.timeout(25000) });
 
-      if (res.ok) {
-        // Update KV (non-blocking)
+      if (response.ok) {
         kvNamespace.put(chunkKey, JSON.stringify({
-          ...chunkMeta,
+          ...chunkMetadata,
           directUrl: freshUrl,
-          refreshed: Date.now()
+          lastRefreshed: Date.now()
         })).catch(() => {});
 
-        log(`✅ URL refreshed: ${chunkKey}`);
-        return await res.arrayBuffer();
+        return response.arrayBuffer();
       }
-    } catch (e) {
-      log(`⚠️ Bot ${i + 1} failed for chunk`);
+    } catch (error) {
       continue;
     }
   }
 
-  throw new Error('All bots failed for chunk: ' + chunkKey);
+  throw new Error('All bots failed');
 }
 
-/**
- * Error response helper
- */
 function errorResponse(message, status = 500) {
-  log('❌ Error response:', status, message);
   return new Response(JSON.stringify({
     error: message,
-    status: status,
-    timestamp: new Date().toISOString()
+    status: status
   }), {
     status: status,
     headers: {
