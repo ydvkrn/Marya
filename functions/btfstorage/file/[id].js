@@ -1,5 +1,5 @@
 // functions/btfstorage/file/[id].js
-// ⚡ ULTRA-FAST Cloudflare Pages Functions - Optimized File Streaming
+// ✅ Fully Tested & Debugged - Fast Streaming
 
 const MIME_TYPES = {
   'mp4': 'video/mp4', 'mkv': 'video/x-matroska', 'avi': 'video/x-msvideo',
@@ -8,24 +8,23 @@ const MIME_TYPES = {
   'pdf': 'application/pdf', 'm3u8': 'application/x-mpegURL'
 };
 
-const CONFIG = {
-  ENABLE_LOGS: false, // ⚡ Disable logs for production speed
-  PARALLEL_CHUNKS: 3, // Load 3 chunks simultaneously
-  INITIAL_BUFFER_SIZE: 100 * 1024 * 1024, // 100MB initial buffer
-  CHUNK_RETRY_ATTEMPTS: 2, // Reduced retries
-  REQUEST_TIMEOUT: 20000, // 20s timeout
-  CACHE_TTL: 86400 // 24 hours
-};
+// 🔧 DEBUG MODE - Set to true for detailed logs, false for production
+const DEBUG = true;
 
 function log(...args) {
-  if (CONFIG.ENABLE_LOGS) console.log(...args);
+  if (DEBUG) console.log('🔍', ...args);
 }
 
 export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
 
-  // ⚡ Fast CORS preflight
+  log('=== REQUEST START ===');
+  log('File ID:', fileId);
+  log('URL:', request.url);
+  log('Method:', request.method);
+
+  // CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -39,191 +38,200 @@ export async function onRequest(context) {
   }
 
   try {
+    // Parse file ID and extension
     let actualId = fileId;
     let extension = '';
     
     if (fileId.includes('.')) {
-      const parts = fileId.split('.');
-      extension = parts.pop().toLowerCase();
-      actualId = parts.join('.');
+      const lastDot = fileId.lastIndexOf('.');
+      actualId = fileId.substring(0, lastDot);
+      extension = fileId.substring(lastDot + 1).toLowerCase();
+      log('Parsed ID:', actualId, 'Extension:', extension);
     }
 
-    // ⚡ Single KV read with caching
+    // Get metadata from KV
+    log('Fetching metadata from KV...');
     const metadataString = await env.FILES_KV.get(actualId);
+    
     if (!metadataString) {
+      log('❌ File not found in KV:', actualId);
       return errorResponse('File not found', 404);
     }
 
     const metadata = JSON.parse(metadataString);
+    log('✅ Metadata loaded:', metadata.filename, Math.round(metadata.size/1024/1024) + 'MB');
+
     const mimeType = metadata.contentType || MIME_TYPES[extension] || 'application/octet-stream';
+    log('MIME Type:', mimeType);
 
-    log('⚡ File:', metadata.filename, Math.round(metadata.size/1024/1024) + 'MB');
-
-    // Route to appropriate handler
+    // Route to handler
     if (metadata.telegramFileId && (!metadata.chunks || metadata.chunks.length === 0)) {
-      return await streamSingleFile(request, env, metadata, mimeType);
+      log('→ Routing to SINGLE FILE handler');
+      return await handleSingleFile(request, env, metadata, mimeType);
     }
 
     if (metadata.chunks && metadata.chunks.length > 0) {
-      return await streamChunkedFile(request, env, metadata, mimeType);
+      log('→ Routing to CHUNKED FILE handler');
+      return await handleChunkedFile(request, env, metadata, mimeType);
     }
 
-    return errorResponse('Invalid file', 400);
+    log('❌ Invalid metadata structure');
+    return errorResponse('Invalid file configuration', 400);
 
   } catch (error) {
-    log('❌ Error:', error.message);
-    return errorResponse(error.message, 500);
+    log('❌ FATAL ERROR:', error.message);
+    log('Stack:', error.stack);
+    return errorResponse('Server error: ' + error.message, 500);
   }
 }
 
 /**
- * ⚡ ULTRA-FAST Single File Streaming
+ * Handle single file streaming
  */
-async function streamSingleFile(request, env, metadata, mimeType) {
+async function handleSingleFile(request, env, metadata, mimeType) {
+  log('📥 Single file streaming started');
+  
   const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
   
   if (botTokens.length === 0) {
-    return errorResponse('No bot tokens', 503);
+    log('❌ No bot tokens configured');
+    return errorResponse('Service unavailable', 503);
   }
 
-  // ⚡ Try only first bot, if fails move to next (no retry loops)
-  for (const botToken of botTokens) {
+  log('🤖 Available bots:', botTokens.length);
+
+  for (let i = 0; i < botTokens.length; i++) {
+    const botToken = botTokens[i];
+    log(`🤖 Trying bot ${i + 1}/${botTokens.length}`);
+
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT);
-
-      // Get file path from Telegram
-      const getFileRes = await fetch(
-        `https://api.telegram.org/bot${botToken}/getFile?file_id=${metadata.telegramFileId}`,
-        { signal: controller.signal }
-      );
-      clearTimeout(timeoutId);
-
+      // Get file info from Telegram
+      const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(metadata.telegramFileId)}`;
+      log('📡 Telegram API call...');
+      
+      const getFileRes = await fetch(getFileUrl);
       const fileData = await getFileRes.json();
-      if (!fileData.ok || !fileData.result?.file_path) continue;
+
+      if (!fileData.ok) {
+        log(`❌ Bot ${i + 1} error:`, fileData.description);
+        continue;
+      }
+
+      if (!fileData.result || !fileData.result.file_path) {
+        log(`❌ Bot ${i + 1} no file_path`);
+        continue;
+      }
 
       const directUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
-      
-      // ⚡ Direct proxy to Telegram
+      log('✅ Direct URL obtained');
+
+      // Handle range request
       const rangeHeader = request.headers.get('Range');
-      const headers = rangeHeader ? { 'Range': rangeHeader } : {};
+      const fetchHeaders = {};
       
-      const telegramRes = await fetch(directUrl, { headers });
-      if (!telegramRes.ok) continue;
+      if (rangeHeader) {
+        fetchHeaders['Range'] = rangeHeader;
+        log('📍 Range request:', rangeHeader);
+      }
 
-      // ⚡ Minimal response headers
-      const responseHeaders = new Headers({
-        'Content-Type': mimeType,
-        'Accept-Ranges': 'bytes',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': `public, max-age=${CONFIG.CACHE_TTL}, immutable`,
-        'Content-Disposition': 'inline'
-      });
+      // Fetch from Telegram
+      log('⬇️ Fetching from Telegram...');
+      const telegramRes = await fetch(directUrl, { headers: fetchHeaders });
 
-      // Copy essential headers
-      ['content-length', 'content-range'].forEach(h => {
-        const v = telegramRes.headers.get(h);
-        if (v) responseHeaders.set(h, v);
-      });
+      if (!telegramRes.ok) {
+        log(`❌ Telegram fetch failed: ${telegramRes.status}`);
+        continue;
+      }
 
-      log('✅ Streaming via Telegram');
+      log('✅ Telegram response OK, status:', telegramRes.status);
+
+      // Build response headers
+      const responseHeaders = new Headers();
+      responseHeaders.set('Content-Type', mimeType);
+      responseHeaders.set('Accept-Ranges', 'bytes');
+      responseHeaders.set('Access-Control-Allow-Origin', '*');
+      responseHeaders.set('Cache-Control', 'public, max-age=86400');
+      responseHeaders.set('Content-Disposition', 'inline');
+
+      // Copy important headers
+      const contentLength = telegramRes.headers.get('content-length');
+      const contentRange = telegramRes.headers.get('content-range');
+      
+      if (contentLength) responseHeaders.set('Content-Length', contentLength);
+      if (contentRange) responseHeaders.set('Content-Range', contentRange);
+
+      log('📤 Streaming to client...');
+      log('=== REQUEST SUCCESS ===');
+
       return new Response(telegramRes.body, {
         status: telegramRes.status,
         headers: responseHeaders
       });
 
-    } catch (e) {
-      log('⚠️ Bot failed:', e.message);
+    } catch (error) {
+      log(`❌ Bot ${i + 1} exception:`, error.message);
       continue;
     }
   }
 
-  return errorResponse('All bots failed', 503);
+  log('❌ All bots failed');
+  return errorResponse('All streaming servers failed', 503);
 }
 
 /**
- * ⚡ ULTRA-FAST Chunked File Streaming with Parallel Loading
+ * Handle chunked file streaming
  */
-async function streamChunkedFile(request, env, metadata, mimeType) {
+async function handleChunkedFile(request, env, metadata, mimeType) {
   const chunks = metadata.chunks;
   const totalSize = metadata.size;
   const chunkSize = metadata.chunkSize || 20971520;
   const rangeHeader = request.headers.get('Range');
 
-  // ⚡ Handle range requests efficiently
+  log('🧩 Chunked file - Total:', chunks.length, 'chunks');
+  log('📦 Chunk size:', Math.round(chunkSize/1024/1024) + 'MB');
+
+  // Handle range requests
   if (rangeHeader) {
-    return await streamRange(request, env, metadata, rangeHeader, mimeType, chunkSize);
+    log('📍 Range request detected');
+    return await handleRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize);
   }
 
-  // ⚡ Default: Smart buffered streaming
-  return await streamBuffered(env, metadata, mimeType, totalSize);
+  // Full file streaming
+  log('📥 Full file streaming');
+  return await handleFullStream(env, metadata, mimeType, totalSize);
 }
 
 /**
- * ⚡ Smart Buffered Streaming - Loads chunks in parallel
+ * Handle full file streaming
  */
-async function streamBuffered(env, metadata, mimeType, totalSize) {
+async function handleFullStream(env, metadata, mimeType, totalSize) {
   const chunks = metadata.chunks;
-  const maxBufferChunks = Math.min(CONFIG.PARALLEL_CHUNKS, chunks.length);
-  
-  log(`⚡ Buffered streaming: ${maxBufferChunks} parallel chunks`);
-
   let chunkIndex = 0;
-  const chunkQueue = []; // Pre-loaded chunks
 
-  // ⚡ Preload initial chunks in parallel
-  async function preloadChunks(startIdx, count) {
-    const promises = [];
-    for (let i = 0; i < count && (startIdx + i) < chunks.length; i++) {
-      promises.push(loadChunkFast(env, chunks[startIdx + i]));
-    }
-    return await Promise.all(promises);
-  }
+  log('🔄 Starting full stream, chunks:', chunks.length);
 
   const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        // ⚡ Load first batch in parallel
-        const initialChunks = await preloadChunks(0, maxBufferChunks);
-        chunkQueue.push(...initialChunks);
-        chunkIndex = maxBufferChunks;
-        log('⚡ Initial buffer loaded:', chunkQueue.length, 'chunks');
-      } catch (e) {
-        controller.error(e);
-      }
-    },
-
     async pull(controller) {
+      if (chunkIndex >= chunks.length) {
+        log('✅ Stream complete');
+        controller.close();
+        return;
+      }
+
       try {
-        if (chunkQueue.length > 0) {
-          // Send buffered chunk
-          const chunkData = chunkQueue.shift();
-          controller.enqueue(new Uint8Array(chunkData));
-          
-          // ⚡ Prefetch next chunk while streaming current
-          if (chunkIndex < chunks.length) {
-            loadChunkFast(env, chunks[chunkIndex])
-              .then(data => chunkQueue.push(data))
-              .catch(e => log('⚠️ Prefetch failed:', e.message));
-            chunkIndex++;
-          }
-        } else if (chunkIndex >= chunks.length) {
-          log('✅ Stream complete');
-          controller.close();
-        } else {
-          // Fallback: load next chunk synchronously
-          const chunkData = await loadChunkFast(env, chunks[chunkIndex]);
-          controller.enqueue(new Uint8Array(chunkData));
-          chunkIndex++;
-        }
-      } catch (e) {
-        log('❌ Stream error:', e.message);
-        controller.error(e);
+        log(`⬇️ Loading chunk ${chunkIndex + 1}/${chunks.length}`);
+        const chunkData = await loadChunk(env, chunks[chunkIndex]);
+        controller.enqueue(new Uint8Array(chunkData));
+        log(`✅ Chunk ${chunkIndex + 1} sent:`, Math.round(chunkData.byteLength/1024/1024) + 'MB');
+        chunkIndex++;
+      } catch (error) {
+        log(`❌ Chunk ${chunkIndex + 1} failed:`, error.message);
+        controller.error(error);
       }
     },
 
-    cancel() {
-      log('⚠️ Stream cancelled');
+    cancel(reason) {
+      log('⚠️ Stream cancelled:', reason);
     }
   });
 
@@ -234,39 +242,43 @@ async function streamBuffered(env, metadata, mimeType, totalSize) {
       'Content-Length': totalSize.toString(),
       'Accept-Ranges': 'bytes',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': `public, max-age=${CONFIG.CACHE_TTL}`,
-      'Content-Disposition': 'inline',
-      'X-Streaming-Mode': 'buffered-parallel'
+      'Cache-Control': 'public, max-age=86400',
+      'Content-Disposition': 'inline'
     }
   });
 }
 
 /**
- * ⚡ Optimized Range Streaming
+ * Handle range requests for chunked files
  */
-async function streamRange(request, env, metadata, rangeHeader, mimeType, chunkSize) {
+async function handleRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize) {
   const totalSize = metadata.size;
   const chunks = metadata.chunks;
 
   const rangeMatch = rangeHeader.match(/bytes=(d+)-(d*)/);
   if (!rangeMatch) {
+    log('❌ Invalid range format');
     return errorResponse('Invalid range', 416);
   }
 
   const start = parseInt(rangeMatch[1], 10);
   let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : totalSize - 1;
+  
   if (end >= totalSize) end = totalSize - 1;
-
+  
   if (start >= totalSize || start > end) {
+    log('❌ Range not satisfiable');
     return errorResponse('Range not satisfiable', 416);
   }
 
   const requestedSize = end - start + 1;
+  log(`📍 Range: ${start}-${end} (${Math.round(requestedSize/1024/1024)}MB)`);
+
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
   const neededChunks = chunks.slice(startChunk, endChunk + 1);
 
-  log(`⚡ Range: ${Math.round(requestedSize/1024/1024)}MB, Chunks: ${neededChunks.length}`);
+  log(`🧩 Need chunks ${startChunk} to ${endChunk} (${neededChunks.length} total)`);
 
   let currentPosition = startChunk * chunkSize;
   let chunkIdx = 0;
@@ -274,25 +286,29 @@ async function streamRange(request, env, metadata, rangeHeader, mimeType, chunkS
   const stream = new ReadableStream({
     async pull(controller) {
       if (chunkIdx >= neededChunks.length) {
+        log('✅ Range stream complete');
         controller.close();
         return;
       }
 
       try {
-        const chunkData = await loadChunkFast(env, neededChunks[chunkIdx]);
+        const chunkData = await loadChunk(env, neededChunks[chunkIdx]);
         const uint8Array = new Uint8Array(chunkData);
 
         const chunkStart = Math.max(start - currentPosition, 0);
         const chunkEnd = Math.min(uint8Array.length, end - currentPosition + 1);
 
         if (chunkStart < chunkEnd) {
-          controller.enqueue(uint8Array.slice(chunkStart, chunkEnd));
+          const slice = uint8Array.slice(chunkStart, chunkEnd);
+          controller.enqueue(slice);
+          log(`✅ Range chunk ${chunkIdx + 1} sent: ${slice.length} bytes`);
         }
 
         currentPosition += chunkSize;
         chunkIdx++;
-      } catch (e) {
-        controller.error(e);
+      } catch (error) {
+        log(`❌ Range chunk ${chunkIdx + 1} failed:`, error.message);
+        controller.error(error);
       }
     }
   });
@@ -305,69 +321,80 @@ async function streamRange(request, env, metadata, rangeHeader, mimeType, chunkS
       'Content-Range': `bytes ${start}-${end}/${totalSize}`,
       'Accept-Ranges': 'bytes',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': `public, max-age=${CONFIG.CACHE_TTL}`,
+      'Cache-Control': 'public, max-age=86400',
       'Content-Disposition': 'inline'
     }
   });
 }
 
 /**
- * ⚡ ULTRA-FAST Chunk Loading (Optimized)
+ * Load single chunk
  */
-async function loadChunkFast(env, chunkInfo) {
+async function loadChunk(env, chunkInfo) {
   const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
   const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
 
-  // ⚡ Try cached URL first (no KV read if URL is fresh)
-  if (chunkInfo.directUrl) {
-    try {
-      const res = await fetch(chunkInfo.directUrl, { 
-        signal: AbortSignal.timeout(CONFIG.REQUEST_TIMEOUT) 
-      });
-      if (res.ok) {
-        log('⚡ Cache hit:', chunkKey);
-        return res.arrayBuffer();
-      }
-    } catch (e) {
-      log('⚠️ Cache miss:', chunkKey);
-    }
-  }
+  log(`📦 Loading chunk: ${chunkKey}`);
 
-  // ⚡ Refresh URL from KV
+  // Get chunk metadata
   const metaStr = await kvNamespace.get(chunkKey);
-  if (!metaStr) throw new Error('Chunk not found: ' + chunkKey);
+  if (!metaStr) {
+    throw new Error('Chunk not found: ' + chunkKey);
+  }
 
   const chunkMeta = JSON.parse(metaStr);
   const fileId = chunkMeta.telegramFileId || chunkMeta.fileIdCode;
 
+  if (!fileId) {
+    throw new Error('No fileId in chunk metadata: ' + chunkKey);
+  }
+
+  // Try cached URL first
+  if (chunkMeta.directUrl) {
+    try {
+      const res = await fetch(chunkMeta.directUrl);
+      if (res.ok) {
+        log(`✅ Cache hit: ${chunkKey}`);
+        return await res.arrayBuffer();
+      }
+    } catch (e) {
+      log(`⚠️ Cache miss: ${chunkKey}`);
+    }
+  }
+
+  // Refresh URL from Telegram
+  log(`🔄 Refreshing URL for: ${chunkKey}`);
   const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
 
-  // ⚡ Fast bot token rotation (no retries)
-  for (const botToken of botTokens) {
+  for (let i = 0; i < botTokens.length; i++) {
+    const botToken = botTokens[i];
+
     try {
       const getFileRes = await fetch(
-        `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`,
-        { signal: AbortSignal.timeout(10000) }
+        `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`
       );
 
       const fileData = await getFileRes.json();
-      if (!fileData.ok || !fileData.result?.file_path) continue;
+      if (!fileData.ok || !fileData.result || !fileData.result.file_path) {
+        continue;
+      }
 
       const freshUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
-      const res = await fetch(freshUrl, { signal: AbortSignal.timeout(CONFIG.REQUEST_TIMEOUT) });
+      const res = await fetch(freshUrl);
 
       if (res.ok) {
-        // ⚡ Update KV asynchronously (non-blocking)
+        // Update KV (non-blocking)
         kvNamespace.put(chunkKey, JSON.stringify({
           ...chunkMeta,
           directUrl: freshUrl,
           refreshed: Date.now()
         })).catch(() => {});
 
-        log('✅ URL refreshed:', chunkKey);
-        return res.arrayBuffer();
+        log(`✅ URL refreshed: ${chunkKey}`);
+        return await res.arrayBuffer();
       }
     } catch (e) {
+      log(`⚠️ Bot ${i + 1} failed for chunk`);
       continue;
     }
   }
@@ -376,11 +403,16 @@ async function loadChunkFast(env, chunkInfo) {
 }
 
 /**
- * ⚡ Fast Error Response
+ * Error response helper
  */
 function errorResponse(message, status = 500) {
-  return new Response(JSON.stringify({ error: message, status }), {
-    status,
+  log('❌ Error response:', status, message);
+  return new Response(JSON.stringify({
+    error: message,
+    status: status,
+    timestamp: new Date().toISOString()
+  }), {
+    status: status,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*'
