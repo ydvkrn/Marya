@@ -1,20 +1,19 @@
 // functions/btfstorage/file/[id].js
-// 🎬 FIXED: Cloudflare Pages Functions - Video Streaming Handler
+// 🎬 PRODUCTION READY - Fixed Video Streaming
 
 const MIME_TYPES = {
   'mp4': 'video/mp4', 'mkv': 'video/x-matroska', 'avi': 'video/x-msvideo',
-  'mov': 'video/quicktime', 'webm': 'video/webm', 'mp3': 'audio/mpeg',
-  'wav': 'audio/wav', 'aac': 'audio/mp4', 'jpg': 'image/jpeg',
-  'jpeg': 'image/jpeg', 'png': 'image/png', 'gif': 'image/gif',
+  'mov': 'video/quicktime', 'webm': 'video/webm', 'flv': 'video/x-flv',
+  'mp3': 'audio/mpeg', 'wav': 'audio/wav', 'aac': 'audio/mp4',
+  'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
   'pdf': 'application/pdf', 'txt': 'text/plain', 'zip': 'application/zip'
 };
 
 export async function onRequest(context) {
   const { request, env, params } = context;
-  const fileId = params.id;
-
-  console.log('🎬 Streaming request:', fileId);
-
+  
+  console.log('🎬 REQUEST:', request.method, request.url);
+  
   // CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -23,236 +22,265 @@ export async function onRequest(context) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
         'Access-Control-Allow-Headers': 'Range, Content-Type',
-        'Access-Control-Max-Age': '86400'
+        'Access-Control-Max-Age': '86400',
+        'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges'
       }
     });
   }
 
   try {
-    // Parse file ID and extension
+    const fileId = params.id;
+    
+    // Parse ID and extension
     let actualId = fileId;
     let extension = '';
     
     if (fileId.includes('.')) {
-      const lastDot = fileId.lastIndexOf('.');
-      actualId = fileId.substring(0, lastDot);
-      extension = fileId.substring(lastDot + 1).toLowerCase();
+      const parts = fileId.split('.');
+      extension = parts.pop().toLowerCase();
+      actualId = parts.join('.');
     }
 
-    console.log('📂 File ID:', actualId, 'Extension:', extension);
+    console.log('📂 ID:', actualId, 'EXT:', extension);
 
-    // Get metadata from KV
+    // Get metadata
     const metadataString = await env.FILES_KV.get(actualId);
+    
     if (!metadataString) {
+      console.error('❌ NOT FOUND:', actualId);
       return errorResponse('File not found', 404);
     }
 
     const metadata = JSON.parse(metadataString);
+    console.log('📦 FILE:', metadata.filename);
+    console.log('📊 SIZE:', Math.round(metadata.size/1024/1024) + 'MB');
+    console.log('🧩 CHUNKS:', metadata.chunks?.length || 0);
+
     const mimeType = metadata.contentType || MIME_TYPES[extension] || 'application/octet-stream';
 
-    console.log('📦 File:', metadata.filename, 'Size:', Math.round(metadata.size/1024/1024) + 'MB');
-
-    // Determine streaming type
+    // Route to handler
     const hasSingleFile = metadata.telegramFileId || metadata.fileIdCode;
     const hasChunks = metadata.chunks && metadata.chunks.length > 0;
 
     if (hasSingleFile && !hasChunks) {
+      console.log('🚀 ROUTING: Single file');
       return await streamSingleFile(request, env, metadata, mimeType);
     }
 
     if (hasChunks) {
+      console.log('🚀 ROUTING: Chunked file');
       return await streamChunkedFile(request, env, metadata, mimeType);
     }
 
+    console.error('❌ INVALID CONFIG');
     return errorResponse('Invalid file configuration', 400);
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
-    return errorResponse(error.message, 500);
+    console.error('❌ FATAL ERROR:', error.message);
+    console.error('📍 STACK:', error.stack);
+    return errorResponse('Server error: ' + error.message, 500);
   }
 }
 
 /**
- * Stream single file from Telegram (< 20MB files)
+ * Single file streaming (< 20MB)
  */
 async function streamSingleFile(request, env, metadata, mimeType) {
-  console.log('🚀 Single file streaming');
-
   const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(Boolean);
   const telegramFileId = metadata.telegramFileId || metadata.fileIdCode;
 
-  for (const botToken of botTokens) {
-    try {
-      // Get file path
-      const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`;
-      const fileInfoResponse = await fetch(getFileUrl, { signal: AbortSignal.timeout(10000) });
-      const fileInfo = await fileInfoResponse.json();
+  console.log('🤖 BOTS AVAILABLE:', botTokens.length);
 
-      if (!fileInfo.ok || !fileInfo.result?.file_path) {
+  for (let i = 0; i < botTokens.length; i++) {
+    try {
+      console.log('🤖 TRYING BOT:', i + 1);
+      
+      const getFileUrl = `https://api.telegram.org/bot${botTokens[i]}/getFile?file_id=${encodeURIComponent(telegramFileId)}`;
+      
+      const fileInfoRes = await fetch(getFileUrl, { 
+        signal: AbortSignal.timeout(10000) 
+      });
+      
+      if (!fileInfoRes.ok) {
+        console.error('❌ BOT API FAILED:', fileInfoRes.status);
         continue;
       }
 
-      const directUrl = `https://api.telegram.org/file/bot${botToken}/${fileInfo.result.file_path}`;
+      const fileInfo = await fileInfoRes.json();
       
-      // Forward range header if present
-      const headers = {};
-      const rangeHeader = request.headers.get('Range');
-      if (rangeHeader) {
-        headers['Range'] = rangeHeader;
+      if (!fileInfo.ok || !fileInfo.result?.file_path) {
+        console.error('❌ NO FILE PATH');
+        continue;
       }
 
-      // Fetch from Telegram
-      const telegramResponse = await fetch(directUrl, { 
-        headers,
+      const directUrl = `https://api.telegram.org/file/bot${botTokens[i]}/${fileInfo.result.file_path}`;
+      console.log('📡 FETCHING FROM TELEGRAM');
+
+      // Prepare headers
+      const fetchHeaders = {};
+      const rangeHeader = request.headers.get('Range');
+      if (rangeHeader) {
+        fetchHeaders['Range'] = rangeHeader;
+        console.log('🎯 RANGE:', rangeHeader);
+      }
+
+      const telegramRes = await fetch(directUrl, {
+        headers: fetchHeaders,
         signal: AbortSignal.timeout(30000)
       });
 
-      if (!telegramResponse.ok) {
+      if (!telegramRes.ok) {
+        console.error('❌ TELEGRAM FETCH FAILED:', telegramRes.status);
         continue;
       }
 
       // Build response headers
-      const responseHeaders = new Headers();
-      responseHeaders.set('Content-Type', mimeType);
-      responseHeaders.set('Access-Control-Allow-Origin', '*');
-      responseHeaders.set('Accept-Ranges', 'bytes');
-      responseHeaders.set('Cache-Control', 'public, max-age=31536000');
-      responseHeaders.set('Content-Disposition', 'inline');
+      const headers = new Headers();
+      headers.set('Content-Type', mimeType);
+      headers.set('Access-Control-Allow-Origin', '*');
+      headers.set('Accept-Ranges', 'bytes');
+      headers.set('Cache-Control', 'public, max-age=31536000');
+      headers.set('Content-Disposition', 'inline');
 
-      // Copy content headers
-      if (telegramResponse.headers.get('content-length')) {
-        responseHeaders.set('Content-Length', telegramResponse.headers.get('content-length'));
+      // CRITICAL: Copy exact content headers
+      const contentLength = telegramRes.headers.get('content-length');
+      const contentRange = telegramRes.headers.get('content-range');
+      
+      if (contentLength) {
+        headers.set('Content-Length', contentLength);
+        console.log('📏 LENGTH:', contentLength);
       }
-      if (telegramResponse.headers.get('content-range')) {
-        responseHeaders.set('Content-Range', telegramResponse.headers.get('content-range'));
+      
+      if (contentRange) {
+        headers.set('Content-Range', contentRange);
+        console.log('🎯 RANGE:', contentRange);
       }
 
-      console.log('✅ Single file streaming successful');
+      console.log('✅ SINGLE FILE SUCCESS');
 
-      return new Response(telegramResponse.body, {
-        status: telegramResponse.status,
-        headers: responseHeaders
+      return new Response(telegramRes.body, {
+        status: telegramRes.status,
+        headers: headers
       });
 
     } catch (error) {
-      console.log('⚠️ Bot token failed:', error.message);
+      console.error('❌ BOT ERROR:', error.message);
       continue;
     }
   }
 
-  return errorResponse('All streaming attempts failed', 503);
+  console.error('❌ ALL BOTS FAILED');
+  return errorResponse('All streaming sources failed', 503);
 }
 
 /**
- * Stream chunked file (> 20MB files split into chunks)
+ * Chunked file streaming (> 20MB)
  */
 async function streamChunkedFile(request, env, metadata, mimeType) {
   const chunks = metadata.chunks;
   const totalSize = metadata.size;
   const chunkSize = metadata.chunkSize || 20971520;
 
-  console.log('🎬 Chunked streaming:', chunks.length, 'chunks');
-
   const rangeHeader = request.headers.get('Range');
-  const url = new URL(request.url);
-  const isDownload = url.searchParams.has('dl') || url.searchParams.has('download');
+  
+  console.log('🧩 CHUNKS:', chunks.length);
+  console.log('📏 TOTAL:', Math.round(totalSize/1024/1024) + 'MB');
+  console.log('🎯 RANGE:', rangeHeader || 'FULL');
 
-  // Handle range request
+  // Range request
   if (rangeHeader) {
-    return await handleRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize);
+    return handleRangeStream(request, env, metadata, rangeHeader, mimeType, chunkSize);
   }
 
-  // Handle full stream
-  return await handleFullStream(request, env, metadata, mimeType, isDownload);
+  // Full stream
+  return handleFullChunkStream(request, env, metadata, mimeType);
 }
 
 /**
- * Handle range requests for seeking/partial content
+ * Handle range requests
  */
-async function handleRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize) {
+async function handleRangeStream(request, env, metadata, rangeHeader, mimeType, chunkSize) {
   const totalSize = metadata.size;
   const chunks = metadata.chunks;
 
   // Parse range
-  const rangeMatch = rangeHeader.match(/bytes=(d+)-(d*)/);
-  if (!rangeMatch) {
+  const match = rangeHeader.match(/bytes=(d+)-(d*)/);
+  if (!match) {
+    console.error('❌ INVALID RANGE FORMAT');
     return errorResponse('Invalid range', 416, {
       'Content-Range': `bytes */${totalSize}`
     });
   }
 
-  const start = parseInt(rangeMatch[1], 10);
-  let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : totalSize - 1;
+  const start = parseInt(match[1], 10);
+  let end = match[2] ? parseInt(match[2], 10) : totalSize - 1;
 
+  // Fix end boundary
   if (end >= totalSize) end = totalSize - 1;
+
   if (start >= totalSize || start > end) {
+    console.error('❌ RANGE NOT SATISFIABLE');
     return errorResponse('Range not satisfiable', 416, {
       'Content-Range': `bytes */${totalSize}`
     });
   }
 
   const requestedSize = end - start + 1;
-  console.log('🎯 Range:', start, '-', end, '=', Math.round(requestedSize/1024/1024) + 'MB');
+  
+  console.log('🎯 START:', start, 'END:', end);
+  console.log('📏 REQUESTED:', Math.round(requestedSize/1024/1024) + 'MB');
 
-  // Calculate needed chunks
+  // Calculate chunks needed
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
 
-  console.log('🧩 Need chunks:', startChunk, 'to', endChunk);
+  console.log('🧩 CHUNKS:', startChunk, 'to', endChunk);
 
-  let currentChunkIndex = startChunk;
-  let currentPosition = startChunk * chunkSize;
-  let streamClosed = false;
+  // Stream state
+  let chunkIdx = startChunk;
+  let position = startChunk * chunkSize;
+  let closed = false;
 
-  const stream = new ReadableStream({
-    async pull(controller) {
-      if (streamClosed || currentChunkIndex > endChunk) {
-        controller.close();
-        streamClosed = true;
-        return;
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+
+  // Start streaming in background
+  (async () => {
+    try {
+      while (chunkIdx <= endChunk && !closed) {
+        console.log(`🧩 CHUNK ${chunkIdx + 1}/${chunks.length}`);
+
+        const chunkData = await loadChunk(env, chunks[chunkIdx]);
+        const bytes = new Uint8Array(chunkData);
+
+        // Calculate slice
+        const sliceStart = Math.max(start - position, 0);
+        const sliceEnd = Math.min(bytes.length, end - position + 1);
+
+        if (sliceStart < sliceEnd) {
+          const slice = bytes.slice(sliceStart, sliceEnd);
+          await writer.write(slice);
+          console.log(`✅ SENT ${slice.length} bytes`);
+        }
+
+        position += chunkSize;
+        chunkIdx++;
+
+        if (position > end) break;
       }
 
+      console.log('✅ RANGE COMPLETE');
+      await writer.close();
+
+    } catch (error) {
+      console.error('❌ STREAM ERROR:', error.message);
       try {
-        const chunkInfo = chunks[currentChunkIndex];
-        console.log(`🎯 Loading chunk ${currentChunkIndex + 1}/${chunks.length}`);
-
-        const chunkData = await loadChunk(env, chunkInfo);
-        const uint8Array = new Uint8Array(chunkData);
-
-        // Calculate slice boundaries
-        const chunkStart = Math.max(start - currentPosition, 0);
-        const chunkEnd = Math.min(uint8Array.length, end - currentPosition + 1);
-
-        if (chunkStart < chunkEnd) {
-          const slice = uint8Array.slice(chunkStart, chunkEnd);
-          controller.enqueue(slice);
-          console.log(`✅ Chunk ${currentChunkIndex + 1} sent:`, slice.length, 'bytes');
-        }
-
-        currentPosition += chunkSize;
-        currentChunkIndex++;
-
-        // Close if done
-        if (currentChunkIndex > endChunk || currentPosition > end) {
-          controller.close();
-          streamClosed = true;
-          console.log('🎯 Range streaming complete');
-        }
-
-      } catch (error) {
-        console.error('❌ Chunk error:', error);
-        if (!streamClosed) {
-          controller.error(error);
-          streamClosed = true;
-        }
+        await writer.abort(error);
+      } catch (e) {
+        console.error('❌ ABORT FAILED:', e.message);
       }
-    },
-
-    cancel(reason) {
-      streamClosed = true;
-      console.log('🛑 Stream cancelled:', reason);
     }
-  });
+  })();
 
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
@@ -263,99 +291,95 @@ async function handleRangeRequest(request, env, metadata, rangeHeader, mimeType,
   headers.set('Content-Disposition', 'inline');
   headers.set('Cache-Control', 'public, max-age=31536000');
 
-  return new Response(stream, { status: 206, headers });
+  return new Response(readable, { status: 206, headers });
 }
 
 /**
- * Handle full file stream (for download or initial play)
+ * Handle full stream
  */
-async function handleFullStream(request, env, metadata, mimeType, isDownload) {
+async function handleFullChunkStream(request, env, metadata, mimeType) {
   const chunks = metadata.chunks;
   const totalSize = metadata.size;
 
-  console.log('📥', isDownload ? 'Download' : 'Stream', 'mode');
+  console.log('📥 FULL STREAM');
 
-  let currentChunkIndex = 0;
-  let streamClosed = false;
+  let chunkIdx = 0;
+  let closed = false;
 
-  const stream = new ReadableStream({
-    async pull(controller) {
-      if (streamClosed || currentChunkIndex >= chunks.length) {
-        if (!streamClosed) {
-          controller.close();
-          streamClosed = true;
-          console.log('✅ Streaming complete');
-        }
-        return;
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+
+  // Stream in background
+  (async () => {
+    try {
+      while (chunkIdx < chunks.length && !closed) {
+        console.log(`🧩 CHUNK ${chunkIdx + 1}/${chunks.length}`);
+
+        const chunkData = await loadChunk(env, chunks[chunkIdx]);
+        const bytes = new Uint8Array(chunkData);
+
+        await writer.write(bytes);
+        console.log(`✅ SENT ${Math.round(bytes.length/1024/1024)}MB`);
+
+        chunkIdx++;
       }
 
+      console.log('✅ FULL STREAM COMPLETE');
+      await writer.close();
+
+    } catch (error) {
+      console.error('❌ STREAM ERROR:', error.message);
       try {
-        const chunkInfo = chunks[currentChunkIndex];
-        console.log(`📦 Loading chunk ${currentChunkIndex + 1}/${chunks.length}`);
-
-        const chunkData = await loadChunk(env, chunkInfo);
-        const uint8Array = new Uint8Array(chunkData);
-
-        controller.enqueue(uint8Array);
-        console.log(`✅ Chunk ${currentChunkIndex + 1} sent:`, Math.round(uint8Array.byteLength/1024/1024) + 'MB');
-
-        currentChunkIndex++;
-
-      } catch (error) {
-        console.error('❌ Chunk error:', error);
-        if (!streamClosed) {
-          controller.error(error);
-          streamClosed = true;
-        }
+        await writer.abort(error);
+      } catch (e) {
+        console.error('❌ ABORT FAILED:', e.message);
       }
-    },
-
-    cancel(reason) {
-      streamClosed = true;
-      console.log('🛑 Stream cancelled:', reason);
     }
-  });
+  })();
 
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
   headers.set('Content-Length', totalSize.toString());
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Content-Disposition', isDownload ? `attachment; filename="${metadata.filename}"` : 'inline');
+  headers.set('Content-Disposition', 'inline');
   headers.set('Cache-Control', 'public, max-age=31536000');
 
-  return new Response(stream, { status: 200, headers });
+  return new Response(readable, { status: 200, headers });
 }
 
 /**
- * Load single chunk with URL refresh
+ * Load chunk with auto URL refresh
  */
 async function loadChunk(env, chunkInfo) {
   const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
   const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
 
-  // Get chunk metadata
-  const metadataString = await kvNamespace.get(chunkKey);
-  if (!metadataString) {
+  console.log('📥 LOADING:', chunkKey);
+
+  const metadataStr = await kvNamespace.get(chunkKey);
+  if (!metadataStr) {
     throw new Error(`Chunk not found: ${chunkKey}`);
   }
 
-  const chunkMetadata = JSON.parse(metadataString);
-  const telegramFileId = chunkMetadata.telegramFileId || chunkMetadata.fileIdCode;
+  const chunkMeta = JSON.parse(metadataStr);
+  const fileId = chunkMeta.telegramFileId || chunkMeta.fileIdCode;
 
-  // Try cached URL first
-  if (chunkMetadata.directUrl) {
+  // Try cached URL
+  if (chunkMeta.directUrl) {
     try {
-      const response = await fetch(chunkMetadata.directUrl, { 
+      const res = await fetch(chunkMeta.directUrl, { 
         signal: AbortSignal.timeout(20000) 
       });
       
-      if (response.ok) {
-        console.log('✅ Loaded from cached URL');
-        return response.arrayBuffer();
+      if (res.ok) {
+        console.log('✅ CACHED URL OK');
+        return res.arrayBuffer();
       }
-    } catch (error) {
-      console.log('🔄 Cached URL failed, refreshing...');
+      
+      console.log('🔄 CACHED URL EXPIRED');
+    } catch (e) {
+      console.log('🔄 CACHED URL FAILED');
     }
   }
 
@@ -364,50 +388,52 @@ async function loadChunk(env, chunkInfo) {
 
   for (const botToken of botTokens) {
     try {
-      const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`;
-      const fileInfoResponse = await fetch(getFileUrl, { signal: AbortSignal.timeout(10000) });
-      const fileInfo = await fileInfoResponse.json();
+      const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`;
+      const fileInfoRes = await fetch(getFileUrl, { signal: AbortSignal.timeout(10000) });
+      const fileInfo = await fileInfoRes.json();
 
       if (!fileInfo.ok || !fileInfo.result?.file_path) {
         continue;
       }
 
       const freshUrl = `https://api.telegram.org/file/bot${botToken}/${fileInfo.result.file_path}`;
-      const response = await fetch(freshUrl, { signal: AbortSignal.timeout(20000) });
+      const res = await fetch(freshUrl, { signal: AbortSignal.timeout(20000) });
 
-      if (response.ok) {
-        // Update KV with fresh URL (non-blocking)
+      if (res.ok) {
+        // Update KV (non-blocking)
         kvNamespace.put(chunkKey, JSON.stringify({
-          ...chunkMetadata,
+          ...chunkMeta,
           directUrl: freshUrl,
           lastRefreshed: Date.now()
         })).catch(() => {});
 
-        console.log('✅ URL refreshed and loaded');
-        return response.arrayBuffer();
+        console.log('✅ URL REFRESHED');
+        return res.arrayBuffer();
       }
 
-    } catch (error) {
+    } catch (e) {
       continue;
     }
   }
 
-  throw new Error(`Failed to load chunk: ${chunkKey}`);
+  throw new Error(`All bots failed for: ${chunkKey}`);
 }
 
 /**
- * Error response helper
+ * Error response
  */
 function errorResponse(message, status = 500, additionalHeaders = {}) {
+  console.error('❌ ERROR RESPONSE:', status, message);
+  
   const headers = new Headers({
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     ...additionalHeaders
   });
 
-  return new Response(JSON.stringify({ 
-    error: message, 
-    status,
+  return new Response(JSON.stringify({
+    error: message,
+    status: status,
     timestamp: new Date().toISOString()
-  }), { status, headers });
+  }, null, 2), { status, headers });
 }
