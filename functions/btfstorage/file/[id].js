@@ -1,7 +1,6 @@
-
 // functions/btfstorage/file/[id].js
-// ðŸŽ¬ Cloudflare Pages Functions - Advanced File Streaming Handler
-// URL: marya-hosting.pages.dev/btfstorage/file/MSM221-48U91C62-no.mp4
+// 🎬 Cloudflare Pages Functions - Advanced File Streaming Handler
+// MINIMAL FIX - Original structure maintained
 
 const MIME_TYPES = {
 // Video formats
@@ -49,18 +48,14 @@ const MIME_TYPES = {
 'mpd': 'application/dash+xml'
 };
 
-/**
-* Main request handler for Cloudflare Pages Functions
-* Handles dynamic file streaming with multiple formats and protocols
-*/
 export async function onRequest(context) {
 const { request, env, params } = context;
-const fileId = params.id; // Gets MSM221-48U91C62-no.mp4 from URL
+const fileId = params.id;
 
-console.log('ðŸŽ¬ TOP TIER STREAMING STARTED:', fileId);
-console.log('ðŸ“� Request URL:', request.url);
-console.log('ðŸ”— Method:', request.method);
-console.log('ðŸ“Š User-Agent:', request.headers.get('User-Agent') || 'Unknown');
+console.log('🎬 TOP TIER STREAMING STARTED:', fileId);
+console.log('📍 Request URL:', request.url);
+console.log('🔗 Method:', request.method);
+console.log('📊 User-Agent:', request.headers.get('User-Agent') || 'Unknown');
 
 // Handle CORS preflight requests
 if (request.method === 'OPTIONS') {
@@ -71,7 +66,7 @@ corsHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type, Authorizat
 corsHeaders.set('Access-Control-Max-Age', '86400');
 corsHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
 
-console.log('âœ… CORS preflight handled');
+console.log('✅ CORS preflight handled');
 return new Response(null, { status: 204, headers: corsHeaders });
 }
 
@@ -92,7 +87,7 @@ actualId = parts.join('.');
 // HLS Playlist (.m3u8)
 if (extension === 'm3u8') {
 isHlsPlaylist = true;
-console.log('ðŸ“¼ HLS Playlist requested:', actualId);
+console.log('📼 HLS Playlist requested:', actualId);
 }
 // HLS Segment (.ts with index)
 else if (extension === 'ts' && actualId.includes('-')) {
@@ -103,23 +98,23 @@ if (!isNaN(parseInt(lastPart))) {
 segmentIndex = parseInt(segParts.pop(), 10);
 actualId = segParts.join('-');
 isHlsSegment = true;
-console.log('ðŸ“¼ HLS Segment requested:', actualId, 'Index:', segmentIndex);
+console.log('📼 HLS Segment requested:', actualId, 'Index:', segmentIndex);
 }
 }
 // Regular file with extension
 else {
 actualId = fileId.substring(0, fileId.lastIndexOf('.'));
 extension = fileId.substring(fileId.lastIndexOf('.') + 1).toLowerCase();
-console.log('ðŸ“� Regular file requested:', actualId, 'Extension:', extension);
+console.log('📁 Regular file requested:', actualId, 'Extension:', extension);
 }
 }
 
 // Fetch metadata from KV storage
-console.log('ðŸ”� Fetching metadata for:', actualId);
+console.log('🔍 Fetching metadata for:', actualId);
 const metadataString = await env.FILES_KV.get(actualId);
 
 if (!metadataString) {
-console.error('â�Œ File not found in KV storage:', actualId);
+console.error('❌ File not found in KV storage:', actualId);
 return createErrorResponse('File not found', 404);
 }
 
@@ -127,7 +122,7 @@ const metadata = JSON.parse(metadataString);
 
 // Validate metadata structure
 if (!metadata.filename || !metadata.size) {
-console.error('â�Œ Invalid metadata structure:', metadata);
+console.error('❌ Invalid metadata structure:', metadata);
 return createErrorResponse('Invalid file metadata', 400);
 }
 
@@ -136,7 +131,7 @@ metadata.telegramFileId = metadata.telegramFileId || metadata.fileIdCode;
 
 // Validate file source (either single file or chunks)
 if (!metadata.telegramFileId && (!metadata.chunks || metadata.chunks.length === 0)) {
-console.error('â�Œ No telegramFileId or chunks in metadata:', actualId);
+console.error('❌ No telegramFileId or chunks in metadata:', actualId);
 return createErrorResponse('Missing file source data', 400);
 }
 
@@ -144,15 +139,15 @@ return createErrorResponse('Missing file source data', 400);
 const mimeType = metadata.contentType || MIME_TYPES[extension] || 'application/octet-stream';
 
 // Log file information
-console.log(`ðŸ“� File Info:
-ðŸ“� Name: ${metadata.filename}
-ðŸ“� Size: ${Math.round(metadata.size/1024/1024)}MB (${metadata.size} bytes)
-ðŸ�·ï¸� MIME: ${mimeType}
-MaryaUploader Chunks: ${metadata.chunks?.length || 0}
-ðŸ“… Uploaded: ${metadata.uploadedAt || 'N/A'}
-ðŸŽµ HLS Playlist: ${isHlsPlaylist}
-ðŸ“¼ HLS Segment: ${isHlsSegment} (Index: ${segmentIndex})
-ðŸ”— Has Telegram ID: ${!!metadata.telegramFileId}`);
+console.log(`📁 File Info:
+📝 Name: ${metadata.filename}
+📊 Size: ${Math.round(metadata.size/1024/1024)}MB (${metadata.size} bytes)
+🏷️ MIME: ${mimeType}
+🧩 Chunks: ${metadata.chunks?.length || 0}
+📅 Uploaded: ${metadata.uploadedAt || 'N/A'}
+🎵 HLS Playlist: ${isHlsPlaylist}
+📼 HLS Segment: ${isHlsSegment} (Index: ${segmentIndex})
+🔗 Has Telegram ID: ${!!metadata.telegramFileId}`);
 
 // Route to appropriate handler based on request type
 if (isHlsPlaylist) {
@@ -174,42 +169,47 @@ return await handleChunkedFile(request, env, metadata, mimeType, extension);
 return createErrorResponse('Invalid file format or configuration', 400);
 
 } catch (error) {
-console.error('â�Œ Critical streaming error:', error);
-console.error('ðŸ“� Error stack:', error.stack);
+console.error('❌ Critical streaming error:', error);
+console.error('🔍 Error stack:', error.stack);
 return createErrorResponse(`Streaming error: ${error.message}`, 500);
 }
 }
 
 /**
 * Handle HLS playlist generation (.m3u8)
-* Generates dynamic playlist from chunked file segments
 */
 async function handleHlsPlaylist(request, env, metadata, actualId) {
-console.log('ðŸ“¼ Generating HLS playlist for:', actualId);
+console.log('📼 Generating HLS playlist for:', actualId);
 
 if (!metadata.chunks || metadata.chunks.length === 0) {
-console.error('â�Œ HLS playlist requested for non-chunked file');
+console.error('❌ HLS playlist requested for non-chunked file');
 return createErrorResponse('HLS not supported for single files', 400);
 }
 
 const chunks = metadata.chunks;
-const segmentDuration = 6; // seconds per segment
+const segmentDuration = 6;
 const baseUrl = new URL(request.url).origin;
 
-// Generate M3U8 playlist content
-let playlist = '#EXTM3U\n';
-playlist += '#EXT-X-VERSION:3\n';
-playlist += `#EXT-X-TARGETDURATION:${segmentDuration}\n`;
-playlist += '#EXT-X-MEDIA-SEQUENCE:0\n';
-playlist += '#EXT-X-PLAYLIST-TYPE:VOD\n';
+let playlist = '#EXTM3U
+';
+playlist += '#EXT-X-VERSION:3
+';
+playlist += `#EXT-X-TARGETDURATION:${segmentDuration}
+`;
+playlist += '#EXT-X-MEDIA-SEQUENCE:0
+';
+playlist += '#EXT-X-PLAYLIST-TYPE:VOD
+';
 
-// Add each chunk as a segment
 for (let i = 0; i < chunks.length; i++) {
-playlist += `#EXTINF:${segmentDuration.toFixed(1)},\n`;
-playlist += `${baseUrl}/btfstorage/file/${actualId}-${i}.ts\n`;
+playlist += `#EXTINF:${segmentDuration.toFixed(1)},
+`;
+playlist += `${baseUrl}/btfstorage/file/${actualId}-${i}.ts
+`;
 }
 
-playlist += '#EXT-X-ENDLIST\n';
+playlist += '#EXT-X-ENDLIST
+';
 
 const headers = new Headers();
 headers.set('Content-Type', 'application/x-mpegURL');
@@ -218,31 +218,24 @@ headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 headers.set('Pragma', 'no-cache');
 headers.set('Expires', '0');
 
-console.log(`ðŸ“¼ HLS playlist generated successfully:
-ðŸ§© Segments: ${chunks.length}
-â�±ï¸� Duration per segment: ${segmentDuration}s
-ðŸ“� Total estimated duration: ${Math.round(chunks.length * segmentDuration / 60)}min`);
+console.log(`📼 HLS playlist generated: ${chunks.length} segments`);
 
 return new Response(playlist, { status: 200, headers });
 }
 
 /**
 * Handle HLS segment serving (.ts)
-* Serves individual video segments for HLS playback
 */
 async function handleHlsSegment(request, env, metadata, segmentIndex) {
-console.log('ðŸ“¼ Serving HLS segment:', segmentIndex);
+console.log('📼 Serving HLS segment:', segmentIndex);
 
-// Validate segment index
 if (!metadata.chunks || segmentIndex >= metadata.chunks.length || segmentIndex < 0) {
-console.error('â�Œ Invalid segment index:', segmentIndex, 'Available:', metadata.chunks?.length);
+console.error('❌ Invalid segment index:', segmentIndex);
 return createErrorResponse('Segment not found', 404);
 }
 
 try {
 const chunkInfo = metadata.chunks[segmentIndex];
-console.log('ðŸ“¥ Loading segment chunk:', chunkInfo.keyName || chunkInfo.chunkKey);
-
 const chunkData = await loadSingleChunk(env, chunkInfo);
 
 const headers = new Headers();
@@ -253,42 +246,36 @@ headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 headers.set('Content-Disposition', 'inline');
 headers.set('Accept-Ranges', 'bytes');
 
-console.log(`ðŸ“¼ HLS segment served successfully:
-ðŸ“� Index: ${segmentIndex}
-ðŸ“� Size: ${Math.round(chunkData.byteLength/1024/1024)}MB
-ðŸ�·ï¸� Type: video/mp2t`);
+console.log(`✅ HLS segment ${segmentIndex} served`);
 
 return new Response(chunkData, { status: 200, headers });
 
 } catch (error) {
-console.error('â�Œ HLS segment error:', error);
+console.error('❌ HLS segment error:', error);
 return createErrorResponse(`Segment loading failed: ${error.message}`, 500);
 }
 }
 
 /**
 * Handle single file streaming
-* Direct streaming from Telegram with range request support
 */
 async function handleSingleFile(request, env, metadata, mimeType) {
-console.log('ðŸš€ Single file streaming initiated');
+console.log('🚀 Single file streaming initiated');
 
 const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
 
 if (botTokens.length === 0) {
-console.error('â�Œ No bot tokens configured');
+console.error('❌ No bot tokens configured');
 return createErrorResponse('Service configuration error', 503);
 }
 
-console.log(`ðŸ¤– Available bot tokens: ${botTokens.length}`);
+console.log(`🤖 Available bot tokens: ${botTokens.length}`);
 
-// Try each bot token until one works
 for (let botIndex = 0; botIndex < botTokens.length; botIndex++) {
 const botToken = botTokens[botIndex];
-console.log(`ðŸ¤– Trying bot ${botIndex + 1}/${botTokens.length}`);
+console.log(`🤖 Trying bot ${botIndex + 1}/${botTokens.length}`);
 
 try {
-// Get file information from Telegram
 const getFileResponse = await fetchWithRetry(
 `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(metadata.telegramFileId)}`,
 { signal: AbortSignal.timeout(15000) }
@@ -297,37 +284,33 @@ const getFileResponse = await fetchWithRetry(
 const getFileData = await getFileResponse.json();
 
 if (!getFileData.ok || !getFileData.result?.file_path) {
-console.error(`ðŸ¤– Bot ${botIndex + 1} API error: ${getFileData.error_code} - ${getFileData.description}`);
+console.error(`🤖 Bot ${botIndex + 1} failed:`, getFileData.description);
 continue;
 }
 
 const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-console.log('ðŸ“¡ Telegram direct URL obtained');
+console.log('📡 Telegram direct URL obtained');
 
-// Prepare headers for range request if needed
 const requestHeaders = {};
 const rangeHeader = request.headers.get('Range');
 
 if (rangeHeader) {
 requestHeaders['Range'] = rangeHeader;
-console.log('ðŸŽ¯ Range request:', rangeHeader);
+console.log('🎯 Range request:', rangeHeader);
 }
 
-// Fetch file from Telegram
 const telegramResponse = await fetchWithRetry(directUrl, {
 headers: requestHeaders,
 signal: AbortSignal.timeout(45000)
 });
 
 if (!telegramResponse.ok) {
-console.error(`ðŸ“¡ Telegram file fetch failed: ${telegramResponse.status} ${telegramResponse.statusText}`);
+console.error(`📡 Telegram fetch failed: ${telegramResponse.status}`);
 continue;
 }
 
-// Prepare response headers
 const responseHeaders = new Headers();
 
-// Copy relevant headers from Telegram response
 ['content-length', 'content-range', 'accept-ranges'].forEach(header => {
 const value = telegramResponse.headers.get(header);
 if (value) {
@@ -335,28 +318,19 @@ responseHeaders.set(header, value);
 }
 });
 
-// Set standard headers
 responseHeaders.set('Content-Type', mimeType);
 responseHeaders.set('Accept-Ranges', 'bytes');
 responseHeaders.set('Access-Control-Allow-Origin', '*');
 responseHeaders.set('Cache-Control', 'public, max-age=31536000');
 
-// Handle download vs inline display
 const url = new URL(request.url);
 if (url.searchParams.has('dl') || url.searchParams.has('download')) {
 responseHeaders.set('Content-Disposition', `attachment; filename="${metadata.filename}"`);
-console.log('ðŸ“¥ Download mode enabled');
 } else {
 responseHeaders.set('Content-Disposition', 'inline');
-console.log('ðŸ‘�ï¸� Inline display mode');
 }
 
-console.log(`ðŸš€ Single file streaming successful:
-ðŸ“� File: ${metadata.filename}
-ðŸ“Š Status: ${telegramResponse.status}
-ðŸ¤– Bot: ${botIndex + 1}
-ðŸ“� Content-Length: ${telegramResponse.headers.get('content-length') || 'Unknown'}
-ðŸŽ¯ Range: ${rangeHeader || 'Full file'}`);
+console.log(`✅ Single file streaming successful with bot ${botIndex + 1}`);
 
 return new Response(telegramResponse.body, {
 status: telegramResponse.status,
@@ -364,36 +338,34 @@ headers: responseHeaders
 });
 
 } catch (botError) {
-console.error(`â�Œ Bot ${botIndex + 1} failed:`, botError.message);
+console.error(`❌ Bot ${botIndex + 1} error:`, botError.message);
 continue;
 }
 }
 
-console.error('â�Œ All bot tokens failed');
+console.error('❌ All bot tokens failed');
 return createErrorResponse('All streaming servers failed', 503);
 }
 
 /**
-* Handle chunked file streaming
-* Combines multiple chunks into a single stream
+* Handle chunked file streaming - FIXED VERSION
 */
 async function handleChunkedFile(request, env, metadata, mimeType, extension) {
 const chunks = metadata.chunks;
 const totalSize = metadata.size;
-const chunkSize = metadata.chunkSize || 20971520; // Default 20MB chunks
+const chunkSize = metadata.chunkSize || 20971520;
 
 const rangeHeader = request.headers.get('Range');
 const url = new URL(request.url);
 const isDownload = url.searchParams.has('dl') || url.searchParams.has('download');
 
-console.log(`ðŸŽ¬ Chunked file streaming:
-ðŸ§© Total chunks: ${chunks.length}
-ðŸ“� Total size: ${Math.round(totalSize/1024/1024)}MB
-ðŸ“¦ Chunk size: ${Math.round(chunkSize/1024/1024)}MB
-ðŸŽ¯ Range request: ${rangeHeader || 'None'}
-ðŸ“¥ Download mode: ${isDownload}`);
+console.log(`🎬 Chunked file streaming:
+🧩 Total chunks: ${chunks.length}
+📊 Total size: ${Math.round(totalSize/1024/1024)}MB
+📦 Chunk size: ${Math.round(chunkSize/1024/1024)}MB
+🎯 Range request: ${rangeHeader || 'None'}
+📥 Download mode: ${isDownload}`);
 
-// Handle different streaming modes
 if (rangeHeader) {
 return await handleSmartRange(request, env, metadata, rangeHeader, mimeType, chunkSize, isDownload);
 }
@@ -406,84 +378,72 @@ return await handleInstantPlay(request, env, metadata, mimeType, totalSize);
 }
 
 /**
-* Handle instant play streaming
-* Streams initial chunks for quick video start
+* Handle instant play streaming - FIXED
 */
 async function handleInstantPlay(request, env, metadata, mimeType, totalSize) {
 const chunks = metadata.chunks;
-console.log('âš¡ INSTANT PLAY: Streaming initial chunks for quick start...');
+console.log('⚡ INSTANT PLAY MODE');
 
 try {
-const maxInitialBytes = 50 * 1024 * 1024; // 50MB for instant play
-const maxInitialChunks = Math.min(3, chunks.length); // First 3 chunks max
-
-let loadedBytes = 0;
+const maxInitialChunks = Math.min(3, chunks.length);
 let chunkIndex = 0;
+let streamedBytes = 0;
 
-const stream = new ReadableStream({
-async pull(controller) {
-while (chunkIndex < maxInitialChunks && loadedBytes < maxInitialBytes) {
+// FIX: Use TransformStream instead of ReadableStream
+const { readable, writable } = new TransformStream();
+const writer = writable.getWriter();
+
+// Stream chunks in background
+(async () => {
 try {
-console.log(`âš¡ Loading initial chunk ${chunkIndex + 1}/${maxInitialChunks}`);
+while (chunkIndex < maxInitialChunks) {
+console.log(`⚡ Loading chunk ${chunkIndex + 1}/${maxInitialChunks}`);
 const chunkData = await loadSingleChunk(env, chunks[chunkIndex]);
 const uint8Array = new Uint8Array(chunkData);
 
-controller.enqueue(uint8Array);
-loadedBytes += uint8Array.byteLength;
+await writer.write(uint8Array);
+streamedBytes += uint8Array.byteLength;
 
-console.log(`âš¡ Streamed chunk ${chunkIndex + 1}: ${Math.round(uint8Array.byteLength/1024/1024)}MB (Total: ${Math.round(loadedBytes/1024/1024)}MB)`);
+console.log(`⚡ Sent ${Math.round(uint8Array.byteLength/1024/1024)}MB`);
 chunkIndex++;
+}
+
+console.log('⚡ Initial play complete');
+await writer.close();
 
 } catch (error) {
-console.error(`â�Œ Initial chunk ${chunkIndex + 1} failed:`, error);
-controller.error(error);
-return;
+console.error('❌ Instant play error:', error);
+await writer.abort(error).catch(() => {});
 }
-}
-
-console.log('âš¡ Initial chunks streaming completed');
-controller.close();
-},
-
-cancel(reason) {
-console.log('âš¡ Stream cancelled:', reason);
-}
-});
+})();
 
 const headers = new Headers();
 headers.set('Content-Type', mimeType);
-headers.set('Content-Length', Math.min(loadedBytes || maxInitialBytes, totalSize).toString());
-headers.set('Content-Range', `bytes 0-${Math.min(loadedBytes || maxInitialBytes, totalSize) - 1}/${totalSize}`);
 headers.set('Accept-Ranges', 'bytes');
 headers.set('Access-Control-Allow-Origin', '*');
 headers.set('Content-Disposition', 'inline');
 headers.set('Cache-Control', 'public, max-age=31536000');
 headers.set('X-Streaming-Mode', 'instant-play');
 
-console.log(`âš¡ INSTANT PLAY READY: ${Math.round((loadedBytes || maxInitialBytes)/1024/1024)}MB streamed for quick start`);
-
-return new Response(stream, { status: 206, headers });
+return new Response(readable, { status: 200, headers });
 
 } catch (error) {
-console.error('âš¡ Instant play error:', error);
+console.error('❌ Instant play failed:', error);
 return createErrorResponse(`Instant play failed: ${error.message}`, 500);
 }
 }
 
 /**
-* Handle smart range requests
-* Efficiently streams requested byte ranges across multiple chunks
+* Handle smart range requests - FIXED
 */
 async function handleSmartRange(request, env, metadata, rangeHeader, mimeType, chunkSize, isDownload = false) {
 const totalSize = metadata.size;
 const chunks = metadata.chunks;
 
-console.log('ðŸŽ¯ SMART RANGE REQUEST:', rangeHeader);
+console.log('🎯 SMART RANGE REQUEST:', rangeHeader);
 
-// Parse range header (format: bytes=start-end)
-const rangeMatch = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+const rangeMatch = rangeHeader.match(/bytes=(d+)-(d*)/);
 if (!rangeMatch) {
-console.error('â�Œ Invalid range format:', rangeHeader);
 return createErrorResponse('Invalid range format', 416, {
 'Content-Range': `bytes */${totalSize}`
 });
@@ -492,75 +452,59 @@ return createErrorResponse('Invalid range format', 416, {
 const start = parseInt(rangeMatch[1], 10);
 let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : totalSize - 1;
 
-// Validate range bounds
 if (end >= totalSize) end = totalSize - 1;
 if (start >= totalSize || start > end) {
-console.error('â�Œ Range not satisfiable:', `${start}-${end}/${totalSize}`);
 return createErrorResponse('Range not satisfiable', 416, {
 'Content-Range': `bytes */${totalSize}`
 });
 }
 
 const requestedSize = end - start + 1;
-console.log(`ðŸŽ¯ Range details:
-ðŸ“� Start: ${start} (${Math.round(start/1024/1024)}MB)
-ðŸ“� End: ${end} (${Math.round(end/1024/1024)}MB)
-ðŸ“� Requested: ${Math.round(requestedSize/1024/1024)}MB
-ðŸ“Š Total size: ${Math.round(totalSize/1024/1024)}MB`);
+console.log(`🎯 Range: ${start}-${end} = ${Math.round(requestedSize/1024/1024)}MB`);
 
-// Calculate which chunks are needed
 const startChunk = Math.floor(start / chunkSize);
 const endChunk = Math.floor(end / chunkSize);
-const neededChunks = chunks.slice(startChunk, endChunk + 1);
 
-console.log(`ðŸ§© Chunk analysis:
-ðŸŽ¯ Start chunk: ${startChunk}
-ðŸŽ¯ End chunk: ${endChunk}
-ðŸ“¦ Chunks needed: ${neededChunks.length}
-ðŸ“Š Chunk size: ${Math.round(chunkSize/1024/1024)}MB`);
+console.log(`🧩 Chunks needed: ${startChunk} to ${endChunk}`);
 
+let currentChunkIndex = startChunk;
 let currentPosition = startChunk * chunkSize;
 
-const stream = new ReadableStream({
-async pull(controller) {
-for (let i = 0; i < neededChunks.length; i++) {
-const chunkInfo = neededChunks[i];
-const chunkNumber = startChunk + i;
+// FIX: Use TransformStream
+const { readable, writable } = new TransformStream();
+const writer = writable.getWriter();
 
+(async () => {
 try {
-console.log(`ðŸŽ¯ Loading range chunk ${chunkNumber + 1}/${chunks.length} (${i + 1}/${neededChunks.length})`);
-const chunkData = await loadSingleChunk(env, chunkInfo);
+while (currentChunkIndex <= endChunk) {
+console.log(`🎯 Chunk ${currentChunkIndex + 1}/${chunks.length}`);
+
+const chunkData = await loadSingleChunk(env, chunks[currentChunkIndex]);
 const uint8Array = new Uint8Array(chunkData);
 
-// Calculate what portion of this chunk we need
 const chunkStart = Math.max(start - currentPosition, 0);
 const chunkEnd = Math.min(uint8Array.length, end - currentPosition + 1);
 
 if (chunkStart < chunkEnd) {
-const chunkSlice = uint8Array.slice(chunkStart, chunkEnd);
-controller.enqueue(chunkSlice);
-
-console.log(`ðŸŽ¯ Range chunk ${chunkNumber + 1} streamed: ${chunkSlice.length} bytes (${chunkStart}-${chunkEnd-1} of chunk)`);
+const slice = uint8Array.slice(chunkStart, chunkEnd);
+await writer.write(slice);
+console.log(`✅ Sent ${slice.length} bytes`);
 }
 
 currentPosition += chunkSize;
+currentChunkIndex++;
+
 if (currentPosition > end) break;
+}
+
+console.log('🎯 Range complete');
+await writer.close();
 
 } catch (error) {
-console.error(`â�Œ Range chunk ${chunkNumber + 1} failed:`, error);
-controller.error(error);
-return;
+console.error('❌ Range error:', error);
+await writer.abort(error).catch(() => {});
 }
-}
-
-console.log('ðŸŽ¯ Range streaming completed');
-controller.close();
-},
-
-cancel(reason) {
-console.log('ðŸŽ¯ Range stream cancelled:', reason);
-}
-});
+})();
 
 const headers = new Headers();
 headers.set('Content-Type', mimeType);
@@ -570,86 +514,68 @@ headers.set('Accept-Ranges', 'bytes');
 headers.set('Access-Control-Allow-Origin', '*');
 headers.set('Content-Disposition', isDownload ? `attachment; filename="${metadata.filename}"` : 'inline');
 headers.set('Cache-Control', 'public, max-age=31536000');
-headers.set('X-Streaming-Mode', 'range-request');
 
-console.log(`âœ… RANGE RESPONSE READY: ${Math.round(requestedSize/1024/1024)}MB will be streamed`);
-
-return new Response(stream, { status: 206, headers });
+return new Response(readable, { status: 206, headers });
 }
 
 /**
-* Handle full file download streaming
-* Streams complete file by combining all chunks
+* Handle full stream download - FIXED
 */
 async function handleFullStreamDownload(request, env, metadata, mimeType) {
 const chunks = metadata.chunks;
-const filename = metadata.filename;
 const totalSize = metadata.size;
 
-console.log(`ðŸ“¥ FULL DOWNLOAD: Streaming complete file
-ðŸ“� File: ${filename}
-ðŸ“� Size: ${Math.round(totalSize/1024/1024)}MB
-ðŸ§© Chunks: ${chunks.length}`);
+console.log('📥 FULL DOWNLOAD MODE');
 
 let chunkIndex = 0;
-let streamedBytes = 0;
 
-const stream = new ReadableStream({
-async pull(controller) {
-while (chunkIndex < chunks.length) {
+// FIX: Use TransformStream
+const { readable, writable } = new TransformStream();
+const writer = writable.getWriter();
+
+(async () => {
 try {
-console.log(`ðŸ“¥ Download chunk ${chunkIndex + 1}/${chunks.length} (${Math.round((chunkIndex/chunks.length)*100)}%)`);
+while (chunkIndex < chunks.length) {
+console.log(`📥 Chunk ${chunkIndex + 1}/${chunks.length}`);
 
 const chunkData = await loadSingleChunk(env, chunks[chunkIndex]);
 const uint8Array = new Uint8Array(chunkData);
 
-controller.enqueue(uint8Array);
-streamedBytes += uint8Array.byteLength;
+await writer.write(uint8Array);
+console.log(`✅ Sent ${Math.round(uint8Array.byteLength/1024/1024)}MB`);
 
-console.log(`ðŸ“¥ Download chunk ${chunkIndex + 1} completed: ${Math.round(uint8Array.byteLength/1024/1024)}MB (Total: ${Math.round(streamedBytes/1024/1024)}MB)`);
 chunkIndex++;
+}
+
+console.log('📥 Download complete');
+await writer.close();
 
 } catch (error) {
-console.error(`â�Œ Download chunk ${chunkIndex + 1} failed:`, error);
-controller.error(error);
-return;
+console.error('❌ Download error:', error);
+await writer.abort(error).catch(() => {});
 }
-}
-
-console.log(`ðŸ“¥ Download completed: ${Math.round(streamedBytes/1024/1024)}MB streamed`);
-controller.close();
-},
-
-cancel(reason) {
-console.log('ðŸ“¥ Download stream cancelled:', reason);
-}
-});
+})();
 
 const headers = new Headers();
 headers.set('Content-Type', mimeType);
 headers.set('Content-Length', totalSize.toString());
-headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+headers.set('Content-Disposition', `attachment; filename="${metadata.filename}"`);
 headers.set('Accept-Ranges', 'bytes');
 headers.set('Access-Control-Allow-Origin', '*');
-headers.set('X-Download-Mode', 'full-stream');
 headers.set('Cache-Control', 'public, max-age=31536000');
 
-console.log(`ðŸ“¥ Full download stream initiated: ${Math.round(totalSize/1024/1024)}MB total`);
-
-return new Response(stream, { status: 200, headers });
+return new Response(readable, { status: 200, headers });
 }
 
 /**
 * Load a single chunk from storage
-* Handles URL refresh if expired
 */
 async function loadSingleChunk(env, chunkInfo) {
 const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
 const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
 
-console.log(`ðŸ“¥ Loading chunk: ${chunkKey}`);
+console.log(`📥 Loading chunk: ${chunkKey}`);
 
-// Get chunk metadata from KV
 const metadataString = await kvNamespace.get(chunkKey);
 if (!metadataString) {
 throw new Error(`Chunk metadata not found: ${chunkKey}`);
@@ -666,18 +592,18 @@ signal: AbortSignal.timeout(30000)
 });
 
 if (response.ok) {
-console.log(`âœ… Chunk loaded from cached URL: ${chunkKey}`);
+console.log(`✅ Chunk loaded from cached URL`);
 return response.arrayBuffer();
 }
 
-console.log(`ðŸ”„ Cached URL expired for chunk: ${chunkKey}`);
+console.log(`🔄 Cached URL expired, refreshing...`);
 } catch (error) {
-console.log(`ðŸ”„ Cached URL failed for chunk: ${chunkKey}`, error.message);
+console.log(`🔄 Cached URL failed:`, error.message);
 }
 }
 
-// URL expired or failed, refresh it
-console.log(`ðŸ”„ Refreshing URL for chunk: ${chunkKey}`);
+// Refresh URL
+console.log(`🔄 Refreshing URL for chunk: ${chunkKey}`);
 
 const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
 
@@ -685,8 +611,6 @@ for (let botIndex = 0; botIndex < botTokens.length; botIndex++) {
 const botToken = botTokens[botIndex];
 
 try {
-console.log(`ðŸ¤– Refreshing with bot ${botIndex + 1}/${botTokens.length} for chunk: ${chunkKey}`);
-
 const getFileResponse = await fetchWithRetry(
 `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
 { signal: AbortSignal.timeout(15000) }
@@ -694,13 +618,7 @@ const getFileResponse = await fetchWithRetry(
 
 const getFileData = await getFileResponse.json();
 
-if (!getFileData.ok) {
-console.error(`ðŸ¤– Bot ${botIndex + 1} API error for chunk ${chunkKey}: ${getFileData.error_code} - ${getFileData.description}`);
-continue;
-}
-
-if (!getFileData.result?.file_path) {
-console.error(`ðŸ¤– Bot ${botIndex + 1} no file_path for chunk: ${chunkKey}`);
+if (!getFileData.ok || !getFileData.result?.file_path) {
 continue;
 }
 
@@ -711,24 +629,19 @@ signal: AbortSignal.timeout(30000)
 });
 
 if (response.ok) {
-// Update KV store with fresh URL (don't block on this)
+// Update KV store with fresh URL
 kvNamespace.put(chunkKey, JSON.stringify({
 ...chunkMetadata,
 directUrl: freshUrl,
-lastRefreshed: Date.now(),
-refreshedBy: `bot${botIndex + 1}`
-})).catch(error => {
-console.warn(`âš ï¸� Failed to update KV for chunk ${chunkKey}:`, error.message);
-});
+lastRefreshed: Date.now()
+})).catch(() => {});
 
-console.log(`âœ… URL refreshed successfully for chunk: ${chunkKey} using bot ${botIndex + 1}`);
+console.log(`✅ URL refreshed with bot ${botIndex + 1}`);
 return response.arrayBuffer();
 }
 
-console.error(`ðŸ“¡ Fresh URL failed for chunk ${chunkKey} with bot ${botIndex + 1}: ${response.status}`);
-
 } catch (botError) {
-console.error(`â�Œ Bot ${botIndex + 1} failed for chunk ${chunkKey}:`, botError.message);
+console.error(`❌ Bot ${botIndex + 1} failed:`, botError.message);
 continue;
 }
 }
@@ -737,9 +650,9 @@ throw new Error(`All refresh attempts failed for chunk: ${chunkKey}`);
 }
 
 /**
-* Fetch with retry logic and rate limit handling
+* Fetch with retry logic
 */
-async function fetchWithRetry(url, options = {}, retries = 5) {
+async function fetchWithRetry(url, options = {}, retries = 3) {
 for (let attempt = 0; attempt < retries; attempt++) {
 try {
 const response = await fetch(url, options);
@@ -748,49 +661,37 @@ if (response.ok) {
 return response;
 }
 
-// Handle rate limiting
 if (response.status === 429) {
 const retryAfter = parseInt(response.headers.get('Retry-After')) || 5;
-console.warn(`â�³ Rate limited, waiting ${retryAfter}s before retry ${attempt + 1}/${retries}`);
+console.warn(`⏳ Rate limited, waiting ${retryAfter}s`);
 await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
 continue;
 }
 
-// Handle server errors (5xx) - retry
 if (response.status >= 500) {
-console.error(`ðŸ”„ Server error ${response.status} on attempt ${attempt + 1}/${retries}`);
 if (attempt < retries - 1) {
 await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
 continue;
 }
 }
 
-// Client errors (4xx) - don't retry
 if (response.status >= 400 && response.status < 500) {
-console.error(`â�Œ Client error ${response.status}: ${response.statusText}`);
-return response; // Return even if not ok, let caller handle
+return response;
 }
 
-console.error(`â�Œ Attempt ${attempt + 1}/${retries} failed: ${response.status} ${response.statusText}`);
-
 } catch (error) {
-console.error(`â�Œ Attempt ${attempt + 1}/${retries} error:`, error.message);
-
-// If it's the last attempt, throw the error
 if (attempt === retries - 1) {
 throw error;
 }
 }
 
-// Wait before retry (exponential backoff)
 if (attempt < retries - 1) {
-const delay = Math.min(Math.pow(2, attempt) * 1000, 10000); // Max 10s delay
-console.log(`â�³ Waiting ${delay}ms before retry ${attempt + 2}/${retries}`);
+const delay = Math.min(Math.pow(2, attempt) * 1000, 5000);
 await new Promise(resolve => setTimeout(resolve, delay));
 }
 }
 
-throw new Error(`All ${retries} fetch attempts failed for ${url}`);
+throw new Error(`All ${retries} fetch attempts failed`);
 }
 
 /**
@@ -799,7 +700,7 @@ throw new Error(`All ${retries} fetch attempts failed for ${url}`);
 function createErrorResponse(message, status = 500, additionalHeaders = {}) {
 const headers = new Headers({
 'Content-Type': 'application/json',
-'Access-Control-Allow-Origin': '*',
+'Access-Control-Allow-Origin', '*',
 ...additionalHeaders
 });
 
@@ -810,7 +711,7 @@ timestamp: new Date().toISOString(),
 service: 'BTF Storage Streaming'
 };
 
-console.error(`â�Œ Error response: ${status} - ${message}`);
+console.error(`❌ Error response: ${status} - ${message}`);
 
 return new Response(JSON.stringify(errorResponse, null, 2), {
 status: status,
