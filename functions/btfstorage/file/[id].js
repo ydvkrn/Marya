@@ -1,9 +1,7 @@
 // functions/btfstorage/files/[id].js
 // 🚀 WORLD-CLASS Cloudflare Pages Functions - Ultra-Optimized Streaming Handler
-// URL: marya-hosting.pages.dev/btfstorage/files/MSM221-48U91C62-no.mp4
 
 const MIME_TYPES = {
-  // Video formats
   'mp4': 'video/mp4',
   'mkv': 'video/x-matroska',
   'avi': 'video/x-msvideo',
@@ -14,8 +12,6 @@ const MIME_TYPES = {
   '3gp': 'video/3gpp',
   'webm': 'video/webm',
   'ogv': 'video/ogg',
-  
-  // Audio formats
   'mp3': 'audio/mpeg',
   'wav': 'audio/wav',
   'aac': 'audio/mp4',
@@ -23,8 +19,6 @@ const MIME_TYPES = {
   'ogg': 'audio/ogg',
   'flac': 'audio/flac',
   'wma': 'audio/x-ms-wma',
-  
-  // Image formats
   'jpg': 'image/jpeg',
   'jpeg': 'image/jpeg',
   'png': 'image/png',
@@ -33,26 +27,19 @@ const MIME_TYPES = {
   'svg': 'image/svg+xml',
   'bmp': 'image/bmp',
   'tiff': 'image/tiff',
-  
-  // Document formats
   'pdf': 'application/pdf',
   'doc': 'application/msword',
   'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'txt': 'text/plain',
   'zip': 'application/zip',
   'rar': 'application/x-rar-compressed',
-  
-  // Streaming formats
   'm3u8': 'application/x-mpegURL',
   'ts': 'video/mp2t',
   'mpd': 'application/dash+xml'
 };
 
-// 🔥 PERFORMANCE OPTIMIZATION CONSTANTS
 const MAX_PARALLEL_CHUNKS = 3;
-const INSTANT_PLAY_SIZE = 30 * 1024 * 1024;
 const CACHE_TTL_LONG = 31536000;
-const CACHE_TTL_SHORT = 300;
 const FETCH_TIMEOUT = 25000;
 const MAX_RETRIES = 3;
 
@@ -60,10 +47,7 @@ export async function onRequest(context) {
   const { request, env, params } = context;
   const fileId = params.id;
   
-  console.log('🚀 WORLD-CLASS STREAMING STARTED:', fileId);
-  console.log('📍 Request URL:', request.url);
-  console.log('🔗 Method:', request.method);
-  console.log('📊 User-Agent:', request.headers.get('User-Agent') || 'Unknown');
+  console.log('🚀 Streaming started:', fileId);
   
   if (request.method === 'OPTIONS') {
     return new Response(null, { 
@@ -86,9 +70,7 @@ export async function onRequest(context) {
       
       if (extension === 'm3u8') {
         isHlsPlaylist = true;
-        console.log('📼 HLS Playlist requested:', actualId);
-      }
-      else if (extension === 'ts' && actualId.includes('-')) {
+      } else if (extension === 'ts' && actualId.includes('-')) {
         const segParts = actualId.split('-');
         const lastPart = segParts[segParts.length - 1];
         
@@ -96,49 +78,32 @@ export async function onRequest(context) {
           segmentIndex = parseInt(segParts.pop(), 10);
           actualId = segParts.join('-');
           isHlsSegment = true;
-          console.log('📼 HLS Segment requested:', actualId, 'Index:', segmentIndex);
         }
-      }
-      else {
+      } else {
         actualId = fileId.substring(0, fileId.lastIndexOf('.'));
         extension = fileId.substring(fileId.lastIndexOf('.') + 1).toLowerCase();
-        console.log('📄 Regular file requested:', actualId, 'Extension:', extension);
       }
     }
     
-    console.log('🔍 Fetching metadata for:', actualId);
     const metadataString = await env.FILES_KV.get(actualId);
     
     if (!metadataString) {
-      console.error('❌ File not found in KV storage:', actualId);
       return createErrorResponse('File not found', 404);
     }
     
     const metadata = JSON.parse(metadataString);
     
     if (!metadata.filename || !metadata.size) {
-      console.error('❌ Invalid metadata structure:', metadata);
       return createErrorResponse('Invalid file metadata', 400);
     }
     
     metadata.telegramFileId = metadata.telegramFileId || metadata.fileIdCode;
     
     if (!metadata.telegramFileId && (!metadata.chunks || metadata.chunks.length === 0)) {
-      console.error('❌ No telegramFileId or chunks in metadata:', actualId);
       return createErrorResponse('Missing file source data', 400);
     }
     
     const mimeType = metadata.contentType || MIME_TYPES[extension] || 'application/octet-stream';
-    
-    console.log(`📦 File Info:
-📝 Name: ${metadata.filename}
-📏 Size: ${Math.round(metadata.size/1024/1024)}MB (${metadata.size} bytes)
-🏷️ MIME: ${mimeType}
-🧩 Chunks: ${metadata.chunks?.length || 0}
-📅 Uploaded: ${metadata.uploadedAt || 'N/A'}
-🎵 HLS Playlist: ${isHlsPlaylist}
-📼 HLS Segment: ${isHlsSegment} (Index: ${segmentIndex})
-🔗 Has Telegram ID: ${!!metadata.telegramFileId}`);
     
     if (isHlsPlaylist) {
       return await handleHlsPlaylist(request, env, metadata, actualId);
@@ -156,11 +121,10 @@ export async function onRequest(context) {
       return await handleChunkedFile(request, env, metadata, mimeType, extension);
     }
     
-    return createErrorResponse('Invalid file format or configuration', 400);
+    return createErrorResponse('Invalid file format', 400);
     
   } catch (error) {
-    console.error('❌ Critical streaming error:', error);
-    console.error('📍 Error stack:', error.stack);
+    console.error('Error:', error);
     return createErrorResponse(`Streaming error: ${error.message}`, 500);
   }
 }
@@ -176,10 +140,7 @@ function createCorsHeaders() {
 }
 
 async function handleHlsPlaylist(request, env, metadata, actualId) {
-  console.log('📼 Generating HLS playlist for:', actualId);
-  
   if (!metadata.chunks || metadata.chunks.length === 0) {
-    console.error('❌ HLS playlist requested for non-chunked file');
     return createErrorResponse('HLS not supported for single files', 400);
   }
   
@@ -187,49 +148,34 @@ async function handleHlsPlaylist(request, env, metadata, actualId) {
   const segmentDuration = 6;
   const baseUrl = new URL(request.url).origin;
   
-  let playlist = `#EXTM3U
-#EXT-X-VERSION:3
-#EXT-X-TARGETDURATION:${segmentDuration}
-#EXT-X-MEDIA-SEQUENCE:0
-#EXT-X-PLAYLIST-TYPE:VOD
-`;
+  const playlistLines = ['#EXTM3U', '#EXT-X-VERSION:3', `#EXT-X-TARGETDURATION:${segmentDuration}`, '#EXT-X-MEDIA-SEQUENCE:0', '#EXT-X-PLAYLIST-TYPE:VOD'];
   
   for (let i = 0; i < chunks.length; i++) {
-    playlist += `#EXTINF:${segmentDuration.toFixed(1)},
-${baseUrl}/btfstorage/files/${actualId}-${i}.ts
-`;
+    playlistLines.push(`#EXTINF:${segmentDuration.toFixed(1)},`);
+    playlistLines.push(`${baseUrl}/btfstorage/files/${actualId}-${i}.ts`);
   }
   
-  playlist += '#EXT-X-ENDLIST
+  playlistLines.push('#EXT-X-ENDLIST');
+  
+  const playlist = playlistLines.join('
+') + '
 ';
   
   const headers = new Headers();
   headers.set('Content-Type', 'application/x-mpegURL');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  headers.set('Pragma', 'no-cache');
-  headers.set('Expires', '0');
-  
-  console.log(`📼 HLS playlist generated successfully:
-🧩 Segments: ${chunks.length}
-⏱️ Duration per segment: ${segmentDuration}s
-📊 Total estimated duration: ${Math.round(chunks.length * segmentDuration / 60)}min`);
   
   return new Response(playlist, { status: 200, headers });
 }
 
 async function handleHlsSegment(request, env, metadata, segmentIndex) {
-  console.log('📼 Serving HLS segment:', segmentIndex);
-  
   if (!metadata.chunks || segmentIndex >= metadata.chunks.length || segmentIndex < 0) {
-    console.error('❌ Invalid segment index:', segmentIndex, 'Available:', metadata.chunks?.length);
     return createErrorResponse('Segment not found', 404);
   }
   
   try {
     const chunkInfo = metadata.chunks[segmentIndex];
-    console.log('📥 Loading segment chunk:', chunkInfo.keyName || chunkInfo.chunkKey);
-    
     const chunkData = await loadSingleChunk(env, chunkInfo);
     
     const headers = new Headers();
@@ -237,37 +183,24 @@ async function handleHlsSegment(request, env, metadata, segmentIndex) {
     headers.set('Content-Length', chunkData.byteLength.toString());
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
-    headers.set('Content-Disposition', 'inline');
     headers.set('Accept-Ranges', 'bytes');
-    
-    console.log(`📼 HLS segment served successfully:
-📍 Index: ${segmentIndex}
-📏 Size: ${Math.round(chunkData.byteLength/1024/1024)}MB
-🏷️ Type: video/mp2t`);
     
     return new Response(chunkData, { status: 200, headers });
     
   } catch (error) {
-    console.error('❌ HLS segment error:', error);
     return createErrorResponse(`Segment loading failed: ${error.message}`, 500);
   }
 }
 
 async function handleSingleFile(request, env, metadata, mimeType) {
-  console.log('🚀 Single file streaming initiated');
-  
   const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
   
   if (botTokens.length === 0) {
-    console.error('❌ No bot tokens configured');
     return createErrorResponse('Service configuration error', 503);
   }
   
-  console.log(`🤖 Available bot tokens: ${botTokens.length}`);
-  
   for (let botIndex = 0; botIndex < botTokens.length; botIndex++) {
     const botToken = botTokens[botIndex];
-    console.log(`🤖 Trying bot ${botIndex + 1}/${botTokens.length}`);
     
     try {
       const getFileResponse = await fetchWithRetry(
@@ -278,19 +211,16 @@ async function handleSingleFile(request, env, metadata, mimeType) {
       const getFileData = await getFileResponse.json();
       
       if (!getFileData.ok || !getFileData.result?.file_path) {
-        console.error(`🤖 Bot ${botIndex + 1} API error: ${getFileData.error_code} - ${getFileData.description}`);
         continue;
       }
       
       const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-      console.log('📡 Telegram direct URL obtained');
       
       const requestHeaders = {};
       const rangeHeader = request.headers.get('Range');
       
       if (rangeHeader) {
         requestHeaders['Range'] = rangeHeader;
-        console.log('🎯 Range request:', rangeHeader);
       }
       
       const telegramResponse = await fetchWithRetry(directUrl, {
@@ -299,7 +229,6 @@ async function handleSingleFile(request, env, metadata, mimeType) {
       });
       
       if (!telegramResponse.ok) {
-        console.error(`📡 Telegram file fetch failed: ${telegramResponse.status} ${telegramResponse.statusText}`);
         continue;
       }
       
@@ -320,18 +249,9 @@ async function handleSingleFile(request, env, metadata, mimeType) {
       const url = new URL(request.url);
       if (url.searchParams.has('dl') || url.searchParams.has('download')) {
         responseHeaders.set('Content-Disposition', `attachment; filename="${metadata.filename}"`);
-        console.log('📥 Download mode enabled');
       } else {
         responseHeaders.set('Content-Disposition', 'inline');
-        console.log('👁️ Inline display mode');
       }
-      
-      console.log(`🚀 Single file streaming successful:
-📝 File: ${metadata.filename}
-📊 Status: ${telegramResponse.status}
-🤖 Bot: ${botIndex + 1}
-📏 Content-Length: ${telegramResponse.headers.get('content-length') || 'Unknown'}
-🎯 Range: ${rangeHeader || 'Full file'}`);
       
       return new Response(telegramResponse.body, {
         status: telegramResponse.status,
@@ -339,12 +259,10 @@ async function handleSingleFile(request, env, metadata, mimeType) {
       });
       
     } catch (botError) {
-      console.error(`❌ Bot ${botIndex + 1} failed:`, botError.message);
       continue;
     }
   }
   
-  console.error('❌ All bot tokens failed');
   return createErrorResponse('All streaming servers failed', 503);
 }
 
@@ -356,13 +274,6 @@ async function handleChunkedFile(request, env, metadata, mimeType, extension) {
   const rangeHeader = request.headers.get('Range');
   const url = new URL(request.url);
   const isDownload = url.searchParams.has('dl') || url.searchParams.has('download');
-  
-  console.log(`🎬 Chunked file streaming:
-🧩 Total chunks: ${chunks.length}
-📏 Total size: ${Math.round(totalSize/1024/1024)}MB
-📦 Chunk size: ${Math.round(chunkSize/1024/1024)}MB
-🎯 Range request: ${rangeHeader || 'None'}
-📥 Download mode: ${isDownload}`);
   
   if (rangeHeader) {
     return await handleParallelRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize, isDownload);
@@ -377,7 +288,6 @@ async function handleChunkedFile(request, env, metadata, mimeType, extension) {
 
 async function handleOptimizedInstantPlay(request, env, metadata, mimeType, totalSize) {
   const chunks = metadata.chunks;
-  console.log('⚡ OPTIMIZED INSTANT PLAY: Parallel streaming for lightning-fast start...');
   
   try {
     const maxInitialChunks = Math.min(2, chunks.length);
@@ -387,7 +297,6 @@ async function handleOptimizedInstantPlay(request, env, metadata, mimeType, tota
       chunkPromises.push(loadSingleChunk(env, chunks[i]));
     }
     
-    console.log(`⚡ Loading ${maxInitialChunks} chunks in parallel...`);
     const loadedChunks = await Promise.all(chunkPromises);
     
     let loadedBytes = 0;
@@ -397,14 +306,8 @@ async function handleOptimizedInstantPlay(request, env, metadata, mimeType, tota
           const uint8Array = new Uint8Array(loadedChunks[i]);
           controller.enqueue(uint8Array);
           loadedBytes += uint8Array.byteLength;
-          console.log(`⚡ Streamed chunk ${i + 1}: ${Math.round(uint8Array.byteLength/1024/1024)}MB`);
         }
-        console.log('⚡ Instant play chunks streaming completed');
         controller.close();
-      },
-      
-      cancel(reason) {
-        console.log('⚡ Stream cancelled:', reason);
       }
     });
     
@@ -414,17 +317,11 @@ async function handleOptimizedInstantPlay(request, env, metadata, mimeType, tota
     headers.set('Content-Range', `bytes 0-${Math.min(loadedBytes, totalSize) - 1}/${totalSize}`);
     headers.set('Accept-Ranges', 'bytes');
     headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Content-Disposition', 'inline');
     headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
-    headers.set('X-Streaming-Mode', 'optimized-instant-play');
-    headers.set('X-Parallel-Chunks', maxInitialChunks.toString());
-    
-    console.log(`⚡ INSTANT PLAY READY: ${Math.round(loadedBytes/1024/1024)}MB loaded in parallel for ultra-fast start`);
     
     return new Response(stream, { status: 206, headers });
     
   } catch (error) {
-    console.error('⚡ Instant play error:', error);
     return createErrorResponse(`Instant play failed: ${error.message}`, 500);
   }
 }
@@ -433,11 +330,8 @@ async function handleParallelRangeRequest(request, env, metadata, rangeHeader, m
   const totalSize = metadata.size;
   const chunks = metadata.chunks;
   
-  console.log('🎯 PARALLEL RANGE REQUEST:', rangeHeader);
-  
   const rangeMatch = rangeHeader.match(/bytes=(d+)-(d*)/);
   if (!rangeMatch) {
-    console.error('❌ Invalid range format:', rangeHeader);
     return createErrorResponse('Invalid range format', 416, {
       'Content-Range': `bytes */${totalSize}`
     });
@@ -448,31 +342,18 @@ async function handleParallelRangeRequest(request, env, metadata, rangeHeader, m
   
   if (end >= totalSize) end = totalSize - 1;
   if (start >= totalSize || start > end) {
-    console.error('❌ Range not satisfiable:', `${start}-${end}/${totalSize}`);
     return createErrorResponse('Range not satisfiable', 416, {
       'Content-Range': `bytes */${totalSize}`
     });
   }
   
   const requestedSize = end - start + 1;
-  console.log(`🎯 Range details:
-📍 Start: ${start} (${Math.round(start/1024/1024)}MB)
-📍 End: ${end} (${Math.round(end/1024/1024)}MB)
-📏 Requested: ${Math.round(requestedSize/1024/1024)}MB
-📊 Total size: ${Math.round(totalSize/1024/1024)}MB`);
   
   const startChunk = Math.floor(start / chunkSize);
   const endChunk = Math.floor(end / chunkSize);
   const neededChunks = chunks.slice(startChunk, endChunk + 1);
   
-  console.log(`🧩 Chunk analysis:
-🎯 Start chunk: ${startChunk}
-🎯 End chunk: ${endChunk}
-📦 Chunks needed: ${neededChunks.length}
-📊 Chunk size: ${Math.round(chunkSize/1024/1024)}MB`);
-  
   try {
-    console.log(`🔥 Loading ${neededChunks.length} chunks in parallel...`);
     const chunkPromises = neededChunks.map(chunkInfo => loadSingleChunk(env, chunkInfo));
     const loadedChunks = await Promise.all(chunkPromises);
     
@@ -488,7 +369,6 @@ async function handleParallelRangeRequest(request, env, metadata, rangeHeader, m
       if (chunkStart < chunkEnd) {
         const chunkSlice = uint8Array.slice(chunkStart, chunkEnd);
         rangeData.push(chunkSlice);
-        console.log(`🎯 Chunk ${startChunk + i + 1} processed: ${chunkSlice.length} bytes`);
       }
       
       currentPosition += chunkSize;
@@ -512,15 +392,10 @@ async function handleParallelRangeRequest(request, env, metadata, rangeHeader, m
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Content-Disposition', isDownload ? `attachment; filename="${metadata.filename}"` : 'inline');
     headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
-    headers.set('X-Streaming-Mode', 'parallel-range-request');
-    headers.set('X-Parallel-Chunks', neededChunks.length.toString());
-    
-    console.log(`✅ PARALLEL RANGE RESPONSE READY: ${Math.round(requestedSize/1024/1024)}MB loaded in parallel`);
     
     return new Response(combinedData, { status: 206, headers });
     
   } catch (error) {
-    console.error('❌ Parallel range request error:', error);
     return createErrorResponse(`Range request failed: ${error.message}`, 500);
   }
 }
@@ -530,13 +405,7 @@ async function handleParallelFullDownload(request, env, metadata, mimeType) {
   const filename = metadata.filename;
   const totalSize = metadata.size;
   
-  console.log(`📥 PARALLEL FULL DOWNLOAD: Streaming complete file
-📝 File: ${filename}
-📏 Size: ${Math.round(totalSize/1024/1024)}MB
-🧩 Chunks: ${chunks.length}`);
-  
   let chunkIndex = 0;
-  let streamedBytes = 0;
   
   const stream = new ReadableStream({
     async pull(controller) {
@@ -544,8 +413,6 @@ async function handleParallelFullDownload(request, env, metadata, mimeType) {
         try {
           const batchSize = Math.min(MAX_PARALLEL_CHUNKS, chunks.length - chunkIndex);
           const batchPromises = [];
-          
-          console.log(`📥 Loading batch of ${batchSize} chunks (${chunkIndex + 1}-${chunkIndex + batchSize}/${chunks.length})`);
           
           for (let i = 0; i < batchSize; i++) {
             batchPromises.push(loadSingleChunk(env, chunks[chunkIndex + i]));
@@ -556,26 +423,17 @@ async function handleParallelFullDownload(request, env, metadata, mimeType) {
           for (let i = 0; i < batchChunks.length; i++) {
             const uint8Array = new Uint8Array(batchChunks[i]);
             controller.enqueue(uint8Array);
-            streamedBytes += uint8Array.byteLength;
-            console.log(`📥 Chunk ${chunkIndex + i + 1} streamed: ${Math.round(uint8Array.byteLength/1024/1024)}MB`);
           }
           
           chunkIndex += batchSize;
-          console.log(`📥 Progress: ${Math.round((chunkIndex/chunks.length)*100)}% (${Math.round(streamedBytes/1024/1024)}MB)`);
           
         } catch (error) {
-          console.error(`❌ Batch download failed at chunk ${chunkIndex + 1}:`, error);
           controller.error(error);
           return;
         }
       }
       
-      console.log(`📥 Download completed: ${Math.round(streamedBytes/1024/1024)}MB streamed with parallel loading`);
       controller.close();
-    },
-    
-    cancel(reason) {
-      console.log('📥 Download stream cancelled:', reason);
     }
   });
   
@@ -583,12 +441,8 @@ async function handleParallelFullDownload(request, env, metadata, mimeType) {
   headers.set('Content-Type', mimeType);
   headers.set('Content-Length', totalSize.toString());
   headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-  headers.set('Accept-Control-Allow-Origin', '*');
-  headers.set('X-Download-Mode', 'parallel-full-stream');
-  headers.set('X-Batch-Size', MAX_PARALLEL_CHUNKS.toString());
+  headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
-  
-  console.log(`📥 Parallel full download stream initiated with batch size: ${MAX_PARALLEL_CHUNKS}`);
   
   return new Response(stream, { status: 200, headers });
 }
@@ -596,8 +450,6 @@ async function handleParallelFullDownload(request, env, metadata, mimeType) {
 async function loadSingleChunk(env, chunkInfo) {
   const kvNamespace = env[chunkInfo.kvNamespace] || env.FILES_KV;
   const chunkKey = chunkInfo.keyName || chunkInfo.chunkKey;
-  
-  console.log(`📥 Loading chunk: ${chunkKey}`);
   
   const metadataString = await kvNamespace.get(chunkKey);
   if (!metadataString) {
@@ -614,17 +466,12 @@ async function loadSingleChunk(env, chunkInfo) {
       });
       
       if (response.ok) {
-        console.log(`✅ Chunk loaded from cached URL: ${chunkKey}`);
         return response.arrayBuffer();
       }
-      
-      console.log(`🔄 Cached URL expired for chunk: ${chunkKey}`);
     } catch (error) {
-      console.log(`🔄 Cached URL failed for chunk: ${chunkKey}`, error.message);
+      console.log('Cached URL failed, refreshing...');
     }
   }
-  
-  console.log(`🔄 Refreshing URL for chunk: ${chunkKey}`);
   
   const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
   
@@ -632,8 +479,6 @@ async function loadSingleChunk(env, chunkInfo) {
     const botToken = botTokens[botIndex];
     
     try {
-      console.log(`🤖 Refreshing with bot ${botIndex + 1}/${botTokens.length} for chunk: ${chunkKey}`);
-      
       const getFileResponse = await fetchWithRetry(
         `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
         { signal: AbortSignal.timeout(15000) }
@@ -641,13 +486,7 @@ async function loadSingleChunk(env, chunkInfo) {
       
       const getFileData = await getFileResponse.json();
       
-      if (!getFileData.ok) {
-        console.error(`🤖 Bot ${botIndex + 1} API error for chunk ${chunkKey}: ${getFileData.error_code} - ${getFileData.description}`);
-        continue;
-      }
-      
-      if (!getFileData.result?.file_path) {
-        console.error(`🤖 Bot ${botIndex + 1} no file_path for chunk: ${chunkKey}`);
+      if (!getFileData.ok || !getFileData.result?.file_path) {
         continue;
       }
       
@@ -661,20 +500,13 @@ async function loadSingleChunk(env, chunkInfo) {
         kvNamespace.put(chunkKey, JSON.stringify({
           ...chunkMetadata,
           directUrl: freshUrl,
-          lastRefreshed: Date.now(),
-          refreshedBy: `bot${botIndex + 1}`
-        })).catch(error => {
-          console.warn(`⚠️ Failed to update KV for chunk ${chunkKey}:`, error.message);
-        });
+          lastRefreshed: Date.now()
+        })).catch(() => {});
         
-        console.log(`✅ URL refreshed successfully for chunk: ${chunkKey} using bot ${botIndex + 1}`);
         return response.arrayBuffer();
       }
       
-      console.error(`📡 Fresh URL failed for chunk ${chunkKey} with bot ${botIndex + 1}: ${response.status}`);
-      
     } catch (botError) {
-      console.error(`❌ Bot ${botIndex + 1} failed for chunk ${chunkKey}:`, botError.message);
       continue;
     }
   }
@@ -693,30 +525,21 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
       
       if (response.status === 429) {
         const retryAfter = parseInt(response.headers.get('Retry-After')) || Math.pow(2, attempt);
-        console.warn(`⏳ Rate limited, waiting ${retryAfter}s before retry ${attempt + 1}/${retries}`);
         await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
         continue;
       }
       
-      if (response.status >= 500) {
-        console.error(`🔄 Server error ${response.status} on attempt ${attempt + 1}/${retries}`);
-        if (attempt < retries - 1) {
-          const delay = Math.min(Math.pow(2, attempt) * 1000, 8000);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
-        }
+      if (response.status >= 500 && attempt < retries - 1) {
+        const delay = Math.min(Math.pow(2, attempt) * 1000, 8000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
       }
       
       if (response.status >= 400 && response.status < 500) {
-        console.error(`❌ Client error ${response.status}: ${response.statusText}`);
         return response;
       }
       
-      console.error(`❌ Attempt ${attempt + 1}/${retries} failed: ${response.status} ${response.statusText}`);
-      
     } catch (error) {
-      console.error(`❌ Attempt ${attempt + 1}/${retries} error:`, error.message);
-      
       if (attempt === retries - 1) {
         throw error;
       }
@@ -724,12 +547,11 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
     
     if (attempt < retries - 1) {
       const delay = Math.min(Math.pow(2, attempt) * 1000, 8000);
-      console.log(`⏳ Waiting ${delay}ms before retry ${attempt + 2}/${retries}`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
   
-  throw new Error(`All ${retries} fetch attempts failed for ${url}`);
+  throw new Error(`All ${retries} fetch attempts failed`);
 }
 
 function createErrorResponse(message, status = 500, additionalHeaders = {}) {
@@ -742,11 +564,8 @@ function createErrorResponse(message, status = 500, additionalHeaders = {}) {
   const errorResponse = {
     error: message,
     status: status,
-    timestamp: new Date().toISOString(),
-    service: 'BTF Storage - World-Class Streaming'
+    timestamp: new Date().toISOString()
   };
-  
-  console.error(`❌ Error response: ${status} - ${message}`);
   
   return new Response(JSON.stringify(errorResponse, null, 2), {
     status: status,
