@@ -339,115 +339,128 @@
 
     <script>
         let fileCounter = 0;
-        let totalSize = 0;
-        let totalChunks = 0;
-        let uploadStats = { total: 0, completed: 0, failed: 0 };
-        let isProcessing = false;
+let totalSize = 0;
+let totalChunks = 0;
+let uploadStats = { total: 0, completed: 0, failed: 0 };
+let isProcessing = false;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('✅ DOM fully loaded, initializing MARYA VAULT ULTIMATE...');
-            initializeSystem();
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ DOM fully loaded, initializing MARYA VAULT ULTIMATE...');
+    initializeSystem();
+});
 
-        function initializeSystem() {
-            setupFileUpload();
-            setupUrlUpload();
-            setupDragDrop();
-            console.log('✅ System initialized successfully');
+function initializeSystem() {
+    setupFileUpload();
+    setupUrlUpload();
+    setupDragDrop();
+    console.log('✅ System initialized successfully');
+}
+
+function showTab(event, tabName) {
+    console.log(`Switching to tab: ${tabName}`);
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+    document.getElementById(tabName + '-content').classList.add('active');
+}
+
+function setupFileUpload() {
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+
+    dropzone.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Dropzone clicked, isProcessing:', isProcessing);
+        if (!isProcessing) {
+            console.log('Triggering file input click');
+            fileInput.click();
+        } else {
+            console.log('Dropzone click ignored: processing in progress');
+            showToast('Please wait, upload in progress', 'warning');
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        console.log('File input changed, files selected:', e.target.files.length);
+        if (isProcessing) {
+            console.log('File selection ignored: processing in progress');
+            showToast('Please wait, upload in progress', 'warning');
+            e.target.value = '';
+            return;
         }
 
-        function showTab(tabName) {
-            console.log(`Switching to tab: ${tabName}`);
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById(tabName + '-content').classList.add('active');
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            handleFiles(files);
         }
+        e.target.value = ''; // Clear input for re-selection
+    });
+}
 
-        function setupFileUpload() {
-            const fileInput = document.getElementById('fileInput');
-            const dropzone = document.getElementById('dropzone');
-
-            dropzone.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Dropzone clicked, isProcessing:', isProcessing);
-                if (!isProcessing) {
-                    console.log('Triggering file input click');
-                    fileInput.click();
-                } else {
-                    console.log('Dropzone click ignored: processing in progress');
-                    showToast('Please wait, upload in progress', 'warning');
-                }
-            });
-
-            fileInput.addEventListener('change', (e) => {
-                console.log('File input changed, files selected:', e.target.files.length);
-                if (isProcessing) {
-                    console.log('File selection ignored: processing in progress');
-                    showToast('Please wait, upload in progress', 'warning');
-                    e.target.value = '';
-                    return;
-                }
-                
-                const files = Array.from(e.target.files);
-                if (files.length > 0) {
-                    handleFiles(files);
-                }
-                e.target.value = ''; // Clear input for re-selection
-            });
+function setupUrlUpload() {
+    const urlInput = document.getElementById('urlInput');
+    const uploadBtn = document.getElementById('urlUploadBtn');
+    
+    urlInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !isProcessing) {
+            console.log('Enter pressed in URL input');
+            uploadFromUrl();
         }
-
-        function setupUrlUpload() {
-            const urlInput = document.getElementById('urlInput');
-            urlInput.addEventListener('keypress', e => {
-                if (e.key === 'Enter' && !isProcessing) {
-                    console.log('Enter pressed in URL input');
-                    uploadFromUrl();
-                }
-            });
+    });
+    uploadBtn.addEventListener('click', () => {
+        if (!isProcessing) {
+            uploadFromUrl();
+        } else {
+            showToast('Please wait, upload in progress', 'warning');
         }
+    });
+}
 
-        function setupDragDrop() {
-            const dropzone = document.getElementById('dropzone');
+function setupDragDrop() {
+    const dropzone = document.getElementById('dropzone');
 
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
 
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => {
-                    if (!isProcessing) {
-                        dropzone.classList.add('dragover');
-                    }
-                }, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => {
-                    dropzone.classList.remove('dragover');
-                }, false);
-            });
-
-            dropzone.addEventListener('drop', e => {
-                console.log('Files dropped:', e.dataTransfer.files.length);
-                if (!isProcessing) {
-                    const files = Array.from(e.dataTransfer.files);
-                    if (files.length > 0) {
-                        handleFiles(files);
-                    }
-                } else {
-                    console.log('Drop ignored: processing in progress');
-                    showToast('Please wait, upload in progress', 'warning');
-                }
-            }, false);
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+            if (!isProcessing) {
+                dropzone.classList.add('dragover');
             }
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+            dropzone.classList.remove('dragover');
+        }, false);
+    });
+
+    dropzone.addEventListener('drop', e => {
+        console.log('Files dropped:', e.dataTransfer.files.length);
+        if (!isProcessing) {
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        } else {
+            console.log('Drop ignored: processing in progress');
+            showToast('Please wait, upload in progress', 'warning');
         }
+    }, false);
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}
+
+// The rest of your code (handleFiles, uploadFile, uploadFromUrl, UI updates etc.) remains unchanged...
 
         function handleFiles(files) {
             console.log('📦 Handling files:', files.length);
