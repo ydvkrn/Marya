@@ -1,16 +1,5 @@
 {
   "version": 1,
-  "include": [
-    "/*"
-  ],
-  "exclude": [
-    "/upload",
-    "/upload-from-url",
-    "/assets/*",
-    "/static/*",
-    "/_next/static/*",
-    "/favicon.ico",
-    "/robots.txt",
-    "/.well-known/*"
-  ]
+  "include": ["/upload", "/upload-from-url", "/api/*", "/btfstorage/*"],
+  "exclude": ["/assets/*", "/favicon.ico"]
 }
