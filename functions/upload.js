@@ -1,36 +1,43 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
-  console.log('=== MARYA VAULT MULTI-KV UPLOAD START ===');
+  console.log('=== MARYA VAULT UPLOAD START ===');
   console.log('Request method:', request.method);
   console.log('Request URL:', request.url);
+  console.log('Timestamp:', new Date().toISOString());
 
-  // ✅ Enhanced CORS headers
+  // ✅ CRITICAL: Enhanced CORS headers for all responses
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Max-Age': '86400'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET, PUT, DELETE',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Requested-With',
+    'Access-Control-Max-Age': '86400',
+    'Access-Control-Expose-Headers': 'X-File-Id, X-Upload-Duration, X-Total-Chunks'
   };
 
-  // ✅ Handle preflight OPTIONS request
+  // ✅ CRITICAL: Handle preflight OPTIONS request FIRST
   if (request.method === 'OPTIONS') {
+    console.log('✅ Handling OPTIONS preflight request');
     return new Response(null, {
       status: 204,
       headers: corsHeaders
     });
   }
 
-  // ✅ Only allow POST method
+  // ✅ CRITICAL: Only allow POST method for uploads
   if (request.method !== 'POST') {
+    console.error(`❌ Invalid method: ${request.method}`);
     return new Response(JSON.stringify({
       success: false,
-      error: 'Method not allowed. Use POST method.',
+      error: 'Method not allowed. Use POST method for file uploads.',
+      allowedMethods: ['POST', 'OPTIONS'],
+      receivedMethod: request.method,
       timestamp: new Date().toISOString()
     }), {
       status: 405,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
+        'Allow': 'POST, OPTIONS',
         ...corsHeaders
       }
     });
@@ -42,7 +49,8 @@ export async function onRequest(context) {
 
     console.log('Environment check:', {
       hasBotToken: !!BOT_TOKEN,
-      hasChannelId: !!CHANNEL_ID
+      hasChannelId: !!CHANNEL_ID,
+      timestamp: Date.now()
     });
 
     // ✅ All 25 KV namespaces array
@@ -74,24 +82,24 @@ export async function onRequest(context) {
       { kv: env.FILES_KV25, name: 'FILES_KV25' }
     ].filter(item => item.kv);
 
-    console.log(`Available KV namespaces: ${kvNamespaces.length}`);
+    console.log(`✅ Available KV namespaces: ${kvNamespaces.length}/25`);
 
     // ✅ Validation checks
     if (!BOT_TOKEN || !CHANNEL_ID) {
-      throw new Error('Missing bot credentials. Please configure BOT_TOKEN and CHANNEL_ID.');
+      throw new Error('Missing bot credentials. Please configure BOT_TOKEN and CHANNEL_ID in environment variables.');
     }
 
     if (kvNamespaces.length === 0) {
-      throw new Error('No KV namespaces available. Please bind at least FILES_KV.');
+      throw new Error('No KV namespaces available. Please bind at least FILES_KV in your Worker settings.');
     }
 
     // ✅ Parse multipart form data
     let formData;
     try {
       formData = await request.formData();
-      console.log('Form data parsed successfully');
+      console.log('✅ Form data parsed successfully');
     } catch (parseError) {
-      console.error('Form data parse error:', parseError);
+      console.error('❌ Form data parse error:', parseError);
       throw new Error('Invalid form data. Please ensure you are sending multipart/form-data.');
     }
 
@@ -101,7 +109,7 @@ export async function onRequest(context) {
       throw new Error('No file provided. Please include a file in the form data with key "file".');
     }
 
-    console.log('File received:', {
+    console.log('📄 File received:', {
       name: file.name,
       size: file.size,
       type: file.type
@@ -168,7 +176,7 @@ export async function onRequest(context) {
     const uploadEndTime = Date.now();
     const uploadDuration = ((uploadEndTime - uploadStartTime) / 1000).toFixed(2);
 
-    console.log(`All ${totalChunks} chunks uploaded successfully in ${uploadDuration}s`);
+    console.log(`✅ All ${totalChunks} chunks uploaded successfully in ${uploadDuration}s`);
 
     // ✅ Store master metadata in primary KV with enhanced info
     const masterMetadata = {
@@ -193,7 +201,7 @@ export async function onRequest(context) {
     };
 
     await kvNamespaces[0].kv.put(fileId, JSON.stringify(masterMetadata));
-    console.log('Master metadata stored in', kvNamespaces[0].name);
+    console.log('✅ Master metadata stored in', kvNamespaces[0].name);
 
     // ✅ Generate response URLs
     const baseUrl = new URL(request.url).origin;
@@ -230,7 +238,7 @@ export async function onRequest(context) {
       timestamp: new Date().toISOString()
     };
 
-    console.log('✅ UPLOAD COMPLETED:', {
+    console.log('✅✅✅ UPLOAD COMPLETED:', {
       fileId,
       filename: file.name,
       size: file.size,
@@ -238,7 +246,7 @@ export async function onRequest(context) {
       duration: uploadDuration
     });
 
-    // ✅ Return proper JSON response with correct headers
+    // ✅ CRITICAL: Return proper JSON response with CORS headers
     return new Response(JSON.stringify(result, null, 2), {
       status: 200,
       headers: {
@@ -251,10 +259,10 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    console.error('❌ UPLOAD ERROR:', error);
+    console.error('❌❌❌ UPLOAD ERROR:', error);
     console.error('Error stack:', error.stack);
 
-    // ✅ Enhanced error response
+    // ✅ Enhanced error response with CORS
     const errorResponse = {
       success: false,
       error: {
@@ -284,18 +292,18 @@ async function uploadChunkToKVWithRetry(chunkFile, fileId, chunkIndex, botToken,
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Chunk ${chunkIndex}: Upload attempt ${attempt}/${maxRetries} to ${kvNamespace.name}`);
+      console.log(`📤 Chunk ${chunkIndex}: Upload attempt ${attempt}/${maxRetries} to ${kvNamespace.name}`);
 
       return await uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace);
 
     } catch (error) {
-      console.error(`Chunk ${chunkIndex}: Attempt ${attempt} failed:`, error.message);
+      console.error(`❌ Chunk ${chunkIndex}: Attempt ${attempt} failed:`, error.message);
       lastError = error;
 
       if (attempt < maxRetries) {
         // Exponential backoff
         const delayMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-        console.log(`Retrying chunk ${chunkIndex} after ${delayMs}ms...`);
+        console.log(`⏳ Retrying chunk ${chunkIndex} after ${delayMs}ms...`);
         await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
