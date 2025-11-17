@@ -1,7 +1,8 @@
 {
   "version": 1,
   "include": [
-    "/*"
+    "/*",
+    "/upload"
   ],
   "exclude": [
     "/upload",
