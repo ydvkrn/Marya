@@ -186,9 +186,7 @@ export async function onRequest(context) {
     if (!filename) {
       const disposition = fileResponse.headers.get('content-disposition');
       if (disposition && disposition.includes('filename=')) {
-        const matches = disposition.match(/filename[^;=
-]*=((['"]).*?\u0002|[^;
-]*)/);
+        const matches = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
         if (matches && matches[1]) {
           filename = matches[1].replace(/['"]/g, '');
         }
