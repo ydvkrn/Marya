@@ -1,156 +1,238 @@
 // functions/upload-from-url.js
-// MARYA VAULT URL UPLOAD v3.0 → 625 MB MAX | 25 KV | Cloudflare Pages Ready
+export async function onRequest(context) {
+  const { request, env } = context;
 
-export async function onRequestPost({ request, env }) {
+  // CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': '*',
   };
 
-  if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  // Handle preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    });
+  }
+
+  // Only allow POST
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Method not allowed. Use POST.'
+    }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
 
   try {
-    // ====== 25 KV BINDINGS (tune already bind kar diye hain) ======
-    const kvNamespaces = [
-      env.FILES_KV,  env.FILES_KV2,  env.FILES_KV3,  env.FILES_KV4,  env.FILES_KV5,
-      env.FILES_KV6,  env.FILES_KV7,  env.FILES_KV8,  env.FILES_KV9,  env.FILES_KV10,
-      env.FILES_KV11, env.FILES_KV12, env.FILES_KV13, env.FILES_KV14, env.FILES_KV15,
-      env.FILES_KV16, env.FILES_KV17, env.FILES_KV18, env.FILES_KV19, env.FILES_KV20,
-      env.FILES_KV21, env.FILES_KV22, env.FILES_KV23, env.FILES_KV24, env.FILES_KV25
-    ].filter(Boolean); // jo bind nahi hoga wo skip
+    const { url } = await request.json();
 
-    if (kvNamespaces.length < 10) throw new Error('Kam se kam 10 KV bind karo bhai!');
-
-    const BOT_TOKEN = env.BOT_TOKEN;
-    const CHANNEL_ID = env.CHANNEL_ID;
-    if (!BOT_TOKEN || !CHANNEL_ID) throw new Error('BOT_TOKEN ya CHANNEL_ID missing hai');
-
-    // ====== MAX LIMITS (25 KV = 625 MB possible) ======
-    const MAX_FILE_SIZE = 625 * 1024 * 1024;  // 625 MB
-    const CHUNK_SIZE = 25 * 1024 * 1024;     // 25 MB (KV ka full limit)
-
-    // ====== Parse JSON body ======
-    const body = await request.json();
-    const url = body.url || body.fileUrl;
-    const customName = body.filename || null;
-
-    if (!url) return new Response(JSON.stringify({ success: false, error: 'Bhai URL toh daal!' }), { status: 400, headers: corsHeaders });
-
-    // ====== Fetch file from URL ======
-    const res = await fetch(url, { redirect: 'follow' });
-    if (!res.ok || !res.body) throw new Error('URL se file nahi aayi');
-
-    const blob = await res.blob();
-    if (blob.size === 0) throw new Error('File khali hai');
-    if (blob.size > MAX_FILE_SIZE) throw new Error(`File bohot bada hai: ${ (blob.size/1024/1024).toFixed(1) } MB (Max 625 MB)`);
-
-    let filename = customName || url.split('/').pop().split('?')[0] || 'unknown_file';
-    filename = decodeURIComponent(filename.replace(/[<>:"|?*]/g, '_')).substring(0, 200);
-
-    const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
-
-    // ====== Chunking ======
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    if (totalChunks > kvNamespaces.length) {
-      throw new Error(`File ko ${totalChunks} chunks chahiye, lekin sirf ${kvNamespaces.length} KV available hain`);
+    if (!url || !url.trim()) {
+      throw new Error('No URL provided');
     }
 
-    const fileId = `url_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-    const ext = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '';
+    console.log(`ðŸŒ Downloading: ${url}`);
 
-    const uploadStart = Date.now();
+    // Validate URL
+    const urlObj = new URL(url);
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      throw new Error('Only HTTP/HTTPS URLs allowed');
+    }
 
-    // ====== Upload all chunks ======
-    const results = await Promise.all(
-      Array.from({ length: totalChunks }, async (_, i) => {
-        const start = i * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, file.size);
-        const chunk = file.slice(start, end);
-        const chunkFile = new File([chunk], `${filename}.part${i}`, { type: file.type });
+    // Download file
+    const downloadResponse = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
 
-        const kv = kvNamespaces[i % kvNamespaces.length];
+    if (!downloadResponse.ok) {
+      throw new Error(`Download failed: ${downloadResponse.status}`);
+    }
 
-        // Upload to Telegram
-        const form = new FormData();
-        form.append('chat_id', CHANNEL_ID);
-        form.append('document', chunkFile);
+    // Get filename
+    let filename = 'download';
+    const contentDisposition = downloadResponse.headers.get('Content-Disposition');
 
-        const tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-          method: 'POST',
-          body: form
-        });
-        const tgData = await tgRes.json();
-        if (!tgData.ok) throw new Error(tgData.description || 'Telegram fail');
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[*]?=([^;\n\r"']+)/);
+      if (match) {
+        filename = match[1].replace(/['"]/g, '').trim();
+      }
+    }
 
-        const fileIdTg = tgData.result.document.file_id;
+    if (filename === 'download') {
+      const urlFilename = urlObj.pathname.split('/').pop();
+      if (urlFilename && urlFilename.length > 0) {
+        filename = decodeURIComponent(urlFilename);
+      }
+    }
 
-        // Get direct link
-        const pathRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileIdTg}`);
-        const pathData = await pathRes.json();
-        if (!pathData.ok) throw new Error('getFile failed');
-        const directUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${pathData.result.file_path}`;
+    const contentType = downloadResponse.headers.get('Content-Type') || 'application/octet-stream';
+    const arrayBuffer = await downloadResponse.arrayBuffer();
+    const fileSize = arrayBuffer.byteLength;
 
-        // Save metadata in KV
-        const key = `${fileId}_chunk_${i}`;
-        await kv.put(key, JSON.stringify({
-          telegramFileId: fileIdTg,
-          directUrl,
-          size: chunk.size,
-          uploadedAt: Date.now()
-        }));
+    console.log(`âœ… Downloaded: ${formatBytes(fileSize)}`);
 
-        return { kvName: kv === env.FILES_KV ? 'FILES_KV' : `FILES_KV${kvNamespaces.indexOf(kv)+1}`, size: chunk.size };
-      })
-    );
+    if (fileSize === 0) throw new Error('File is empty');
+    if (fileSize > 2147483648) throw new Error('File too large (max 2GB)');
 
-    // ====== Save master metadata ======
-    await kvNamespaces[0].put(fileId, JSON.stringify({
-      filename, size: file.size, type: file.type, ext,
-      totalChunks, uploadedAt: Date.now(), sourceUrl: url
-    }));
+    // Generate unique filename
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 8);
+    const ext = filename.includes('.') ? filename.substring(filename.lastIndexOf('.')) : '';
+    const baseName = filename.substring(0, filename.lastIndexOf('.') || filename.length);
+    const sanitized = baseName.toLowerCase().replace(/[^a-z0-9-]/g, '_').substring(0, 40);
+    const finalFilename = `${sanitized}_${timestamp}${random}${ext}`;
 
-    const base = new URL(request.url).origin;
-    const link = `${base}/btfstorage/file/${fileId}${ext}`;
+    // Create file
+    const file = new File([arrayBuffer], filename, { type: contentType });
+
+    // Chunking strategy
+    const CHUNK_THRESHOLD = 50 * 1024 * 1024; // 50MB
+    const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+
+    let uploadType = 'single';
+    let chunks = 0;
+
+    if (fileSize > CHUNK_THRESHOLD) {
+      console.log('ðŸ§© Using chunked upload');
+      chunks = await uploadChunked(file, finalFilename, env, CHUNK_SIZE);
+      uploadType = 'chunked';
+    } else {
+      console.log('ðŸ“¤ Using single upload');
+      await uploadSingle(file, finalFilename, env);
+    }
+
+    const baseUrl = new URL(request.url).origin;
 
     return new Response(JSON.stringify({
       success: true,
-      message: "URL se upload ho gaya bhai!",
-      data: {
-        id: fileId,
-        filename,
-        size: file.size,
-        size_mb: (file.size/1024/1024).toFixed(2) + ' MB',
-        chunks: totalChunks,
-        time_taken: Math.round((Date.now() - uploadStart)/1000) + ' sec',
-        urls: {
-          view: link,
-          download: link + '?dl=1',
-          stream: link + '?stream=1'
-        },
-        max_limit: "625 MB (25 KV)"
-      }
-    }, null, 2), {
+      filename: finalFilename,
+      id: timestamp + random,
+      originalName: filename,
+      size: fileSize,
+      contentType: contentType,
+      url: `${baseUrl}/btfstorage/file/${finalFilename}`,
+      download: `${baseUrl}/btfstorage/file/${finalFilename}?dl=1`,
+      uploadType: uploadType,
+      chunks: chunks,
+      sourceUrl: url,
+      uploadedAt: new Date().toISOString()
+    }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
-  } catch (err) {
+  } catch (error) {
+    console.error('âŒ Error:', error.message);
     return new Response(JSON.stringify({
       success: false,
-      error: err.message || 'Kuch toh gadbad hai daya'
-    }, null, 2), {
+      error: error.message
+    }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 }
 
-// Helper
-function formatBytes(b) {
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let i = 0;
-  while (b >= 1024 && i < units.length-1) { b /= 1024; i++; }
-  return `${b.toFixed(1)} ${units[i]}`;
+async function uploadSingle(file, filename, env) {
+  const formData = new FormData();
+  formData.append('chat_id', env.CHAT_ID);
+  formData.append('document', file);
+  formData.append('caption', `ðŸŒ ${file.name}`);
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
+    { method: 'POST', body: formData }
+  );
+
+  const data = await response.json();
+  if (!data.ok) throw new Error('Telegram upload failed');
+
+  await env.FILES_KV.put(filename, JSON.stringify({
+    filename,
+    originalName: file.name,
+    size: file.size,
+    contentType: file.type || 'application/octet-stream',
+    telegramFileId: data.result.document.file_id,
+    uploadType: 'single',
+    uploadedAt: Date.now()
+  }));
+
+  return 0;
+}
+
+async function uploadChunked(file, filename, env, chunkSize) {
+  const totalChunks = Math.ceil(file.size / chunkSize);
+  console.log(`ðŸ§© Total chunks: ${totalChunks}`);
+
+  const chunks = [];
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, file.size);
+    const chunkBlob = file.slice(start, end);
+
+    console.log(`ðŸ“¤ Chunk ${i + 1}/${totalChunks}`);
+
+    const chunkFilename = `${filename}.chunk${String(i).padStart(4, '0')}`;
+    const chunkFile = new File([chunkBlob], chunkFilename, { type: 'application/octet-stream' });
+
+    const formData = new FormData();
+    formData.append('chat_id', env.CHAT_ID);
+    formData.append('document', chunkFile);
+    formData.append('caption', `ðŸ§© ${i + 1}/${totalChunks}`);
+
+    const response = await fetch(
+      `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
+      { method: 'POST', body: formData }
+    );
+
+    const data = await response.json();
+    if (!data.ok) throw new Error(`Chunk ${i + 1} failed`);
+
+    const chunkKey = `${filename}_chunk_${String(i).padStart(4, '0')}`;
+    await env.FILES_KV.put(chunkKey, JSON.stringify({
+      parentFile: filename,
+      index: i,
+      size: chunkBlob.size,
+      telegramFileId: data.result.document.file_id,
+      uploadedAt: Date.now()
+    }));
+
+    chunks.push({
+      index: i,
+      size: chunkBlob.size,
+      telegramFileId: data.result.document.file_id
+    });
+
+    if (i < totalChunks - 1) {
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }
+
+  await env.FILES_KV.put(filename, JSON.stringify({
+    filename,
+    originalName: file.name,
+    size: file.size,
+    contentType: file.type || 'application/octet-stream',
+    uploadType: 'chunked',
+    totalChunks,
+    chunkSize,
+    chunks,
+    uploadedAt: Date.now()
+  }));
+
+  return totalChunks;
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
