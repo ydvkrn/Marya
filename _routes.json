@@ -1,12 +1,17 @@
 {
   "version": 1,
   "include": [
-    "/*",
-    "/upload",
-    "/upload-from-url"
+    "/*"
   ],
   "exclude": [
+    "/upload",
+    "/upload-from-url",
     "/assets/*",
-    "/static/*"
+    "/static/*",
+    "/_next/static/*",
+    "/favicon.ico",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/.well-known/*"
   ]
 }
