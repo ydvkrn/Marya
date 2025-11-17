@@ -1,1084 +1,915 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- ✅ Ultra-fast loading optimizations -->
-<link rel="preconnect" href="https://api.telegram.org">
-<link rel="dns-prefetch" href="//api.telegram.org">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- ✅ Performance hints -->
-<meta name="referrer" content="no-referrer-when-downgrade">
-<meta name="format-detection" content="telephone=no">
-
-<!-- ✅ Preload critical resources -->
-<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-
-<meta charset="UTF-8">
-<title>Marya Vault - Professional File Storage</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<style>
-    :root {
-        --primary-red: #dc2626;
-        --primary-red-dark: #b91c1c;
-        --primary-red-light: #fef2f2;
-        --white: #ffffff;
-        --gray-50: #f9fafb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --gray-600: #4b5563;
-        --gray-700: #374151;
-        --gray-800: #1f2937;
-        --gray-900: #111827;
-        --success: #059669;
-        --success-light: #d1fae5;
-        --error: #dc2626;
-        --error-light: #fee2e2;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
-        min-height: 100vh;
-        color: var(--gray-900);
-        line-height: 1.5;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    /* Header */
-    .header {
-        text-align: center;
-        margin-bottom: 3rem;
-        padding: 2rem 0;
-    }
-
-    .logo {
-        width: 100px;
-        height: 100px;
-        background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-        border-radius: 24px;
-        margin: 0 auto 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: var(--shadow-xl);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .logo::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-        animation: shimmer 3s infinite;
-    }
-
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-
-    .title {
-        font-size: 3.5rem;
-        font-weight: 900;
-        background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 1rem;
-        letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-        font-size: 1.25rem;
-        color: var(--gray-600);
-        font-weight: 500;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
-    /* Upload Card */
-    .upload-section {
-        background: var(--white);
-        border-radius: 24px;
-        box-shadow: var(--shadow-xl);
-        padding: 3rem;
-        margin-bottom: 3rem;
-        border: 1px solid var(--gray-100);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .upload-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
-    }
-
-    .dropzone {
-        border: 2px dashed var(--gray-200);
-        border-radius: 16px;
-        padding: 4rem 2rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: var(--gray-50);
-        position: relative;
-        min-height: 300px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .dropzone:hover,
-    .dropzone.dragover {
-        border-color: var(--primary-red);
-        background: var(--primary-red-light);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .upload-icon {
-        font-size: 4rem;
-        margin-bottom: 1.5rem;
-        color: var(--primary-red);
-        animation: float 6s ease-in-out infinite;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
-    .upload-title {
-        font-size: 1.875rem;
-        font-weight: 700;
-        color: var(--gray-900);
-        margin-bottom: 0.5rem;
-    }
-
-    .upload-description {
-        font-size: 1.125rem;
-        color: var(--gray-600);
-        margin-bottom: 2rem;
-    }
-
-    .file-types {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-top: 2rem;
-    }
-
-    .file-type-badge {
-        background: var(--primary-red);
-        color: var(--white);
-        padding: 0.75rem 1.5rem;
-        border-radius: 50px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.2s;
-    }
-
-    .file-type-badge:hover {
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    .file-type-badge i {
-        margin-right: 0.5rem;
-    }
-
-    .file-input { display: none; }
-
-    /* URL Upload Section */
-    .url-upload-section {
-        background: var(--white);
-        border-radius: 24px;
-        box-shadow: var(--shadow-xl);
-        padding: 3rem;
-        margin-bottom: 3rem;
-        border: 1px solid var(--gray-100);
-    }
-
-    .url-upload-form {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .url-input {
-        flex: 1 1 400px;
-        padding: 0.75rem 1rem;
-        border: 1px solid var(--gray-300);
-        border-radius: 12px;
-        font-size: 1rem;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-
-    .url-input:focus {
-        border-color: var(--primary-red);
-        box-shadow: 0 0 5px var(--primary-red-light);
-    }
-
-    .btn-url-upload {
-        background: var(--primary-red);
-        color: var(--white);
-        padding: 0.875rem 1.5rem;
-        border: none;
-        border-radius: 12px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.2s;
-        min-width: 140px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .btn-url-upload:hover {
-        background: var(--primary-red-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    /* Results Section */
-    .results {
-        display: none;
-    }
-
-    .results.show {
-        display: block;
-        animation: fadeIn 0.5s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .results-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .results-title {
-        font-size: 1.875rem;
-        font-weight: 700;
-        color: var(--gray-900);
-    }
-
-    .results-count {
-        background: var(--primary-red-light);
-        color: var(--primary-red);
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
-
-    .file-item {
-        background: var(--white);
-        border-radius: 16px;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--gray-100);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .file-item::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: var(--primary-red);
-    }
-
-    .file-item:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .file-header {
-        display: flex;
-        align-items: flex-start;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .file-icon {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: var(--white);
-        flex-shrink: 0;
-    }
-
-    .file-icon i {
-        font-size: 2rem;
-    }
-
-    .file-details {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .file-name {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--gray-900);
-        margin-bottom: 0.5rem;
-        word-break: break-all;
-    }
-
-    .file-meta {
-        color: var(--gray-600);
-        font-size: 0.875rem;
-        margin-bottom: 1rem;
-    }
-
-    .file-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 600;
-    }
-
-    .file-status.uploading {
-        color: var(--primary-red);
-    }
-
-    .file-status.completed {
-        color: var(--success);
-    }
-
-    .file-status.failed {
-        color: var(--error);
-    }
-
-    /* Progress Bar */
-    .progress-container {
-        margin: 1.5rem 0;
-    }
-
-    .progress-bar {
-        width: 100%;
-        height: 8px;
-        background: var(--gray-200);
-        border-radius: 50px;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
-        width: 0%;
-        transition: width 0.3s ease;
-        border-radius: 50px;
-        position: relative;
-    }
-
-    .progress-fill::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        animation: progress-shimmer 2s infinite;
-    }
-
-    @keyframes progress-shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-
-    .progress-text {
-        text-align: center;
-        margin-top: 0.5rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--primary-red);
-    }
-
-    /* Action Buttons */
-    .file-actions {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.875rem 1.5rem;
-        border: none;
-        border-radius: 12px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.2s;
-        min-width: 120px;
-        justify-content: center;
-    }
-
-    .btn i {
-        font-size: 1rem;
-    }
-
-    .btn-primary {
-        background: var(--primary-red);
-        color: var(--white);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .btn-primary:hover {
-        background: var(--primary-red-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    .btn-success {
-        background: var(--success);
-        color: var(--white);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .btn-success:hover {
-        background: #047857;
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    .btn-outline {
-        background: var(--white);
-        color: var(--gray-700);
-        border: 1px solid var(--gray-300);
-    }
-
-    .btn-outline:hover {
-        background: var(--gray-50);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    /* Toast Notifications */
-    .toast {
-        position: fixed;
-        top: 2rem;
-        right: 2rem;
-        background: var(--white);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow-xl);
-        border: 1px solid var(--gray-200);
-        z-index: 1000;
-        transform: translateX(400px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        max-width: 400px;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .toast.show {
-        transform: translateX(0);
-    }
-
-    .toast.success {
-        border-left: 4px solid var(--success);
-    }
-
-    .toast.error {
-        border-left: 4px solid var(--error);
-    }
-
-    .toast-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.875rem;
-        font-weight: 600;
-        flex-shrink: 0;
-    }
-
-    .toast.success .toast-icon {
-        background: var(--success-light);
-        color: var(--success);
-    }
-
-    .toast.error .toast-icon {
-        background: var(--error-light);
-        color: var(--error);
-    }
-
-    .toast-content {
-        flex: 1;
-    }
-
-    .toast-title {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-    }
-
-    .toast-message {
-        font-size: 0.875rem;
-        color: var(--gray-600);
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .container {
-            padding: 1rem;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 MARYA VAULT ULTIMATE - Professional Storage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2;
+            --success: #059669; --success-light: #d1fae5; --error: #dc2626; --warning: #f59e0b;
+            --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; 
+            --gray-300: #d1d5db; --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); 
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
         }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--white), var(--gray-50));
+            min-height: 100vh; color: var(--gray-900); line-height: 1.5; -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
+        .logo {
+            width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 30px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-xl); position: relative; overflow: hidden;
+            animation: logoGlow 3s ease-in-out infinite alternate;
+        }
+        @keyframes logoGlow { 0% { box-shadow: var(--shadow-xl); } 100% { box-shadow: 0 25px 50px rgba(220, 38, 38, 0.3); } }
+        .logo::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .title {
-            font-size: 2.5rem;
+            font-size: 4rem; font-weight: 900; margin-bottom: 1rem; letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            text-shadow: 2px 2px 4px rgba(220, 38, 38, 0.1);
         }
-
-        .upload-section, .url-upload-section {
-            padding: 2rem 1.5rem;
+        .subtitle { font-size: 1.25rem; color: var(--gray-600); font-weight: 500; max-width: 700px; margin: 0 auto; }
+        .tabs-container {
+            background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl);
+            padding: 2rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
+            position: relative; overflow: hidden;
         }
-
+        .tabs-container::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        }
+        .tabs { display: flex; margin-bottom: 2rem; background: var(--gray-100); border-radius: 12px; overflow: hidden; }
+        .tab {
+            flex: 1; padding: 1rem 1.5rem; border: none; background: transparent; cursor: pointer;
+            font-size: 1rem; font-weight: 600; transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .tab.active { background: var(--primary); color: var(--white); }
+        .tab:not(.active):hover { background: var(--gray-200); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeInUp 0.5s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .dropzone {
-            padding: 3rem 1.5rem;
-            min-height: 250px;
+            border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: var(--gray-50);
+            min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        .upload-title {
-            font-size: 1.5rem;
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary); background: var(--primary-light);
+            transform: translateY(-3px); box-shadow: var(--shadow-lg);
         }
-
-        .file-types {
-            gap: 0.5rem;
+        .upload-icon { 
+            font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary);
+            animation: float 6s ease-in-out infinite;
         }
-
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        .upload-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
+        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: stretch; }
+        .url-input-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+        .url-input, .filename-input {
+            padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
+            font-size: 1rem; outline: none; transition: border-color 0.3s;
+            background: var(--white); box-shadow: var(--shadow-sm);
+        }
+        .url-input:focus, .filename-input:focus { border-color: var(--primary); }
+        .url-btn {
+            background: var(--primary); color: var(--white); padding: 1rem 2rem; border: none;
+            border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;
+        }
+        .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .url-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
         .file-type-badge {
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
+            background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border-radius: 25px;
+            font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;
+            box-shadow: var(--shadow-sm); transition: all 0.3s; position: relative; overflow: hidden;
         }
-
-        .file-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
+        .file-type-badge:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .file-type-badge i { margin-right: 0.5rem; }
+        .stats-dashboard {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
+            margin-bottom: 2rem; padding: 1.5rem; background: var(--gray-50); border-radius: 15px;
         }
-
-        .file-actions {
-            flex-direction: column;
+        .stat-card {
+            background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm);
+            text-align: center; position: relative; overflow: hidden;
         }
-
-        .btn, .btn-url-upload {
-            width: 100%;
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
+        .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; text-transform: uppercase; }
+        .file-item {
+            background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
+            box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
+            transition: all 0.4s ease;
         }
-
+        .file-item::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+        }
+        .file-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .file-header { display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 2rem; }
+        .file-icon {
+            width: 80px; height: 80px; border-radius: 15px; display: flex; align-items: center;
+            justify-content: center; font-size: 2rem; color: var(--white); flex-shrink: 0;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        .file-details { flex: 1; min-width: 0; }
+        .file-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-all; }
+        .file-meta { color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem; }
+        .progress-container { margin: 2rem 0; }
+        .progress-info {
+            display: flex; justify-content: space-between; margin-bottom: 1rem;
+            font-size: 0.875rem; font-weight: 600; flex-wrap: wrap; gap: 0.5rem;
+        }
+        .progress-bar {
+            width: 100%; height: 12px; background: var(--gray-200); border-radius: 10px;
+            overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .progress-fill {
+            height: 100%; border-radius: 10px; position: relative; transition: width 0.4s ease;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+        .progress-fill::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: progressShimmer 2s infinite;
+        }
+        @keyframes progressShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .speed-indicator {
+            display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--success);
+            font-weight: 600;
+        }
+        .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .file-status.uploading { color: var(--primary); }
+        .file-status.completed { color: var(--success); }
+        .file-status.failed { color: var(--error); }
+        .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
+            border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
+            text-decoration: none; cursor: pointer; transition: all 0.3s; min-width: 140px;
+            justify-content: center; position: relative; overflow: hidden;
+        }
+        .btn::before {
+            content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.2);
+            transform: translateX(-100%); transition: transform 0.3s;
+        }
+        .btn:hover::before { transform: translateX(0); }
+        .btn i { font-size: 1rem; }
+        .btn-primary { background: var(--primary); color: var(--white); box-shadow: var(--shadow-sm); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-success { background: var(--success); color: var(--white); }
+        .btn-success:hover { background: #047857; transform: translateY(-2px); }
+        .btn-outline {
+            background: var(--white); color: var(--gray-700); border: 2px solid var(--gray-300);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-outline:hover { background: var(--gray-50); border-color: var(--primary); }
         .toast {
-            top: 1rem;
-            right: 1rem;
-            left: 1rem;
-            max-width: none;
-            transform: translateY(-100px);
+            position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px;
+            padding: 1.5rem; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);
+            z-index: 1000; transform: translateX(120%); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px; display: flex; align-items: center; gap: 1rem;
         }
-
-        .toast.show {
-            transform: translateY(0);
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-left: 5px solid var(--success); }
+        .toast.error { border-left: 5px solid var(--error); }
+        .toast.warning { border-left: 5px solid var(--warning); }
+        .toast-icon {
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1.25rem; font-weight: 600; flex-shrink: 0;
         }
-
-        .url-upload-form {
-            flex-direction: column;
-            gap: 1rem;
+        .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
+        .toast.error .toast-icon { background: var(--primary-light); color: var(--error); }
+        .toast.warning .toast-icon { background: #fef3c7; color: var(--warning); }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 1rem; }
+        .toast-message { font-size: 0.875rem; color: var(--gray-600); }
+        .results { display: none; }
+        .results.show { display: block; animation: fadeIn 0.6s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .results-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;
+            padding: 1.5rem; background: var(--white); border-radius: 15px; box-shadow: var(--shadow-sm);
         }
-    }
-
-    /* Loading Animation */
-    .loading-spinner {
-        display: inline-block;
-        width: 1rem;
-        height: 1rem;
-        border: 2px solid var(--gray-300);
-        border-radius: 50%;
-        border-top-color: var(--primary-red);
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-</style>
+        .results-title { font-size: 2rem; font-weight: 800; color: var(--gray-900); }
+        .results-count {
+            background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem;
+            border-radius: 25px; font-size: 0.875rem; font-weight: 700;
+        }
+        .storage-info {
+            background: linear-gradient(135deg, var(--primary-light), var(--success-light));
+            padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center;
+        }
+        .storage-info-title { font-size: 1rem; font-weight: 700; color: var(--gray-700); margin-bottom: 0.5rem; }
+        .storage-info-desc { font-size: 0.875rem; color: var(--gray-600); }
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .title { font-size: 2.5rem; }
+            .tabs-container { padding: 1.5rem; }
+            .dropzone { padding: 3rem 1.5rem; min-height: 280px; }
+            .url-section { flex-direction: column; }
+            .url-btn { width: 100%; justify-content: center; }
+            .stats-dashboard { grid-template-columns: repeat(2, 1fr); }
+            .file-header { flex-direction: column; align-items: center; text-align: center; }
+            .file-actions { flex-direction: column; }
+            .btn { width: 100%; }
+            .results-header { flex-direction: column; gap: 1rem; text-align: center; }
+            .toast { top: 1rem; right: 1rem; left: 1rem; max-width: none; }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <header class="header">
-            <div class="logo">
-                <i class="fas fa-cloud" style="font-size: 3rem; color: var(--white);"></i>
-            </div>
-            <h1 class="title">Marya Vault</h1>
-            <p class="subtitle">Professional file storage solution with enterprise-grade security and lightning-fast uploads up to 2GB per file.</p>
+            <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
+            <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
+            <p class="subtitle">Professional 25-KV multi-namespace storage with chunking. Upload up to <strong>500MB</strong> per file.</p>
         </header>
 
-        <!-- Upload Section -->
-        <section class="upload-section">
-            <label class="dropzone" id="dropzone" for="fileInput">
-                <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
-                <h2 class="upload-title">Drop your files here</h2>
-                <p class="upload-description">or click to browse from your device</p>
-                
-                <div class="file-types">
-                    <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
-                    <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
-                    <span class="file-type-badge"><i class="fas fa-file"></i> Documents</span>
-                    <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
-                    <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
+        <div class="storage-info">
+            <div class="storage-info-title">
+                <i class="fas fa-database"></i> Advanced Multi-KV Storage System
+            </div>
+            <div class="storage-info-desc">
+                25 KV Namespaces • 20MB Chunks • 500MB Max File Size • Permanent Links
+            </div>
+        </div>
+
+        <section class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('file')">
+                    <i class="fas fa-upload"></i> File Upload
+                </button>
+                <button class="tab" onclick="showTab('url')">
+                    <i class="fas fa-link"></i> URL Upload
+                </button>
+            </div>
+
+            <div class="tab-content active" id="file-content">
+                <label class="dropzone" id="dropzone">
+                    <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
+                    <h2 class="upload-title">Drop your files here</h2>
+                    <p class="upload-description">or click to browse from your device • Max <strong>500MB</strong> per file</p>
+                    <div class="file-types">
+                        <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
+                        <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
+                        <span class="file-type-badge"><i class="fas fa-file"></i> Documents</span>
+                        <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
+                        <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
+                    </div>
+                </label>
+                <input type="file" id="fileInput" multiple accept="*/*" style="display: none;">
+            </div>
+
+            <div class="tab-content" id="url-content">
+                <div class="storage-info" style="margin-bottom: 1.5rem; text-align: left; background: linear-gradient(135deg, var(--gray-50), var(--primary-light));">
+                    <div class="storage-info-title" style="margin-bottom: 0.75rem;">
+                        <i class="fas fa-info-circle"></i> URL Import Features
+                    </div>
+                    <div class="storage-info-desc">
+                        • Direct file download from any HTTP/HTTPS URL<br>
+                        • Auto-filename detection from headers<br>
+                        • Supports up to <strong>500MB</strong> files<br>
+                        • Automatic chunking across 25 KV namespaces<br>
+                        • Retry logic for reliable transfers
+                    </div>
                 </div>
-            </label>
-            <input type="file" id="fileInput" class="file-input" multiple accept="*/*">
+                <div class="url-section">
+                    <div class="url-input-group">
+                        <input type="text" id="urlInput" class="url-input" 
+                               placeholder="🔗 Direct file URL (e.g., https://example.com/video.mp4)">
+                        <input type="text" id="filenameInput" class="filename-input" 
+                               placeholder="📝 Custom filename (optional, e.g., my-video.mp4)">
+                    </div>
+                    <button class="url-btn" id="urlUploadBtn" onclick="uploadFromUrl()">
+                        <i class="fas fa-cloud-download-alt"></i> Import
+                    </button>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; color: var(--gray-600); font-size: 0.875rem;">
+                    <strong>💡 Pro Tip:</strong> Paste any direct file URL and we'll handle the rest!<br>
+                    Files are automatically chunked and distributed across multiple KV namespaces for optimal performance.
+                </div>
+            </div>
         </section>
 
-        <!-- URL Upload Section -->
-        <section class="url-upload-section">
-            <h2 class="upload-title">Upload from URL</h2>
-            <form id="urlUploadForm" class="url-upload-form" novalidate>
-                <input type="url" id="fileUrlInput" class="url-input" placeholder="Enter direct file URL here" required>
-                <button type="submit" class="btn-url-upload"><i class="fas fa-cloud-upload-alt"></i> Upload URL</button>
-            </form>
-            <p class="upload-description" style="text-align:center; margin-top: 0.75rem; color: var(--gray-600); font-size: 0.9rem;">
-                Supported file size up to 2GB. Please enter a valid direct file URL.
-            </p>
+        <section class="stats-dashboard" id="statsDashboard" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="totalSize">0 MB</div>
+                <div class="stat-label">Total Size</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgSpeed">0 MB/s</div>
+                <div class="stat-label">Upload Speed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalChunks">0</div>
+                <div class="stat-label">Total Chunks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="filesCount">0</div>
+                <div class="stat-label">Files Processed</div>
+            </div>
         </section>
 
-        <!-- Results Section -->
         <section class="results" id="results">
             <div class="results-header">
-                <h2 class="results-title">Your Files</h2>
-                <div class="results-count" id="filesCount">0 files</div>
+                <h2 class="results-title">📁 Your Files</h2>
+                <div class="results-count" id="resultsCount">0 files uploaded</div>
             </div>
             <div id="filesList"></div>
         </section>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
     <script>
-        console.log('🚀 Marya Vault Professional - Loading...');
-
         let fileCounter = 0;
+        let totalSize = 0;
+        let totalChunks = 0;
+        let uploadStats = { total: 0, completed: 0, failed: 0 };
+        let isProcessing = false;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DOM Ready - Initializing Professional File Uploader');
-            
-            const dropzone = document.getElementById('dropzone');
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ DOM fully loaded, initializing MARYA VAULT ULTIMATE...');
+            initializeSystem();
+        });
+
+        function initializeSystem() {
+            setupFileUpload();
+            setupUrlUpload();
+            setupDragDrop();
+            console.log('✅ System initialized successfully');
+        }
+
+        function showTab(tabName) {
+            console.log(`Switching to tab: ${tabName}`);
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-content').classList.add('active');
+        }
+
+        function setupFileUpload() {
             const fileInput = document.getElementById('fileInput');
-            const results = document.getElementById('results');
-            const filesList = document.getElementById('filesList');
-            const filesCount = document.getElementById('filesCount');
-            const urlUploadForm = document.getElementById('urlUploadForm');
-            const fileUrlInput = document.getElementById('fileUrlInput');
+            const dropzone = document.getElementById('dropzone');
 
-            if (!dropzone || !fileInput || !urlUploadForm || !fileUrlInput) {
-                console.error('❌ Required elements not found');
-                return;
-            }
-
-            // File selection handler for input change (triggered by click or drop)
-            fileInput.addEventListener('change', function(e) {
-                console.log('📂 Files selected via click:', e.target.files.length);
-                if (e.target.files.length > 0) {
-                    handleFiles(Array.from(e.target.files));
-                    fileInput.value = ''; // Reset input for next selection
+            dropzone.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Dropzone clicked, isProcessing:', isProcessing);
+                if (!isProcessing) {
+                    console.log('Triggering file input click');
+                    fileInput.click();
+                } else {
+                    console.log('Dropzone click ignored: processing in progress');
+                    showToast('Please wait, upload in progress', 'warning');
                 }
             });
 
-            // Drag and drop handlers
+            fileInput.addEventListener('change', (e) => {
+                console.log('File input changed, files selected:', e.target.files.length);
+                if (isProcessing) {
+                    console.log('File selection ignored: processing in progress');
+                    showToast('Please wait, upload in progress', 'warning');
+                    e.target.value = '';
+                    return;
+                }
+                
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+                e.target.value = ''; // Clear input for re-selection
+            });
+        }
+
+        function setupUrlUpload() {
+            const urlInput = document.getElementById('urlInput');
+            urlInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter' && !isProcessing) {
+                    console.log('Enter pressed in URL input');
+                    uploadFromUrl();
+                }
+            });
+        }
+
+        function setupDragDrop() {
+            const dropzone = document.getElementById('dropzone');
+
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropzone.addEventListener(eventName, preventDefaults, false);
                 document.body.addEventListener(eventName, preventDefaults, false);
             });
 
             ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, highlight, false);
+                dropzone.addEventListener(eventName, () => {
+                    if (!isProcessing) {
+                        dropzone.classList.add('dragover');
+                    }
+                }, false);
             });
 
             ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, unhighlight, false);
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.classList.remove('dragover');
+                }, false);
             });
 
-            dropzone.addEventListener('drop', handleDrop, false);
+            dropzone.addEventListener('drop', e => {
+                console.log('Files dropped:', e.dataTransfer.files.length);
+                if (!isProcessing) {
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length > 0) {
+                        handleFiles(files);
+                    }
+                } else {
+                    console.log('Drop ignored: processing in progress');
+                    showToast('Please wait, upload in progress', 'warning');
+                }
+            }, false);
 
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
+        }
 
-            function highlight() {
-                dropzone.classList.add('dragover');
+        function handleFiles(files) {
+            console.log('📦 Handling files:', files.length);
+            if (files.length === 0) {
+                showToast('No files selected', 'error');
+                return;
             }
 
-            function unhighlight() {
-                dropzone.classList.remove('dragover');
-            }
-
-            function handleDrop(e) {
-                const files = e.dataTransfer.files;
-                console.log('📋 Files dropped:', files.length);
-                if (files.length > 0) {
-                    handleFiles(Array.from(files));
+            const MAX_SIZE = 500 * 1024 * 1024; // 500MB
+            const validFiles = files.filter(file => {
+                if (file.size > MAX_SIZE) {
+                    showToast(`File "${file.name}" is too large (max 500MB)`, 'error');
+                    return false;
                 }
-            }
-
-            function handleFiles(files) {
-                console.log('🔄 Processing files:', files.length);
-                
-                if (files.length === 0) {
-                    showToast('No files selected', 'error');
-                    return;
+                if (file.size === 0) {
+                    showToast(`File "${file.name}" is empty`, 'error');
+                    return false;
                 }
-
-                results.classList.add('show');
-                fileCounter += files.length;
-                updateFilesCount();
-
-                files.forEach(file => uploadFile(file));
-            }
-
-            function uploadFile(file) {
-                console.log('⬆️ Starting upload:', file.name, formatBytes(file.size));
-
-                if (file.size > 2147483648) { // 2GB
-                    showToast(`File "${file.name}" is too large (max 2GB)`, 'error');
-                    fileCounter--;
-                    updateFilesCount();
-                    return;
-                }
-
-                const fileItem = createFileItem(file);
-                filesList.appendChild(fileItem);
-
-                const progressFill = fileItem.querySelector('.progress-fill');
-                const progressText = fileItem.querySelector('.progress-text');
-                const statusElement = fileItem.querySelector('.file-status');
-                const actionsContainer = fileItem.querySelector('.file-actions');
-
-                // XMLHttpRequest for progress tracking
-                const xhr = new XMLHttpRequest();
-                const formData = new FormData();
-                formData.append('file', file);
-
-                // Upload progress
-                xhr.upload.addEventListener('progress', function(e) {
-                    if (e.lengthComputable) {
-                        const percentComplete = Math.round((e.loaded / e.total) * 100);
-                        progressFill.style.width = percentComplete + '%';
-                        progressText.textContent = `${percentComplete}% uploaded`;
-                        
-                        console.log('📊 Upload progress:', percentComplete + '%');
-                    }
-                });
-
-                // Upload completion
-                xhr.addEventListener('load', function() {
-                    console.log('✅ Upload response:', xhr.status);
-                    
-                    if (xhr.status === 200) {
-                        try {
-                            const result = JSON.parse(xhr.responseText);
-                            if (result.success) {
-                                statusElement.textContent = 'Upload Complete';
-                                statusElement.className = 'file-status completed';
-                                
-                                progressFill.style.width = '100%';
-                                progressText.textContent = '100% complete';
-                                
-                                // Add action buttons
-                                actionsContainer.innerHTML = `
-                                    <a href="${result.url}" target="_blank" class="btn btn-primary">
-                                        <i class="fas fa-eye"></i> View File
-                                    </a>
-                                    <a href="${result.download}" class="btn btn-success" download>
-                                        <i class="fas fa-download"></i> Download
-                                    </a>
-                                    <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
-                                        <i class="fas fa-copy"></i> Copy Link
-                                    </button>
-                                `;
-                                
-                                showToast(`${file.name} uploaded successfully!`, 'success');
-                            } else {
-                                throw new Error(result.error || 'Upload failed');
-                            }
-                        } catch (parseError) {
-                            handleUploadError(statusElement, 'Invalid server response');
-                            showToast(`Upload failed: ${file.name}`, 'error');
-                        }
-                    } else {
-                        handleUploadError(statusElement, `HTTP ${xhr.status}`);
-                        showToast(`Upload failed: ${file.name}`, 'error');
-                    }
-                });
-
-                xhr.addEventListener('error', function() {
-                    handleUploadError(statusElement, 'Network error');
-                    showToast(`Network error: ${file.name}`, 'error');
-                });
-
-                // Start upload
-                xhr.open('POST', '/upload');
-                xhr.send(formData);
-            }
-
-            function createFileItem(file) {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                
-                const icon = getFileIcon(file.name);
-                
-                item.innerHTML = `
-                    <div class="file-header">
-                        <div class="file-icon">${icon}</div>
-                        <div class="file-details">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-meta">${formatBytes(file.size)} • <span class="file-status uploading">Preparing upload...</span></div>
-                        </div>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
-                        <div class="progress-text">0% uploaded</div>
-                    </div>
-                    <div class="file-actions"></div>
-                `;
-                
-                return item;
-            }
-
-            function handleUploadError(statusElement, error) {
-                statusElement.textContent = `Failed: ${error}`;
-                statusElement.className = 'file-status failed';
-            }
-
-            function updateFilesCount() {
-                filesCount.textContent = `${fileCounter} file${fileCounter !== 1 ? 's' : ''}`;
-            }
-
-            function getFileIcon(filename) {
-                const ext = filename.split('.').pop()?.toLowerCase() || '';
-                
-                const iconMap = {
-                    'jpg': '<i class="fas fa-image"></i>', 'jpeg': '<i class="fas fa-image"></i>', 'png': '<i class="fas fa-image"></i>', 'gif': '<i class="fas fa-image"></i>', 'webp': '<i class="fas fa-image"></i>', 'svg': '<i class="fas fa-palette"></i>',
-                    'mp4': '<i class="fas fa-video"></i>', 'mov': '<i class="fas fa-video"></i>', 'avi': '<i class="fas fa-video"></i>', 'mkv': '<i class="fas fa-video"></i>', 'webm': '<i class="fas fa-film"></i>',
-                    'mp3': '<i class="fas fa-music"></i>', 'wav': '<i class="fas fa-music"></i>', 'flac': '<i class="fas fa-music"></i>', 'aac': '<i class="fas fa-music"></i>', 'm4a': '<i class="fas fa-headphones"></i>',
-                    'pdf': '<i class="fas fa-file-pdf"></i>', 'doc': '<i class="fas fa-file-word"></i>', 'docx': '<i class="fas fa-file-word"></i>', 'txt': '<i class="fas fa-file-alt"></i>', 'rtf': '<i class="fas fa-file-lines"></i>',
-                    'zip': '<i class="fas fa-file-archive"></i>', 'rar': '<i class="fas fa-file-archive"></i>', '7z': '<i class="fas fa-file-archive"></i>', 'tar': '<i class="fas fa-box-archive"></i>', 'gz': '<i class="fas fa-file-zipper"></i>',
-                    'js': '<i class="fas fa-code"></i>', 'html': '<i class="fas fa-globe"></i>', 'css': '<i class="fas fa-palette"></i>', 'py': '<i class="fab fa-python"></i>', 'java': '<i class="fab fa-java"></i>'
-                };
-                
-                return iconMap[ext] || '<i class="fas fa-file"></i>';
-            }
-
-            function formatBytes(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
-
-            window.copyToClipboard = function(text) {
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        showToast('Link copied to clipboard!', 'success');
-                    }).catch(() => {
-                        showToast('Failed to copy link', 'error');
-                    });
-                } else {
-                    // Fallback
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    textArea.style.position = 'fixed';
-                    textArea.style.left = '-999999px';
-                    textArea.style.top = '-999999px';
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    
-                    try {
-                        document.execCommand('copy');
-                        showToast('Link copied to clipboard!', 'success');
-                    } catch (err) {
-                        showToast('Failed to copy link', 'error');
-                    }
-                    
-                    document.body.removeChild(textArea);
-                }
-            };
-
-            function showToast(message, type = 'success') {
-                const toast = document.getElementById('toast');
-                const icon = type === 'success' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
-                const title = type === 'success' ? 'Success' : 'Error';
-                
-                toast.innerHTML = `
-                    <div class="toast-icon">${icon}</div>
-                    <div class="toast-content">
-                        <div class="toast-title">${title}</div>
-                        <div class="toast-message">${message}</div>
-                    </div>
-                `;
-                
-                toast.className = `toast ${type} show`;
-                
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 5000);
-            }
-
-            // URL Upload Handling
-            urlUploadForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const url = fileUrlInput.value.trim();
-                if (!isValidUrl(url)) {
-                    showToast('Please enter a valid URL', 'error');
-                    return;
-                }
-                uploadFromUrl(url);
+                return true;
             });
 
-            function isValidUrl(string) {
-                try {
-                    new URL(string);
-                    return true;
-                } catch (_) {
-                    return false;  
+            if (validFiles.length === 0) {
+                return;
+            }
+
+            isProcessing = true;
+            showResults();
+            updateFileCounter(validFiles.length);
+
+            validFiles.forEach((file, index) => {
+                setTimeout(() => uploadFile(file), index * 100);
+            });
+        }
+
+        function uploadFile(file) {
+            console.log(`🚀 Starting upload for file: ${file.name}`);
+            const fileItem = createAdvancedFileItem(file);
+            document.getElementById('filesList').prepend(fileItem);
+
+            const elements = getFileElements(fileItem);
+            uploadStats.total++;
+            updateTotalSize(file.size);
+
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+            const startTime = Date.now();
+            let lastLoaded = 0;
+            let lastTime = startTime;
+
+            xhr.upload.addEventListener('progress', e => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const currentTime = Date.now();
+                    const timeDiff = (currentTime - lastTime) / 1000;
+                    const loadedDiff = e.loaded - lastLoaded;
+                    const speed = timeDiff > 0 ? loadedDiff / timeDiff : 0;
+
+                    lastLoaded = e.loaded;
+                    lastTime = currentTime;
+
+                    updateProgress(elements, percent, speed);
+                    updateStats();
                 }
-            }
+            });
 
-            function uploadFromUrl(url) {
-                console.log('⬆️ Starting URL upload:', url);
-                const fileName = url.split('/').pop().split('?')[0] || 'file-from-url';
-                // Create a dummy File-like object for UI
-                const dummyFile = { name: fileName, size: 0 }; 
-                
-                results.classList.add('show');
-                fileCounter++;
-                updateFilesCount();
-                
-                const fileItem = createFileItem(dummyFile);
-                filesList.appendChild(fileItem);
-
-                const progressFill = fileItem.querySelector('.progress-fill');
-                const progressText = fileItem.querySelector('.progress-text');
-                const statusElement = fileItem.querySelector('.file-status');
-                const actionsContainer = fileItem.querySelector('.file-actions');
-
-                statusElement.textContent = 'Starting upload...';
-                statusElement.className = 'file-status uploading';
-
-                fetch('/functions/upload-from-url', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        statusElement.textContent = 'Upload Complete';
-                        statusElement.className = 'file-status completed';
-                        progressFill.style.width = '100%';
-                        progressText.textContent = '100% complete';
-                        
-                        // Update file size if provided
-                        if (result.size) {
-                            const meta = fileItem.querySelector('.file-meta');
-                            meta.innerHTML = `${formatBytes(result.size)} • <span class="file-status completed">Upload Complete</span>`;
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.success && result.data) {
+                            handleUploadSuccess(elements, result.data, file);
+                            uploadStats.completed++;
+                            totalChunks += result.data.storage?.totalChunks || 0;
+                            showToast(`✅ ${file.name} uploaded successfully!`, 'success');
+                        } else {
+                            throw new Error(result.error?.message || 'Upload failed');
                         }
-
-                        // Add action buttons
-                        actionsContainer.innerHTML = `
-                            <a href="${result.url}" target="_blank" class="btn btn-primary">
-                                <i class="fas fa-eye"></i> View File
-                            </a>
-                            <a href="${result.download}" class="btn btn-success" download>
-                                <i class="fas fa-download"></i> Download
-                            </a>
-                            <button onclick="copyToClipboard('${result.url}')" class="btn btn-outline">
-                                <i class="fas fa-copy"></i> Copy Link
-                            </button>
-                        `;
-                        showToast(`File uploaded from URL successfully!`, 'success');
-                    } else {
-                        throw new Error(result.error || 'Upload from URL failed');
+                    } catch (parseError) {
+                        console.error('Parse error:', parseError);
+                        handleUploadError(elements, 'Invalid response');
+                        uploadStats.failed++;
+                        showToast(`❌ Upload failed: ${file.name}`, 'error');
                     }
-                })
-                .catch(error => {
-                    handleUploadError(statusElement, error.message);
-                    showToast(`Upload failed from URL`, 'error');
-                    fileCounter--;
-                    updateFilesCount();
-                });
+                } else {
+                    handleUploadError(elements, `HTTP ${xhr.status}`);
+                    uploadStats.failed++;
+                    showToast(`❌ Upload failed: ${file.name} (HTTP ${xhr.status})`, 'error');
+                }
+                updateStats();
+                checkProcessingComplete();
+            });
+
+            xhr.addEventListener('error', () => {
+                uploadStats.failed++;
+                handleUploadError(elements, 'Network error');
+                showToast(`🔥 Network error: ${file.name}`, 'error');
+                updateStats();
+                checkProcessingComplete();
+            });
+
+            xhr.open('POST', '/upload');
+            xhr.send(formData);
+        }
+
+        async function uploadFromUrl() {
+            console.log('🌐 Starting URL upload');
+            const urlInput = document.getElementById('urlInput');
+            const filenameInput = document.getElementById('filenameInput');
+            const uploadBtn = document.getElementById('urlUploadBtn');
+
+            const fileUrl = urlInput.value.trim();
+            const filename = filenameInput.value.trim();
+
+            if (!fileUrl) {
+                showToast('Please enter a URL', 'error');
+                return;
             }
 
-            console.log('✅ Marya Vault Professional - Ready!');
-        });
+            try {
+                new URL(fileUrl);
+                if (!fileUrl.match(/^https?://.+/)) {
+                    throw new Error('URL must start with http:// or https://');
+                }
+            } catch {
+                showToast('Please enter a valid URL (e.g., https://example.com/file.mp4)', 'error');
+                return;
+            }
+
+            if (isProcessing) {
+                showToast('Please wait, upload in progress', 'warning');
+                return;
+            }
+
+            isProcessing = true;
+            showResults();
+
+            const fileItem = createUrlFileItem({
+                filename: filename || 'Importing from URL...',
+                size: 0,
+                storage: { totalChunks: 0 }
+            });
+            document.getElementById('filesList').prepend(fileItem);
+            const elements = getFileElements(fileItem);
+            elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+            elements.actions.innerHTML = '';
+
+            showToast('🌐 Starting URL import...', 'success');
+            urlInput.disabled = true;
+            filenameInput.disabled = true;
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+
+            try {
+                console.log(`📤 Sending POST request to /upload-from-url`);
+                const response = await fetch('/upload-from-url', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        fileUrl: fileUrl,
+                        filename: filename || undefined
+                    })
+                });
+
+                console.log(`Response status: ${response.status}`);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Fetch error: HTTP ${response.status} - ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Parsed response:', result);
+
+                if (result.success && result.data) {
+                    if (result.data.size === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
+                    
+                    updateFileCounter(1);
+                    totalSize += result.data.size;
+                    totalChunks += result.data.chunks || result.data.storage?.totalChunks || 0;
+                    updateStats();
+
+                    fileItem.querySelector('.file-name').textContent = result.data.filename;
+                    fileItem.querySelector('.file-meta').innerHTML = `
+                        ${formatBytes(result.data.size)} • URL Import • 
+                        ${result.data.chunks || result.data.storage?.totalChunks || 0} chunks • 
+                        <span class="file-status completed">
+                            <i class="fas fa-check-circle"></i> Complete
+                        </span>
+                    `;
+                    
+                    const viewUrl = result.data.urls?.view || result.data.url;
+                    const downloadUrl = result.data.urls?.download || result.data.download;
+                    
+                    fileItem.querySelector('.file-actions').innerHTML = `
+                        <a href="${viewUrl}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="${downloadUrl}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline">
+                            <i class="fas fa-copy"></i> Copy Link
+                        </button>
+                    `;
+                    
+                    // Hide progress bar
+                    fileItem.querySelector('.progress-container').style.display = 'none';
+                    
+                    showToast(`🚀 URL import completed: ${result.data.filename}`, 'success');
+                    urlInput.value = '';
+                    filenameInput.value = '';
+                } else {
+                    throw new Error(result.error?.message || result.error || 'Import failed');
+                }
+            } catch (error) {
+                console.error('❌ URL upload error:', error.message);
+                elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed`;
+                elements.status.className = 'file-status failed';
+                fileItem.querySelector('.file-meta').innerHTML = `
+                    URL Import Failed • 
+                    <span class="file-status failed">
+                        <i class="fas fa-times-circle"></i> ${error.message.substring(0, 50)}
+                    </span>
+                `;
+                showToast(`❌ Import failed: ${error.message}`, 'error');
+            } finally {
+                urlInput.disabled = false;
+                filenameInput.disabled = false;
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import';
+                isProcessing = false;
+                console.log('✅ isProcessing reset to false after URL upload');
+            }
+        }
+
+        function createAdvancedFileItem(file) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon">${getFileIcon(file.name)}</div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">
+                            ${formatBytes(file.size)} • ${file.type || 'Unknown'} • 
+                            <span class="file-status uploading">
+                                <i class="fas fa-spinner fa-spin"></i> Preparing...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-percent">0%</span>
+                        <span class="speed-indicator">
+                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
+                        </span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="file-actions"></div>
+            `;
+            return item;
+        }
+
+        function createUrlFileItem(data) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon"><i class="fas fa-link"></i></div>
+                    <div class="file-details">
+                        <div class="file-name">${data.filename}</div>
+                        <div class="file-meta">
+                            ${formatBytes(data.size)} • URL Import • 
+                            <span class="file-status uploading">
+                                <i class="fas fa-spinner fa-spin"></i> Importing...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-percent">0%</span>
+                        <span class="speed-indicator">
+                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
+                        </span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="file-actions"></div>
+            `;
+            return item;
+        }
+
+        function getFileElements(fileItem) {
+            return {
+                progressFill: fileItem.querySelector('.progress-fill'),
+                progressPercent: fileItem.querySelector('.progress-percent'),
+                uploadSpeed: fileItem.querySelector('.upload-speed'),
+                status: fileItem.querySelector('.file-status'),
+                actions: fileItem.querySelector('.file-actions')
+            };
+        }
+
+        function updateProgress(elements, percent, speed) {
+            elements.progressFill.style.width = percent + '%';
+            elements.progressPercent.textContent = percent + '%';
+            elements.uploadSpeed.textContent = formatBytes(speed) + '/s';
+
+            if (percent < 100) {
+                elements.status.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Uploading... ${percent}%`;
+                elements.status.className = 'file-status uploading';
+            }
+        }
+
+        function handleUploadSuccess(elements, data, file) {
+            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
+            elements.status.className = 'file-status completed';
+            elements.progressFill.style.width = '100%';
+            elements.progressPercent.textContent = '100%';
+
+            const viewUrl = data.urls?.view || data.url;
+            const downloadUrl = data.urls?.download || data.download;
+            const streamUrl = data.urls?.stream;
+
+            elements.actions.innerHTML = `
+                <a href="${viewUrl}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                <a href="${downloadUrl}" class="btn btn-success">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                ${streamUrl ? `<a href="${streamUrl}" target="_blank" class="btn btn-outline">
+                    <i class="fas fa-play"></i> Stream
+                </a>` : ''}
+                <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline">
+                    <i class="fas fa-copy"></i> Copy Link
+                </button>
+            `;
+        }
+
+        function handleUploadError(elements, error) {
+            elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
+            elements.status.className = 'file-status failed';
+            elements.progressFill.style.width = '100%';
+            elements.progressFill.style.background = 'var(--error)';
+        }
+
+        function checkProcessingComplete() {
+            if (uploadStats.total === uploadStats.completed + uploadStats.failed) {
+                isProcessing = false;
+                console.log('✅ All uploads completed, isProcessing reset to false');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalSize').textContent = formatBytes(totalSize);
+            document.getElementById('totalChunks').textContent = totalChunks;
+            document.getElementById('filesCount').textContent = uploadStats.completed;
+            
+            const avgSpeed = totalSize / 1024 / 1024; // Convert to MB
+            document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(2) + ' MB';
+            
+            document.getElementById('statsDashboard').style.display = 'grid';
+        }
+
+        function showResults() {
+            document.getElementById('results').classList.add('show');
+        }
+
+        function updateFileCounter(count) {
+            fileCounter += count;
+            document.getElementById('resultsCount').textContent = `${fileCounter} file${fileCounter !== 1 ? 's' : ''} uploaded`;
+        }
+
+        function updateTotalSize(size) {
+            totalSize += size;
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                // Images
+                jpg: '<i class="fas fa-image"></i>', jpeg: '<i class="fas fa-image"></i>',
+                png: '<i class="fas fa-image"></i>', gif: '<i class="fas fa-image"></i>',
+                webp: '<i class="fas fa-image"></i>', svg: '<i class="fas fa-image"></i>',
+                // Videos
+                mp4: '<i class="fas fa-video"></i>', avi: '<i class="fas fa-video"></i>',
+                mov: '<i class="fas fa-video"></i>', mkv: '<i class="fas fa-video"></i>',
+                webm: '<i class="fas fa-video"></i>',
+                // Audio
+                mp3: '<i class="fas fa-music"></i>', wav: '<i class="fas fa-music"></i>',
+                ogg: '<i class="fas fa-music"></i>', flac: '<i class="fas fa-music"></i>',
+                // Documents
+                pdf: '<i class="fas fa-file-pdf"></i>',
+                doc: '<i class="fas fa-file-word"></i>', docx: '<i class="fas fa-file-word"></i>',
+                xls: '<i class="fas fa-file-excel"></i>', xlsx: '<i class="fas fa-file-excel"></i>',
+                ppt: '<i class="fas fa-file-powerpoint"></i>', pptx: '<i class="fas fa-file-powerpoint"></i>',
+                txt: '<i class="fas fa-file-alt"></i>',
+                // Archives
+                zip: '<i class="fas fa-file-archive"></i>', rar: '<i class="fas fa-file-archive"></i>',
+                '7z': '<i class="fas fa-file-archive"></i>', tar: '<i class="fas fa-file-archive"></i>',
+                gz: '<i class="fas fa-file-archive"></i>',
+                // Code
+                js: '<i class="fas fa-file-code"></i>', html: '<i class="fas fa-file-code"></i>',
+                css: '<i class="fas fa-file-code"></i>', json: '<i class="fas fa-file-code"></i>',
+                xml: '<i class="fas fa-file-code"></i>', php: '<i class="fas fa-file-code"></i>',
+                py: '<i class="fas fa-file-code"></i>'
+            };
+            return icons[ext] || '<i class="fas fa-file"></i>';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Link copied to clipboard!', 'success');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showToast('Failed to copy link', 'error');
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+            
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        console.log('✅ MARYA VAULT ULTIMATE loaded successfully');
     </script>
 </body>
 </html>
