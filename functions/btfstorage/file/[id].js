@@ -125,7 +125,7 @@ export async function onRequest(context) {
     
   } catch (error) {
     console.error('Error:', error);
-    return createErrorResponse(`Streaming error: ${error.message}`, 500);
+    return createErrorResponse('Streaming error: ' + error.message, 500);
   }
 }
 
@@ -148,11 +148,11 @@ async function handleHlsPlaylist(request, env, metadata, actualId) {
   const segmentDuration = 6;
   const baseUrl = new URL(request.url).origin;
   
-  const playlistLines = ['#EXTM3U', '#EXT-X-VERSION:3', `#EXT-X-TARGETDURATION:${segmentDuration}`, '#EXT-X-MEDIA-SEQUENCE:0', '#EXT-X-PLAYLIST-TYPE:VOD'];
+  const playlistLines = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:' + segmentDuration, '#EXT-X-MEDIA-SEQUENCE:0', '#EXT-X-PLAYLIST-TYPE:VOD'];
   
   for (let i = 0; i < chunks.length; i++) {
-    playlistLines.push(`#EXTINF:${segmentDuration.toFixed(1)},`);
-    playlistLines.push(`${baseUrl}/btfstorage/files/${actualId}-${i}.ts`);
+    playlistLines.push('#EXTINF:' + segmentDuration.toFixed(1) + ',');
+    playlistLines.push(baseUrl + '/btfstorage/files/' + actualId + '-' + i + '.ts');
   }
   
   playlistLines.push('#EXT-X-ENDLIST');
@@ -182,13 +182,13 @@ async function handleHlsSegment(request, env, metadata, segmentIndex) {
     headers.set('Content-Type', 'video/mp2t');
     headers.set('Content-Length', chunkData.byteLength.toString());
     headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
+    headers.set('Cache-Control', 'public, max-age=' + CACHE_TTL_LONG + ', immutable');
     headers.set('Accept-Ranges', 'bytes');
     
     return new Response(chunkData, { status: 200, headers });
     
   } catch (error) {
-    return createErrorResponse(`Segment loading failed: ${error.message}`, 500);
+    return createErrorResponse('Segment loading failed: ' + error.message, 500);
   }
 }
 
@@ -204,7 +204,7 @@ async function handleSingleFile(request, env, metadata, mimeType) {
     
     try {
       const getFileResponse = await fetchWithRetry(
-        `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(metadata.telegramFileId)}`,
+        'https://api.telegram.org/bot' + botToken + '/getFile?file_id=' + encodeURIComponent(metadata.telegramFileId),
         { signal: AbortSignal.timeout(15000) }
       );
       
@@ -214,7 +214,7 @@ async function handleSingleFile(request, env, metadata, mimeType) {
         continue;
       }
       
-      const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+      const directUrl = 'https://api.telegram.org/file/bot' + botToken + '/' + getFileData.result.file_path;
       
       const requestHeaders = {};
       const rangeHeader = request.headers.get('Range');
@@ -244,11 +244,11 @@ async function handleSingleFile(request, env, metadata, mimeType) {
       responseHeaders.set('Content-Type', mimeType);
       responseHeaders.set('Accept-Ranges', 'bytes');
       responseHeaders.set('Access-Control-Allow-Origin', '*');
-      responseHeaders.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
+      responseHeaders.set('Cache-Control', 'public, max-age=' + CACHE_TTL_LONG + ', immutable');
       
       const url = new URL(request.url);
       if (url.searchParams.has('dl') || url.searchParams.has('download')) {
-        responseHeaders.set('Content-Disposition', `attachment; filename="${metadata.filename}"`);
+        responseHeaders.set('Content-Disposition', 'attachment; filename="' + metadata.filename + '"');
       } else {
         responseHeaders.set('Content-Disposition', 'inline');
       }
@@ -314,26 +314,26 @@ async function handleOptimizedInstantPlay(request, env, metadata, mimeType, tota
     const headers = new Headers();
     headers.set('Content-Type', mimeType);
     headers.set('Content-Length', Math.min(loadedBytes, totalSize).toString());
-    headers.set('Content-Range', `bytes 0-${Math.min(loadedBytes, totalSize) - 1}/${totalSize}`);
+    headers.set('Content-Range', 'bytes 0-' + (Math.min(loadedBytes, totalSize) - 1) + '/' + totalSize);
     headers.set('Accept-Ranges', 'bytes');
     headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
+    headers.set('Cache-Control', 'public, max-age=' + CACHE_TTL_LONG + ', immutable');
     
     return new Response(stream, { status: 206, headers });
     
   } catch (error) {
-    return createErrorResponse(`Instant play failed: ${error.message}`, 500);
+    return createErrorResponse('Instant play failed: ' + error.message, 500);
   }
 }
 
-async function handleParallelRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize, isDownload = false) {
+async function handleParallelRangeRequest(request, env, metadata, rangeHeader, mimeType, chunkSize, isDownload) {
   const totalSize = metadata.size;
   const chunks = metadata.chunks;
   
   const rangeMatch = rangeHeader.match(/bytes=(d+)-(d*)/);
   if (!rangeMatch) {
     return createErrorResponse('Invalid range format', 416, {
-      'Content-Range': `bytes */${totalSize}`
+      'Content-Range': 'bytes */' + totalSize
     });
   }
   
@@ -343,7 +343,7 @@ async function handleParallelRangeRequest(request, env, metadata, rangeHeader, m
   if (end >= totalSize) end = totalSize - 1;
   if (start >= totalSize || start > end) {
     return createErrorResponse('Range not satisfiable', 416, {
-      'Content-Range': `bytes */${totalSize}`
+      'Content-Range': 'bytes */' + totalSize
     });
   }
   
@@ -387,16 +387,16 @@ async function handleParallelRangeRequest(request, env, metadata, rangeHeader, m
     const headers = new Headers();
     headers.set('Content-Type', mimeType);
     headers.set('Content-Length', requestedSize.toString());
-    headers.set('Content-Range', `bytes ${start}-${end}/${totalSize}`);
+    headers.set('Content-Range', 'bytes ' + start + '-' + end + '/' + totalSize);
     headers.set('Accept-Ranges', 'bytes');
     headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Content-Disposition', isDownload ? `attachment; filename="${metadata.filename}"` : 'inline');
-    headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
+    headers.set('Content-Disposition', isDownload ? ('attachment; filename="' + metadata.filename + '"') : 'inline');
+    headers.set('Cache-Control', 'public, max-age=' + CACHE_TTL_LONG + ', immutable');
     
     return new Response(combinedData, { status: 206, headers });
     
   } catch (error) {
-    return createErrorResponse(`Range request failed: ${error.message}`, 500);
+    return createErrorResponse('Range request failed: ' + error.message, 500);
   }
 }
 
@@ -440,9 +440,9 @@ async function handleParallelFullDownload(request, env, metadata, mimeType) {
   const headers = new Headers();
   headers.set('Content-Type', mimeType);
   headers.set('Content-Length', totalSize.toString());
-  headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+  headers.set('Content-Disposition', 'attachment; filename="' + filename + '"');
   headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Cache-Control', `public, max-age=${CACHE_TTL_LONG}, immutable`);
+  headers.set('Cache-Control', 'public, max-age=' + CACHE_TTL_LONG + ', immutable');
   
   return new Response(stream, { status: 200, headers });
 }
@@ -453,7 +453,7 @@ async function loadSingleChunk(env, chunkInfo) {
   
   const metadataString = await kvNamespace.get(chunkKey);
   if (!metadataString) {
-    throw new Error(`Chunk metadata not found: ${chunkKey}`);
+    throw new Error('Chunk metadata not found: ' + chunkKey);
   }
   
   const chunkMetadata = JSON.parse(metadataString);
@@ -480,7 +480,7 @@ async function loadSingleChunk(env, chunkInfo) {
     
     try {
       const getFileResponse = await fetchWithRetry(
-        `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(chunkMetadata.telegramFileId)}`,
+        'https://api.telegram.org/bot' + botToken + '/getFile?file_id=' + encodeURIComponent(chunkMetadata.telegramFileId),
         { signal: AbortSignal.timeout(15000) }
       );
       
@@ -490,7 +490,7 @@ async function loadSingleChunk(env, chunkInfo) {
         continue;
       }
       
-      const freshUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+      const freshUrl = 'https://api.telegram.org/file/bot' + botToken + '/' + getFileData.result.file_path;
       
       const response = await fetchWithRetry(freshUrl, {
         signal: AbortSignal.timeout(FETCH_TIMEOUT)
@@ -511,10 +511,12 @@ async function loadSingleChunk(env, chunkInfo) {
     }
   }
   
-  throw new Error(`All refresh attempts failed for chunk: ${chunkKey}`);
+  throw new Error('All refresh attempts failed for chunk: ' + chunkKey);
 }
 
-async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
+async function fetchWithRetry(url, options, retries) {
+  if (!retries) retries = MAX_RETRIES;
+  
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await fetch(url, options);
@@ -551,10 +553,10 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
     }
   }
   
-  throw new Error(`All ${retries} fetch attempts failed`);
+  throw new Error('All fetch attempts failed');
 }
 
-function createErrorResponse(message, status = 500, additionalHeaders = {}) {
+function createErrorResponse(message, status, additionalHeaders) {
   const headers = new Headers({
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
@@ -563,12 +565,12 @@ function createErrorResponse(message, status = 500, additionalHeaders = {}) {
   
   const errorResponse = {
     error: message,
-    status: status,
+    status: status || 500,
     timestamp: new Date().toISOString()
   };
   
   return new Response(JSON.stringify(errorResponse, null, 2), {
-    status: status,
+    status: status || 500,
     headers: headers
   });
 }
