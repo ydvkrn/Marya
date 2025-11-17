@@ -1,7 +1,9 @@
 {
   "version": 1,
   "include": [
-    "/*"
+    "/*",
+    "/upload"
+    "/upload-from-url"
   ],
   "exclude": [
     "/assets/*",
