@@ -45,7 +45,7 @@ export async function onRequest(context) {
       hasChannelId: !!CHANNEL_ID
     });
 
-    // ✅ All KV namespaces array
+    // ✅ All 25 KV namespaces array
     const kvNamespaces = [
       { kv: env.FILES_KV, name: 'FILES_KV' },
       { kv: env.FILES_KV2, name: 'FILES_KV2' },
@@ -53,7 +53,25 @@ export async function onRequest(context) {
       { kv: env.FILES_KV4, name: 'FILES_KV4' },
       { kv: env.FILES_KV5, name: 'FILES_KV5' },
       { kv: env.FILES_KV6, name: 'FILES_KV6' },
-      { kv: env.FILES_KV7, name: 'FILES_KV7' }
+      { kv: env.FILES_KV7, name: 'FILES_KV7' },
+      { kv: env.FILES_KV8, name: 'FILES_KV8' },
+      { kv: env.FILES_KV9, name: 'FILES_KV9' },
+      { kv: env.FILES_KV10, name: 'FILES_KV10' },
+      { kv: env.FILES_KV11, name: 'FILES_KV11' },
+      { kv: env.FILES_KV12, name: 'FILES_KV12' },
+      { kv: env.FILES_KV13, name: 'FILES_KV13' },
+      { kv: env.FILES_KV14, name: 'FILES_KV14' },
+      { kv: env.FILES_KV15, name: 'FILES_KV15' },
+      { kv: env.FILES_KV16, name: 'FILES_KV16' },
+      { kv: env.FILES_KV17, name: 'FILES_KV17' },
+      { kv: env.FILES_KV18, name: 'FILES_KV18' },
+      { kv: env.FILES_KV19, name: 'FILES_KV19' },
+      { kv: env.FILES_KV20, name: 'FILES_KV20' },
+      { kv: env.FILES_KV21, name: 'FILES_KV21' },
+      { kv: env.FILES_KV22, name: 'FILES_KV22' },
+      { kv: env.FILES_KV23, name: 'FILES_KV23' },
+      { kv: env.FILES_KV24, name: 'FILES_KV24' },
+      { kv: env.FILES_KV25, name: 'FILES_KV25' }
     ].filter(item => item.kv);
 
     console.log(`Available KV namespaces: ${kvNamespaces.length}`);
@@ -89,10 +107,10 @@ export async function onRequest(context) {
       type: file.type
     });
 
-    // ✅ Enhanced size validation with better error message
-    const MAX_FILE_SIZE = 175 * 1024 * 1024; // 175MB
+    // ✅ Enhanced size validation - 500MB max with 25 KV namespaces
+    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
     if (file.size > MAX_FILE_SIZE) {
-      throw new Error(`File too large: ${Math.round(file.size / 1024 / 1024)}MB. Maximum allowed: 175MB`);
+      throw new Error(`File too large: ${Math.round(file.size / 1024 / 1024)}MB. Maximum allowed: 500MB`);
     }
 
     if (file.size === 0) {
