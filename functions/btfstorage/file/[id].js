@@ -213,10 +213,10 @@ function handleCORSPreflight() {
  * Handle HLS playlist generation (.m3u8)
  */
 async function handleHlsPlaylist(request, env, metadata, actualId) {
-  console.log('📼 Generating HLS playlist for:', actualId);
+  console.log('Generating HLS playlist for:', actualId);
 
   if (!metadata.chunks || metadata.chunks.length === 0) {
-    console.error('❌ HLS playlist requested for non-chunked file');
+    console.error('HLS playlist requested for non-chunked file');
     return createErrorResponse('HLS not supported for single files', 400);
   }
 
@@ -224,36 +224,29 @@ async function handleHlsPlaylist(request, env, metadata, actualId) {
   const segmentDuration = 6;
   const baseUrl = new URL(request.url).origin;
 
-  // Generate M3U8 playlist
-  let playlist = '#EXTM3U
-';
-  playlist += '#EXT-X-VERSION:3
-';
-  playlist += `#EXT-X-TARGETDURATION:${segmentDuration}
+  let playlist = `#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-TARGETDURATION:${segmentDuration}
+#EXT-X-MEDIA-SEQUENCE:0
+#EXT-X-PLAYLIST-TYPE:VOD
 `;
-  playlist += '#EXT-X-MEDIA-SEQUENCE:0
-';
-  playlist += '#EXT-X-PLAYLIST-TYPE:VOD
-';
 
   for (let i = 0; i < chunks.length; i++) {
     playlist += `#EXTINF:${segmentDuration.toFixed(1)},
-`;
-    playlist += `${baseUrl}/btfstorage/file/${actualId}-${i}.ts
+${baseUrl}/btfstorage/file/${actualId}-${i}.ts
 `;
   }
 
-  playlist += '#EXT-X-ENDLIST
-';
+  playlist += `#EXT-X-ENDLIST
+`;
 
   const headers = new Headers();
   headers.set('Content-Type', 'application/x-mpegURL');
   headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Cache-Control', 'public, max-age=300'); // 5 min cache
-  headers.set('CDN-Cache-Control', 'public, max-age=3600'); // 1 hour edge cache
+  headers.set('Cache-Control', 'public, max-age=300');
+  headers.set('CDN-Cache-Control', 'public, max-age=3600');
 
-  console.log(`📼 HLS playlist generated: ${chunks.length} segments`);
-
+  console.log(`HLS playlist generated: ${chunks.length} segments`);
   return new Response(playlist, { status: 200, headers });
 }
 
