@@ -1,31 +1,17 @@
 // functions/upload.js
+// ðŸš€ ADVANCED FILE UPLOAD with Chunking & Retry Logic
+
 export async function onRequest(context) {
   const { request, env } = context;
 
-  // CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // Handle preflight
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders
-    });
-  }
-
-  // Only allow POST
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Method not allowed. Use POST.'
-    }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
@@ -36,7 +22,7 @@ export async function onRequest(context) {
       throw new Error('No file provided');
     }
 
-    console.log(`ðŸ“ File: ${file.name}, Size: ${formatBytes(file.size)}`);
+    console.log(`ðŸ“ Uploading: ${file.name} (${formatBytes(file.size)})`);
 
     // Generate unique filename
     const timestamp = Date.now().toString(36);
@@ -46,25 +32,20 @@ export async function onRequest(context) {
     const sanitized = baseName.toLowerCase().replace(/[^a-z0-9-]/g, '_').substring(0, 40);
     const finalFilename = `${sanitized}_${timestamp}${random}${ext}`;
 
-    // Chunking strategy
-    const CHUNK_THRESHOLD = 50 * 1024 * 1024; // 50MB
-    const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
+    // Chunking strategy for large files
+    const CHUNK_THRESHOLD = 100 * 1024 * 1024; // 100MB
+    const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB chunks
 
-    let uploadType = 'single';
-    let chunks = 0;
+    let result;
 
     if (file.size > CHUNK_THRESHOLD) {
-      // Chunked upload
-      console.log('ðŸ§© Using chunked upload');
-      chunks = await uploadChunked(file, finalFilename, env, CHUNK_SIZE);
-      uploadType = 'chunked';
+      console.log(`ðŸ§© Using chunked upload (${Math.ceil(file.size / CHUNK_SIZE)} chunks)`);
+      result = await uploadChunked(file, finalFilename, env, CHUNK_SIZE);
     } else {
-      // Single upload
       console.log('ðŸ“¤ Using single upload');
-      await uploadSingle(file, finalFilename, env);
+      result = await uploadSingle(file, finalFilename, env);
     }
 
-    // Build response
     const baseUrl = new URL(request.url).origin;
 
     return new Response(JSON.stringify({
@@ -76,8 +57,8 @@ export async function onRequest(context) {
       contentType: file.type || 'application/octet-stream',
       url: `${baseUrl}/btfstorage/file/${finalFilename}`,
       download: `${baseUrl}/btfstorage/file/${finalFilename}?dl=1`,
-      uploadType: uploadType,
-      chunks: chunks,
+      uploadType: result.type,
+      chunks: result.chunks || 0,
       uploadedAt: new Date().toISOString()
     }), {
       status: 200,
@@ -85,7 +66,7 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    console.error('âŒ Error:', error.message);
+    console.error('âŒ Upload error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message
@@ -96,95 +77,142 @@ export async function onRequest(context) {
   }
 }
 
+// Single file upload with retry
 async function uploadSingle(file, filename, env) {
-  const formData = new FormData();
-  formData.append('chat_id', env.CHAT_ID);
-  formData.append('document', file);
-  formData.append('caption', `ðŸ“ ${file.name}`);
+  const maxRetries = 3;
 
-  const response = await fetch(
-    `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
-    { method: 'POST', body: formData }
-  );
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const formData = new FormData();
+      formData.append('chat_id', env.CHAT_ID);
+      formData.append('document', file);
+      formData.append('caption', `ðŸ“ ${file.name}\n${formatBytes(file.size)}`);
 
-  const data = await response.json();
-  if (!data.ok) throw new Error('Telegram upload failed');
+      const response = await fetch(
+        `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
+        { method: 'POST', body: formData }
+      );
 
-  await env.FILES_KV.put(filename, JSON.stringify({
-    filename,
-    originalName: file.name,
-    size: file.size,
-    contentType: file.type || 'application/octet-stream',
-    telegramFileId: data.result.document.file_id,
-    uploadType: 'single',
-    uploadedAt: Date.now()
-  }));
+      const data = await response.json();
 
-  return 0;
+      if (!data.ok) {
+        throw new Error(`Telegram: ${data.description || 'Upload failed'}`);
+      }
+
+      // Store metadata
+      await env.FILES_KV.put(filename, JSON.stringify({
+        filename: filename,
+        originalName: file.name,
+        size: file.size,
+        contentType: file.type || 'application/octet-stream',
+        telegramFileId: data.result.document.file_id,
+        uploadType: 'single',
+        uploadedAt: Date.now()
+      }));
+
+      console.log(`âœ… Single upload complete`);
+      return { type: 'single', chunks: 0 };
+
+    } catch (error) {
+      console.error(`âŒ Attempt ${attempt} failed:`, error.message);
+      if (attempt === maxRetries) throw error;
+      await new Promise(r => setTimeout(r, 1000 * attempt));
+    }
+  }
 }
 
+// Advanced chunked upload
 async function uploadChunked(file, filename, env, chunkSize) {
   const totalChunks = Math.ceil(file.size / chunkSize);
-  console.log(`ðŸ§© Total chunks: ${totalChunks}`);
+  console.log(`ðŸ§© Uploading ${totalChunks} chunks...`);
 
   const chunks = [];
 
+  // Upload each chunk with retry
   for (let i = 0; i < totalChunks; i++) {
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, file.size);
     const chunkBlob = file.slice(start, end);
 
-    console.log(`ðŸ“¤ Chunk ${i + 1}/${totalChunks}`);
+    console.log(`ðŸ“¤ Chunk ${i + 1}/${totalChunks} (${formatBytes(chunkBlob.size)})`);
 
     const chunkFilename = `${filename}.chunk${String(i).padStart(4, '0')}`;
-    const chunkFile = new File([chunkBlob], chunkFilename, { type: 'application/octet-stream' });
-
-    const formData = new FormData();
-    formData.append('chat_id', env.CHAT_ID);
-    formData.append('document', chunkFile);
-    formData.append('caption', `ðŸ§© ${i + 1}/${totalChunks}`);
-
-    const response = await fetch(
-      `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
-      { method: 'POST', body: formData }
-    );
-
-    const data = await response.json();
-    if (!data.ok) throw new Error(`Chunk ${i + 1} failed`);
-
-    const chunkKey = `${filename}_chunk_${String(i).padStart(4, '0')}`;
-    await env.FILES_KV.put(chunkKey, JSON.stringify({
-      parentFile: filename,
-      index: i,
-      size: chunkBlob.size,
-      telegramFileId: data.result.document.file_id,
-      uploadedAt: Date.now()
-    }));
-
-    chunks.push({
-      index: i,
-      size: chunkBlob.size,
-      telegramFileId: data.result.document.file_id
+    const chunkFile = new File([chunkBlob], chunkFilename, { 
+      type: 'application/octet-stream' 
     });
 
+    // Retry logic for each chunk
+    let uploaded = false;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const formData = new FormData();
+        formData.append('chat_id', env.CHAT_ID);
+        formData.append('document', chunkFile);
+        formData.append('caption', `ðŸ§© Chunk ${i + 1}/${totalChunks}`);
+
+        const response = await fetch(
+          `https://api.telegram.org/bot${env.BOT_TOKEN}/sendDocument`,
+          { method: 'POST', body: formData }
+        );
+
+        const data = await response.json();
+
+        if (!data.ok) {
+          throw new Error(`Telegram: ${data.description}`);
+        }
+
+        // Store chunk metadata
+        const chunkKey = `${filename}_chunk_${String(i).padStart(4, '0')}`;
+        await env.FILES_KV.put(chunkKey, JSON.stringify({
+          parentFile: filename,
+          index: i,
+          size: chunkBlob.size,
+          telegramFileId: data.result.document.file_id,
+          uploadedAt: Date.now()
+        }));
+
+        chunks.push({
+          index: i,
+          size: chunkBlob.size,
+          telegramFileId: data.result.document.file_id
+        });
+
+        console.log(`âœ… Chunk ${i + 1} uploaded`);
+        uploaded = true;
+        break;
+
+      } catch (error) {
+        console.error(`âŒ Chunk ${i + 1} attempt ${attempt} failed:`, error.message);
+        if (attempt === 3) throw new Error(`Chunk ${i + 1} failed after 3 attempts`);
+        await new Promise(r => setTimeout(r, 1000 * attempt));
+      }
+    }
+
+    if (!uploaded) {
+      throw new Error(`Failed to upload chunk ${i + 1}`);
+    }
+
+    // Delay between chunks
     if (i < totalChunks - 1) {
       await new Promise(r => setTimeout(r, 300));
     }
   }
 
+  // Store master metadata
   await env.FILES_KV.put(filename, JSON.stringify({
-    filename,
+    filename: filename,
     originalName: file.name,
     size: file.size,
     contentType: file.type || 'application/octet-stream',
     uploadType: 'chunked',
-    totalChunks,
-    chunkSize,
-    chunks,
+    totalChunks: totalChunks,
+    chunkSize: chunkSize,
+    chunks: chunks,
     uploadedAt: Date.now()
   }));
 
-  return totalChunks;
+  console.log(`âœ… All ${totalChunks} chunks uploaded`);
+  return { type: 'chunked', chunks: totalChunks };
 }
 
 function formatBytes(bytes) {
