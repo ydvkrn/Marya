@@ -1,7 +1,7 @@
 // /functions/upload-from-url.js
 export async function onRequest(context) {
   const { request, env } = context;
-
+  
   console.log('=== UPLOAD-FROM-URL.JS HIT ===');
   console.log('Method:', request.method);
 
@@ -11,14 +11,16 @@ export async function onRequest(context) {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept'
   };
 
+  // Handle OPTIONS (CORS preflight)
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
+  // Only allow POST
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({
       success: false,
-      error: { message: 'Method not allowed' }
+      error: { message: 'Method not allowed. Use POST.' }
     }), {
       status: 405,
       headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
@@ -26,9 +28,11 @@ export async function onRequest(context) {
   }
 
   try {
+    // Load environment variables
     const BOT_TOKEN = env.BOT_TOKEN;
     const CHANNEL_ID = env.CHANNEL_ID;
-
+    
+    // Collect all 25 KV namespaces
     const kvNamespaces = [];
     for (let i = 1; i <= 25; i++) {
       const kvKey = i === 1 ? 'FILES_KV' : `FILES_KV${i}`;
@@ -41,7 +45,7 @@ export async function onRequest(context) {
       throw new Error('Missing BOT_TOKEN, CHANNEL_ID or KV namespaces');
     }
 
-    // Parse body
+    // Parse incoming request body
     const body = await request.json();
     const fileUrl = body.fileUrl || body.url || body.telegramUrl || body.file_url;
     const customFilename = body.filename || body.name || null;
@@ -52,7 +56,7 @@ export async function onRequest(context) {
 
     console.log('Fetching file from:', fileUrl);
 
-    // Fetch file with better headers
+    // Download file from URL
     const fileResponse = await fetch(fileUrl, {
       headers: {
         'User-Agent': 'MaryaVault/2.0 (+https://github.com/ydvkrn/Marya)'
@@ -71,9 +75,8 @@ export async function onRequest(context) {
 
     const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
 
-    // FIXED: Safe & correct filename extraction
+    // Extract filename from headers or URL
     let filename = customFilename;
-
     if (!filename) {
       const disposition = fileResponse.headers.get('content-disposition');
       if (disposition) {
@@ -83,28 +86,30 @@ export async function onRequest(context) {
         }
       }
 
-      // Final fallback: from URL
+      // Fallback: extract from URL path
       if (!filename) {
         const urlPath = new URL(fileUrl).pathname;
         const decodedPath = decodeURIComponent(urlPath);
         filename = decodedPath.split('/').pop() || `file_${Date.now()}`;
-        // Clean weird characters
         filename = filename.split('?')[0].split('#')[0];
       }
     }
 
-    // FIXED: Safe filename cleaning - moved hyphen to end to avoid invalid range
-    filename = filename.replace(/[\x00-\x1F\x7F<>:"/\\|?*\u001F-]/g, '_');
+    // Clean filename - remove invalid characters
+    filename = filename.replace(/[-\u001F<>:"/\\|?*-]/g, '_');
 
     const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
     if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
       throw new Error(`File too large: ${formatBytes(arrayBuffer.byteLength)} (max 500MB)`);
     }
 
+    // Create File object
     const file = new File([arrayBuffer], filename, { type: contentType });
+    
+    // Generate unique file ID
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
-    const fileId = `url${timestamp}${random}`;
+    const fileId = `url_${timestamp}${random}`;
     const extension = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '';
 
     const CHUNK_SIZE = 20 * 1024 * 1024; // 20 MB chunks
@@ -114,6 +119,7 @@ export async function onRequest(context) {
       throw new Error(`File too big: needs ${totalChunks} chunks but only ${kvNamespaces.length} KV namespaces available`);
     }
 
+    // Upload all chunks in parallel
     const chunkPromises = [];
     const uploadStartTime = Date.now();
 
@@ -132,7 +138,7 @@ export async function onRequest(context) {
     const chunkResults = await Promise.all(chunkPromises);
     const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(2);
 
-    // Save master metadata in first KV
+    // Save master metadata to first KV namespace
     const masterMetadata = {
       filename,
       size: file.size,
@@ -157,6 +163,7 @@ export async function onRequest(context) {
 
     await kvNamespaces[0].kv.put(fileId, JSON.stringify(masterMetadata));
 
+    // Generate URLs
     const baseUrl = new URL(request.url).origin;
     const customUrl = `${baseUrl}/btfstorage/file/${fileId}${extension}`;
     const downloadUrl = `${baseUrl}/btfstorage/file/${fileId}${extension}?dl=1`;
@@ -194,7 +201,6 @@ export async function onRequest(context) {
 
   } catch (error) {
     console.error('URL UPLOAD FAILED:', error.message);
-
     return new Response(JSON.stringify({
       success: false,
       error: {
@@ -234,7 +240,7 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   const telegramFileId = data.result.document.file_id;
   const telegramMessageId = data.result.message_id;
 
-  // Get direct link
+  // Get direct Telegram file link
   const fileInfo = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${telegramFileId}`);
   const fileData = await fileInfo.json();
 
@@ -245,6 +251,7 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   const directUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
   const chunkKey = `${fileId}_chunk_${chunkIndex}`;
 
+  // Save chunk metadata to KV
   const metadata = {
     telegramFileId,
     telegramMessageId,
@@ -272,7 +279,7 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   };
 }
 
-// Helper function
+// Helper: Format bytes to human-readable size
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
   const k = 1024;
