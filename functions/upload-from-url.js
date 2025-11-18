@@ -138,8 +138,8 @@ export async function onRequest(context) {
       }
     }
 
-    // Sanitize filename - remove invalid characters
-    filename = filename.replace(/[<>:"/\\|?*-\u001F]/g, '_').trim();
+    // ✅ CORRECT - fixed regex
+filename = filename.replace(/[<>:"/\\|?*-\u001F]/g, '_').trim();
     if (filename.length === 0) {
       filename = `file_${Date.now()}`;
     }
