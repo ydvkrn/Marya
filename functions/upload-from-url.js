@@ -1,4 +1,4 @@
-// /functions/upload-from-url.js
+// /functions/upload-from-url.js - UNIVERSAL ADVANCED VERSION
 export async function onRequest(context) {
   const { request, env } = context;
 
@@ -67,14 +67,43 @@ export async function onRequest(context) {
       );
     }
 
-    const fileResponse = await fetch(fileUrl, {
-      headers: { 'User-Agent': 'MaryaVault/2.1', 'Accept': '*/*' },
-      redirect: 'follow',
-      cf: { cacheTtl: 0, cacheEverything: false }
-    });
+    console.log('📥 Fetching file from:', fileUrl);
 
-    if (!fileResponse.ok) {
-      throw new Error(`Failed to download file: ${fileResponse.status} ${fileResponse.statusText}`);
+    // 🚀 UNIVERSAL PLATFORM DETECTION & HEADERS
+    const fetchHeaders = getUniversalHeaders(fileUrl);
+
+    // Try downloading with retry logic
+    let fileResponse;
+    let lastError;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        fileResponse = await fetch(fileUrl, {
+          headers: fetchHeaders,
+          redirect: 'follow',
+          cf: { cacheTtl: 0, cacheEverything: false }
+        });
+
+        if (fileResponse.ok) break;
+
+        // If 403/401, try with alternate headers
+        if (attempt < 2 && [403, 401].includes(fileResponse.status)) {
+          Object.assign(fetchHeaders, getAlternateHeaders(fileUrl, attempt));
+          continue;
+        }
+
+        lastError = `${fileResponse.status} ${fileResponse.statusText}`;
+      } catch (err) {
+        lastError = err.message;
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          continue;
+        }
+      }
+    }
+
+    if (!fileResponse || !fileResponse.ok) {
+      throw new Error(`Failed to download file: ${lastError}`);
     }
 
     const arrayBuffer = await fileResponse.arrayBuffer();
@@ -100,12 +129,18 @@ export async function onRequest(context) {
         filename = decodedPath.split('/').pop() || `file_${Date.now()}`;
         filename = filename.split('?')[0].split('#')[0];
       }
+
+      // Auto-detect extension from content-type if missing
+      if (!filename.includes('.')) {
+        const ext = getExtensionFromContentType(contentType);
+        if (ext) filename += ext;
+      }
     }
 
-    // ✅ FIXED LINE - No more regex error
+    // Sanitize filename
     filename = filename.replace(/[<>:"/\\|?*]/g, '_').replace(/[-\u001F]/g, '').trim();
-    if (filename.length === 0) {
-      filename = `file_${Date.now()}`;
+    if (filename.length === 0 || filename === '_') {
+      filename = `file_${Date.now()}${getExtensionFromContentType(contentType)}`;
     }
 
     const MAX_FILE_SIZE = 500 * 1024 * 1024;
@@ -126,6 +161,8 @@ export async function onRequest(context) {
     if (totalChunks > kvNamespaces.length) {
       throw new Error(`File requires ${totalChunks} chunks but only ${kvNamespaces.length} KV namespaces available`);
     }
+
+    console.log(`📦 Uploading ${totalChunks} chunks for: ${filename} (${formatBytes(file.size)})`);
 
     const chunkPromises = [];
     const uploadStartTime = Date.now();
@@ -151,7 +188,7 @@ export async function onRequest(context) {
       uploadedAt: Date.now(),
       uploadDuration: parseFloat(uploadDuration),
       type: 'multi_kv_chunked_url',
-      version: '2.1',
+      version: '2.2',
       sourceUrl: fileUrl,
       sourceMethod: request.method,
       totalChunks,
@@ -189,16 +226,104 @@ export async function onRequest(context) {
       },
     };
 
+    console.log(`✅ Upload success: ${fileId} | ${filename} | ${formatBytes(file.size)}`);
+
     return new Response(JSON.stringify(result, null, 2), {
       status: 200,
       headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders },
     });
   } catch (error) {
+    console.error('❌ Upload failed:', error.message);
     return new Response(
       JSON.stringify({ success: false, error: { message: error.message || 'Unknown error occurred', type: error.name || 'UploadError', timestamp: new Date().toISOString() }}),
       { status: 500, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }}
     );
   }
+}
+
+// 🚀 UNIVERSAL HEADER GENERATOR - Supports all platforms automatically
+function getUniversalHeaders(url) {
+  const urlLower = url.toLowerCase();
+  
+  // Base headers - works for most sites
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+  };
+
+  // Platform-specific headers
+  if (urlLower.includes('instagram.com') || urlLower.includes('cdninstagram.com')) {
+    headers['Referer'] = 'https://www.instagram.com/';
+    headers['Origin'] = 'https://www.instagram.com';
+    headers['Sec-Fetch-Dest'] = 'video';
+    headers['Sec-Fetch-Mode'] = 'cors';
+    headers['Sec-Fetch-Site'] = 'cross-site';
+  } else if (urlLower.includes('twitter.com') || urlLower.includes('twimg.com') || urlLower.includes('x.com')) {
+    headers['Referer'] = 'https://twitter.com/';
+    headers['Origin'] = 'https://twitter.com';
+  } else if (urlLower.includes('facebook.com') || urlLower.includes('fbcdn.net')) {
+    headers['Referer'] = 'https://www.facebook.com/';
+    headers['Origin'] = 'https://www.facebook.com';
+  } else if (urlLower.includes('tiktok.com')) {
+    headers['Referer'] = 'https://www.tiktok.com/';
+    headers['Origin'] = 'https://www.tiktok.com';
+  } else if (urlLower.includes('youtube.com') || urlLower.includes('googlevideo.com')) {
+    headers['Referer'] = 'https://www.youtube.com/';
+    headers['Origin'] = 'https://www.youtube.com';
+  } else if (urlLower.includes('reddit.com') || urlLower.includes('redd.it')) {
+    headers['Referer'] = 'https://www.reddit.com/';
+  } else if (urlLower.includes('pinterest.com') || urlLower.includes('pinimg.com')) {
+    headers['Referer'] = 'https://www.pinterest.com/';
+  } else if (urlLower.includes('tumblr.com')) {
+    headers['Referer'] = 'https://www.tumblr.com/';
+  }
+
+  return headers;
+}
+
+// Alternate headers for retry attempts
+function getAlternateHeaders(url, attempt) {
+  const userAgents = [
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  ];
+
+  return {
+    'User-Agent': userAgents[attempt % userAgents.length],
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+  };
+}
+
+// Get file extension from content-type
+function getExtensionFromContentType(contentType) {
+  const mimeMap = {
+    'video/mp4': '.mp4',
+    'video/webm': '.webm',
+    'video/quicktime': '.mov',
+    'video/x-msvideo': '.avi',
+    'video/x-matroska': '.mkv',
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'image/webp': '.webp',
+    'audio/mpeg': '.mp3',
+    'audio/wav': '.wav',
+    'audio/ogg': '.ogg',
+    'audio/aac': '.aac',
+    'application/pdf': '.pdf',
+    'application/zip': '.zip',
+    'application/x-rar-compressed': '.rar',
+    'text/plain': '.txt',
+    'application/json': '.json',
+  };
+
+  const type = contentType.split(';')[0].trim().toLowerCase();
+  return mimeMap[type] || '';
 }
 
 async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
@@ -243,7 +368,7 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
     uploadedAt: Date.now(),
     lastRefreshed: Date.now(),
     refreshCount: 0,
-    version: '2.1',
+    version: '2.2',
   };
 
   await kvNamespace.kv.put(chunkKey, JSON.stringify(metadata));
