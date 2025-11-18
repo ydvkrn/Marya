@@ -1,46 +1,48 @@
-// functions/upload-from-url-direct.js
+// functions/api-upload.js
 export async function onRequest(context) {
-  const { request } = context;
+  const { request, env } = context;
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+  };
 
-  // Allow CORS / OPTIONS
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept'
-      }
-    });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  // Accept GET and POST both
+  // Accept GET requests with ?url= and optional ?filename=
   const urlObj = new URL(request.url);
-  // try fileUrl or url as param
-  const fileUrl = urlObj.searchParams.get('fileUrl') || urlObj.searchParams.get('url');
+  const fileUrl = urlObj.searchParams.get('url') || urlObj.searchParams.get('fileUrl');
   const filename = urlObj.searchParams.get('filename') || urlObj.searchParams.get('name');
 
   if (!fileUrl) {
-    return new Response(JSON.stringify({
-      success: false, error: { message: 'Missing ?fileUrl= or ?url=' }
-    }), { status: 400, headers: { 'Content-Type': 'application/json' }});
+    return new Response(
+      JSON.stringify({ success: false, error: { message: 'Missing url or fileUrl parameter' } }),
+      { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
   }
 
-  // Forward the request to the real function as POST JSON
-  const forwardBody = {
-    fileUrl,
-    filename: filename || undefined
-  };
+  // Forward request to upload-from-url endpoint as POST
+  try {
+    const apiUrl = urlObj.origin + '/functions/upload-from-url';
 
-  const resp = await fetch(urlObj.origin + '/functions/upload-from-url', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(forwardBody)
-  });
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ fileUrl, filename }),
+    });
 
-  const result = await resp.text();
-  return new Response(result, {
-    status: resp.status,
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-  });
+    const data = await response.text();
+
+    return new Response(data, {
+      status: response.status,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ success: false, error: { message: err.message || 'Internal error' } }),
+      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
 }
