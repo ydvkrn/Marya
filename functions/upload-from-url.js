@@ -138,8 +138,7 @@ export async function onRequest(context) {
       }
     }
 
-    // ✅ CORRECT - fixed regex
-filename = filename.replace(/[<>:"/\\|?*-\u001F]/g, '_').trim();
+    filename = filename.replace(/[<>:"/\\|?*-\u001F]/g, '_').trim();
     if (filename.length === 0) {
       filename = `file_${Date.now()}`;
     }
