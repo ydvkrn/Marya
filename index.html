@@ -337,515 +337,579 @@
 
     <div id="toast" class="toast"></div>
 
-    <script>
-    let fileCounter = 0;
-    let totalSize = 0;
-    let totalChunks = 0;
-    let uploadStats = { total: 0, completed: 0, failed: 0 };
-    let isProcessing = false;
+ <script>
+        let fileCounter = 0;
+        let totalSize = 0;
+        let totalChunks = 0;
+        let uploadStats = { total: 0, completed: 0, failed: 0 };
+        let isProcessing = false;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('✅ DOM loaded, initializing MARYA VAULT v5.0 (Chunked Upload)');
-        initializeSystem();
-    });
-
-    function initializeSystem() {
-        setupFileUpload();
-        setupUrlUpload();
-        setupDragDrop();
-        console.log('✅ System initialized');
-    }
-
-    function showTab(tabName) {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        event.target.classList.add('active');
-        document.getElementById(tabName + '-content').classList.add('active');
-    }
-
-    function setupFileUpload() {
-        const fileInput = document.getElementById('fileInput');
-        const dropzone = document.getElementById('dropzone');
-
-        dropzone.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (!isProcessing) {
-                fileInput.click();
-            } else {
-                showToast('Please wait, upload in progress', 'warning');
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ DOM fully loaded, initializing MARYA VAULT ULTIMATE...');
+            initializeSystem();
         });
 
-        fileInput.addEventListener('change', (e) => {
-            if (isProcessing) {
-                showToast('Please wait, upload in progress', 'warning');
-                e.target.value = '';
+        function initializeSystem() {
+            setupFileUpload();
+            setupUrlUpload();
+            setupDragDrop();
+            console.log('✅ System initialized successfully');
+        }
+
+        function showTab(tabName) {
+            console.log(`Switching to tab: ${tabName}`);
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-content').classList.add('active');
+        }
+
+        function setupFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const dropzone = document.getElementById('dropzone');
+
+            dropzone.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Dropzone clicked, isProcessing:', isProcessing);
+                if (!isProcessing) {
+                    console.log('Triggering file input click');
+                    fileInput.click();
+                } else {
+                    console.log('Dropzone click ignored: processing in progress');
+                    showToast('Please wait, upload in progress', 'warning');
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                console.log('File input changed, files selected:', e.target.files.length);
+                if (isProcessing) {
+                    console.log('File selection ignored: processing in progress');
+                    showToast('Please wait, upload in progress', 'warning');
+                    e.target.value = '';
+                    return;
+                }
+
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+                e.target.value = ''; // Clear input for re-selection
+            });
+        }
+
+        function setupUrlUpload() {
+            const urlInput = document.getElementById('urlInput');
+            urlInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter' && !isProcessing) {
+                    console.log('Enter pressed in URL input');
+                    uploadFromUrl();
+                }
+            });
+        }
+
+        function setupDragDrop() {
+            const dropzone = document.getElementById('dropzone');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    if (!isProcessing) {
+                        dropzone.classList.add('dragover');
+                    }
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', e => {
+                console.log('Files dropped:', e.dataTransfer.files.length);
+                if (!isProcessing) {
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length > 0) {
+                        handleFiles(files);
+                    }
+                } else {
+                    console.log('Drop ignored: processing in progress');
+                    showToast('Please wait, upload in progress', 'warning');
+                }
+            }, false);
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+
+        function handleFiles(files) {
+            console.log('📦 Handling files:', files.length);
+            if (files.length === 0) {
+                showToast('No files selected', 'error');
                 return;
             }
-            const files = Array.from(e.target.files);
-            if (files.length > 0) handleFiles(files);
-            e.target.value = '';
-        });
-    }
 
-    function setupUrlUpload() {
-        const urlInput = document.getElementById('urlInput');
-        urlInput.addEventListener('keypress', e => {
-            if (e.key === 'Enter' && !isProcessing) uploadFromUrl();
-        });
-    }
+            const MAX_SIZE = 500 * 1024 * 1024; // 500MB
+            const validFiles = files.filter(file => {
+                if (file.size > MAX_SIZE) {
+                    showToast(`File "${file.name}" is too large (max 500MB)`, 'error');
+                    return false;
+                }
+                if (file.size === 0) {
+                    showToast(`File "${file.name}" is empty`, 'error');
+                    return false;
+                }
+                return true;
+            });
 
-    function setupDragDrop() {
-        const dropzone = document.getElementById('dropzone');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropzone.addEventListener(eventName, () => {
-                if (!isProcessing) dropzone.classList.add('dragover');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, () => {
-                dropzone.classList.remove('dragover');
-            }, false);
-        });
-
-        dropzone.addEventListener('drop', e => {
-            if (!isProcessing) {
-                const files = Array.from(e.dataTransfer.files);
-                if (files.length > 0) handleFiles(files);
-            } else {
-                showToast('Please wait, upload in progress', 'warning');
+            if (validFiles.length === 0) {
+                return;
             }
-        }, false);
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    }
+            isProcessing = true;
+            showResults();
+            updateFileCounter(validFiles.length);
 
-    function handleFiles(files) {
-        console.log('📦 Handling files:', files.length);
-        if (files.length === 0) {
-            showToast('No files selected', 'error');
-            return;
+            validFiles.forEach((file, index) => {
+                setTimeout(() => uploadFile(file), index * 100);
+            });
         }
 
-        const MAX_SIZE = 500 * 1024 * 1024;
-        const validFiles = files.filter(file => {
-            if (file.size > MAX_SIZE) {
-                showToast(`"${file.name}" too large (max 500MB)`, 'error');
-                return false;
-            }
-            if (file.size === 0) {
-                showToast(`"${file.name}" is empty`, 'error');
-                return false;
-            }
-            return true;
-        });
+        function uploadFile(file) {
+            console.log(`🚀 Starting upload for file: ${file.name}`);
+            const fileItem = createAdvancedFileItem(file);
+            document.getElementById('filesList').prepend(fileItem);
 
-        if (validFiles.length === 0) return;
+            const elements = getFileElements(fileItem);
+            uploadStats.total++;
+            updateTotalSize(file.size);
 
-        isProcessing = true;
-        showResults();
-        updateFileCounter(validFiles.length);
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+            const startTime = Date.now();
+            let lastLoaded = 0;
+            let lastTime = startTime;
 
-        validFiles.forEach((file, index) => {
-            setTimeout(() => uploadFile(file), index * 500);
-        });
-    }
+            xhr.upload.addEventListener('progress', e => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const currentTime = Date.now();
+                    const timeDiff = (currentTime - lastTime) / 1000;
+                    const loadedDiff = e.loaded - lastLoaded;
+                    const speed = timeDiff > 0 ? loadedDiff / timeDiff : 0;
 
-    // ✅ NEW: Chunked upload function
-    async function uploadFile(file) {
-        console.log(`🚀 Chunked upload: ${file.name} (${formatBytes(file.size)})`);
-        
-        const fileId = `id${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-        const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
-        const CHUNK_SIZE = 18 * 1024 * 1024; // 18MB
-        const totalChunksCount = Math.ceil(file.size / CHUNK_SIZE);
+                    lastLoaded = e.loaded;
+                    lastTime = currentTime;
 
-        const fileItem = createAdvancedFileItem(file);
-        document.getElementById('filesList').prepend(fileItem);
-        const elements = getFileElements(fileItem);
+                    updateProgress(elements, percent, speed);
+                    updateStats();
+                }
+            });
 
-        uploadStats.total++;
-        updateTotalSize(file.size);
-
-        const chunkResults = [];
-        let uploadedBytes = 0;
-        const startTime = Date.now();
-
-        try {
-            // Upload chunks sequentially
-            for (let i = 0; i < totalChunksCount; i++) {
-                const start = i * CHUNK_SIZE;
-                const end = Math.min(start + CHUNK_SIZE, file.size);
-                const chunk = file.slice(start, end);
-
-                console.log(`Uploading chunk ${i + 1}/${totalChunksCount} (${formatBytes(chunk.size)})`);
-
-                // Update progress
-                uploadedBytes += chunk.size;
-                const percent = Math.round((uploadedBytes / file.size) * 100);
-                const elapsed = (Date.now() - startTime) / 1000;
-                const speed = uploadedBytes / elapsed;
-                updateProgress(elements, percent, speed);
-
-                // Upload chunk with retry
-                let retries = 3;
-                let success = false;
-
-                while (retries > 0 && !success) {
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
                     try {
-                        const response = await fetch('/upload-chunk', {
-                            method: 'POST',
-                            headers: {
-                                'X-File-Id': fileId,
-                                'X-Chunk-Index': i.toString(),
-                                'X-Total-Chunks': totalChunksCount.toString(),
-                                'X-Filename': file.name
-                            },
-                            body: chunk
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}`);
-                        }
-
-                        const result = await response.json();
-
-                        if (result.success) {
-                            chunkResults.push({
-                                index: i,
-                                kvNamespace: result.kvNamespace,
-                                telegramFileId: result.telegramFileId,
-                                size: chunk.size
-                            });
-                            success = true;
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.success && result.data) {
+                            handleUploadSuccess(elements, result.data, file);
+                            uploadStats.completed++;
+                            totalChunks += result.data.storage?.totalChunks || 0;
+                            showToast(`✅ ${file.name} uploaded successfully!`, 'success');
                         } else {
-                            throw new Error(result.error || 'Chunk upload failed');
+                            throw new Error(result.error?.message || 'Upload failed');
                         }
-
-                    } catch (error) {
-                        retries--;
-                        console.error(`Chunk ${i} attempt failed:`, error.message);
-                        if (retries > 0) {
-                            console.log(`Retrying chunk ${i}... (${retries} left)`);
-                            await sleep(2000);
-                        } else {
-                            throw new Error(`Chunk ${i} failed after 3 attempts: ${error.message}`);
-                        }
+                    } catch (parseError) {
+                        console.error('Parse error:', parseError);
+                        handleUploadError(elements, 'Invalid response');
+                        uploadStats.failed++;
+                        showToast(`❌ Upload failed: ${file.name}`, 'error');
                     }
+                } else {
+                    handleUploadError(elements, `HTTP ${xhr.status}`);
+                    uploadStats.failed++;
+                    showToast(`❌ Upload failed: ${file.name} (HTTP ${xhr.status})`, 'error');
                 }
-
-                // Small delay between chunks
-                if (i < totalChunksCount - 1) {
-                    await sleep(300);
-                }
-            }
-
-            // Finalize upload
-            console.log('Finalizing upload...');
-            elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizing...';
-
-            const finalizeResponse = await fetch('/finalize-upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fileId,
-                    filename: file.name,
-                    size: file.size,
-                    contentType: file.type || 'application/octet-stream',
-                    extension,
-                    chunks: chunkResults
-                })
-            });
-
-            const finalizeData = await finalizeResponse.json();
-
-            if (finalizeData.success) {
-                handleUploadSuccess(elements, finalizeData.data, file);
-                uploadStats.completed++;
-                totalChunks += chunkResults.length;
-                showToast(`✅ ${file.name} uploaded successfully!`, 'success');
-            } else {
-                throw new Error('Finalize failed');
-            }
-
-        } catch (error) {
-            console.error('Upload error:', error);
-            handleUploadError(elements, error.message);
-            uploadStats.failed++;
-            showToast(`❌ Upload failed: ${file.name}`, 'error');
-        }
-
-        updateStats();
-        checkProcessingComplete();
-    }
-
-    async function uploadFromUrl() {
-        console.log('🌐 URL upload');
-        const urlInput = document.getElementById('urlInput');
-        const filenameInput = document.getElementById('filenameInput');
-        const uploadBtn = document.getElementById('urlUploadBtn');
-
-        const fileUrl = urlInput.value.trim();
-        const filename = filenameInput.value.trim();
-
-        if (!fileUrl) {
-            showToast('Please enter a URL', 'error');
-            return;
-        }
-
-        try {
-            new URL(fileUrl);
-        } catch {
-            showToast('Invalid URL', 'error');
-            return;
-        }
-
-        if (isProcessing) {
-            showToast('Please wait, upload in progress', 'warning');
-            return;
-        }
-
-        isProcessing = true;
-        showResults();
-
-        const fileItem = createUrlFileItem({ filename: 'Importing...', size: 0 });
-        document.getElementById('filesList').prepend(fileItem);
-        const elements = getFileElements(fileItem);
-
-        urlInput.disabled = true;
-        filenameInput.disabled = true;
-        uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
-
-        try {
-            const response = await fetch('/upload-from-url', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fileUrl, filename: filename || undefined })
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
-            }
-
-            const result = await response.json();
-
-            if (result.success && result.data) {
-                updateFileCounter(1);
-                totalSize += result.data.size;
-                totalChunks += result.data.storage?.totalChunks || 0;
                 updateStats();
+                checkProcessingComplete();
+            });
 
-                fileItem.querySelector('.file-name').textContent = result.data.filename;
-                fileItem.querySelector('.file-meta').innerHTML = `
-                    ${formatBytes(result.data.size)} • URL Import • 
-                    ${result.data.storage?.totalChunks || 0} chunks • 
-                    <span class="file-status completed"><i class="fas fa-check-circle"></i> Complete</span>
-                `;
+            xhr.addEventListener('error', () => {
+                uploadStats.failed++;
+                handleUploadError(elements, 'Network error');
+                showToast(`🔥 Network error: ${file.name}`, 'error');
+                updateStats();
+                checkProcessingComplete();
+            });
 
-                const viewUrl = result.data.urls?.view || result.data.url;
-                const downloadUrl = result.data.urls?.download;
-
-                fileItem.querySelector('.file-actions').innerHTML = `
-                    <a href="${viewUrl}" target="_blank" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
-                    <a href="${downloadUrl}" class="btn btn-success"><i class="fas fa-download"></i> Download</a>
-                    <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline"><i class="fas fa-copy"></i> Copy Link</button>
-                `;
-
-                fileItem.querySelector('.progress-container').style.display = 'none';
-                showToast(`🚀 Imported: ${result.data.filename}`, 'success');
-                urlInput.value = '';
-                filenameInput.value = '';
-            } else {
-                throw new Error(result.error?.message || 'Import failed');
-            }
-        } catch (error) {
-            console.error('URL error:', error);
-            elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed`;
-            elements.status.className = 'file-status failed';
-            showToast(`❌ Import failed: ${error.message}`, 'error');
-        } finally {
-            urlInput.disabled = false;
-            filenameInput.disabled = false;
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import';
-            isProcessing = false;
+            xhr.open('POST', '/upload');
+            xhr.send(formData);
         }
-    }
 
-    function createAdvancedFileItem(file) {
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.innerHTML = `
-            <div class="file-header">
-                <div class="file-icon">${getFileIcon(file.name)}</div>
-                <div class="file-details">
-                    <div class="file-name">${file.name}</div>
-                    <div class="file-meta">
-                        ${formatBytes(file.size)} • ${file.type || 'Unknown'} • 
-                        <span class="file-status uploading"><i class="fas fa-spinner fa-spin"></i> Preparing...</span>
+        async function uploadFromUrl() {
+            console.log('🌐 Starting URL upload');
+            const urlInput = document.getElementById('urlInput');
+            const filenameInput = document.getElementById('filenameInput');
+            const uploadBtn = document.getElementById('urlUploadBtn');
+
+            const fileUrl = urlInput.value.trim();
+            const filename = filenameInput.value.trim();
+
+            if (!fileUrl) {
+                showToast('Please enter a URL', 'error');
+                return;
+            }
+
+            try {
+                new URL(fileUrl);
+                if (!fileUrl.match(/^https?:\/\/.+/)) {
+                    throw new Error('URL must start with http:// or https://');
+                }
+            } catch {
+                showToast('Please enter a valid URL (e.g., https://example.com/file.mp4)', 'error');
+                return;
+            }
+
+            if (isProcessing) {
+                showToast('Please wait, upload in progress', 'warning');
+                return;
+            }
+
+            isProcessing = true;
+            showResults();
+
+            const fileItem = createUrlFileItem({
+                filename: filename || 'Importing from URL...',
+                size: 0,
+                storage: { totalChunks: 0 }
+            });
+            document.getElementById('filesList').prepend(fileItem);
+            const elements = getFileElements(fileItem);
+            elements.status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+            elements.actions.innerHTML = '';
+
+            showToast('🌐 Starting URL import...', 'success');
+            urlInput.disabled = true;
+            filenameInput.disabled = true;
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+
+            try {
+                console.log(`📤 Sending POST request to /upload-from-url`);
+                const response = await fetch('/upload-from-url', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        fileUrl: fileUrl,
+                        filename: filename || undefined
+                    })
+                });
+
+                console.log(`Response status: ${response.status}`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Fetch error: HTTP ${response.status} - ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Parsed response:', result);
+
+                if (result.success && result.data) {
+                    if (result.data.size === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
+
+                    updateFileCounter(1);
+                    totalSize += result.data.size;
+                    totalChunks += result.data.chunks || result.data.storage?.totalChunks || 0;
+                    updateStats();
+
+                    fileItem.querySelector('.file-name').textContent = result.data.filename;
+                    fileItem.querySelector('.file-meta').innerHTML = `
+                        ${formatBytes(result.data.size)} • URL Import • 
+                        ${result.data.chunks || result.data.storage?.totalChunks || 0} chunks • 
+                        <span class="file-status completed">
+                            <i class="fas fa-check-circle"></i> Complete
+                        </span>
+                    `;
+
+                    const viewUrl = result.data.urls?.view || result.data.url;
+                    const downloadUrl = result.data.urls?.download || result.data.download;
+
+                    fileItem.querySelector('.file-actions').innerHTML = `
+                        <a href="${viewUrl}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="${downloadUrl}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline">
+                            <i class="fas fa-copy"></i> Copy Link
+                        </button>
+                    `;
+
+                    // Hide progress bar
+                    fileItem.querySelector('.progress-container').style.display = 'none';
+
+                    showToast(`🚀 URL import completed: ${result.data.filename}`, 'success');
+                    urlInput.value = '';
+                    filenameInput.value = '';
+                } else {
+                    throw new Error(result.error?.message || result.error || 'Import failed');
+                }
+            } catch (error) {
+                console.error('❌ URL upload error:', error.message);
+                elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed`;
+                elements.status.className = 'file-status failed';
+                fileItem.querySelector('.file-meta').innerHTML = `
+                    URL Import Failed • 
+                    <span class="file-status failed">
+                        <i class="fas fa-times-circle"></i> ${error.message.substring(0, 50)}
+                    </span>
+                `;
+                showToast(`❌ Import failed: ${error.message}`, 'error');
+            } finally {
+                urlInput.disabled = false;
+                filenameInput.disabled = false;
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Import';
+                isProcessing = false;
+                console.log('✅ isProcessing reset to false after URL upload');
+            }
+        }
+
+        function createAdvancedFileItem(file) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon">${getFileIcon(file.name)}</div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">
+                            ${formatBytes(file.size)} • ${file.type || 'Unknown'} • 
+                            <span class="file-status uploading">
+                                <i class="fas fa-spinner fa-spin"></i> Preparing...
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="progress-container">
-                <div class="progress-info">
-                    <span class="progress-percent">0%</span>
-                    <span class="speed-indicator"><i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 KB/s</span></span>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-percent">0%</span>
+                        <span class="speed-indicator">
+                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
+                        </span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
                 </div>
-                <div class="progress-bar"><div class="progress-fill"></div></div>
-            </div>
-            <div class="file-actions"></div>
-        `;
-        return item;
-    }
+                <div class="file-actions"></div>
+            `;
+            return item;
+        }
 
-    function createUrlFileItem(data) {
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.innerHTML = `
-            <div class="file-header">
-                <div class="file-icon"><i class="fas fa-link"></i></div>
-                <div class="file-details">
-                    <div class="file-name">${data.filename}</div>
-                    <div class="file-meta"><span class="file-status uploading"><i class="fas fa-spinner fa-spin"></i> Importing...</span></div>
+        function createUrlFileItem(data) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <div class="file-header">
+                    <div class="file-icon"><i class="fas fa-link"></i></div>
+                    <div class="file-details">
+                        <div class="file-name">${data.filename}</div>
+                        <div class="file-meta">
+                            ${formatBytes(data.size)} • URL Import • 
+                            <span class="file-status uploading">
+                                <i class="fas fa-spinner fa-spin"></i> Importing...
+                            </span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="progress-container">
-                <div class="progress-info"><span class="progress-percent">0%</span><span class="speed-indicator"><i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 KB/s</span></span></div>
-                <div class="progress-bar"><div class="progress-fill"></div></div>
-            </div>
-            <div class="file-actions"></div>
-        `;
-        return item;
-    }
-
-    function getFileElements(fileItem) {
-        return {
-            progressFill: fileItem.querySelector('.progress-fill'),
-            progressPercent: fileItem.querySelector('.progress-percent'),
-            uploadSpeed: fileItem.querySelector('.upload-speed'),
-            status: fileItem.querySelector('.file-status'),
-            actions: fileItem.querySelector('.file-actions')
-        };
-    }
-
-    function updateProgress(elements, percent, speed) {
-        elements.progressFill.style.width = percent + '%';
-        elements.progressPercent.textContent = percent + '%';
-        elements.uploadSpeed.textContent = formatBytes(speed) + '/s';
-        if (percent < 100) {
-            elements.status.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Uploading... ${percent}%`;
-            elements.status.className = 'file-status uploading';
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-percent">0%</span>
+                        <span class="speed-indicator">
+                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
+                        </span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="file-actions"></div>
+            `;
+            return item;
         }
-    }
 
-    function handleUploadSuccess(elements, data, file) {
-        elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
-        elements.status.className = 'file-status completed';
-        elements.progressFill.style.width = '100%';
-        elements.progressPercent.textContent = '100%';
-
-        const viewUrl = data.urls?.view || data.url;
-        const downloadUrl = data.urls?.download;
-
-        elements.actions.innerHTML = `
-            <a href="${viewUrl}" target="_blank" class="btn btn-primary"><i class="fas fa-eye"></i> View</a>
-            <a href="${downloadUrl}" class="btn btn-success"><i class="fas fa-download"></i> Download</a>
-            <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline"><i class="fas fa-copy"></i> Copy Link</button>
-        `;
-    }
-
-    function handleUploadError(elements, error) {
-        elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
-        elements.status.className = 'file-status failed';
-        elements.progressFill.style.width = '100%';
-        elements.progressFill.style.background = 'var(--error)';
-    }
-
-    function checkProcessingComplete() {
-        if (uploadStats.total === uploadStats.completed + uploadStats.failed) {
-            isProcessing = false;
-            console.log('✅ All uploads done');
+        function getFileElements(fileItem) {
+            return {
+                progressFill: fileItem.querySelector('.progress-fill'),
+                progressPercent: fileItem.querySelector('.progress-percent'),
+                uploadSpeed: fileItem.querySelector('.upload-speed'),
+                status: fileItem.querySelector('.file-status'),
+                actions: fileItem.querySelector('.file-actions')
+            };
         }
-    }
 
-    function updateStats() {
-        document.getElementById('totalSize').textContent = formatBytes(totalSize);
-        document.getElementById('totalChunks').textContent = totalChunks;
-        document.getElementById('filesCount').textContent = uploadStats.completed;
-        document.getElementById('statsDashboard').style.display = 'grid';
-    }
+        function updateProgress(elements, percent, speed) {
+            elements.progressFill.style.width = percent + '%';
+            elements.progressPercent.textContent = percent + '%';
+            elements.uploadSpeed.textContent = formatBytes(speed) + '/s';
 
-    function showResults() {
-        document.getElementById('results').classList.add('show');
-    }
+            if (percent < 100) {
+                elements.status.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Uploading... ${percent}%`;
+                elements.status.className = 'file-status uploading';
+            }
+        }
 
-    function updateFileCounter(count) {
-        fileCounter += count;
-        document.getElementById('resultsCount').textContent = `${fileCounter} file${fileCounter !== 1 ? 's' : ''}`;
-    }
+        function handleUploadSuccess(elements, data, file) {
+            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
+            elements.status.className = 'file-status completed';
+            elements.progressFill.style.width = '100%';
+            elements.progressPercent.textContent = '100%';
 
-    function updateTotalSize(size) {
-        totalSize += size;
-    }
+            const viewUrl = data.urls?.view || data.url;
+            const downloadUrl = data.urls?.download || data.download;
+            const streamUrl = data.urls?.stream;
 
-    function getFileIcon(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        const icons = {
-            jpg: '<i class="fas fa-image"></i>', jpeg: '<i class="fas fa-image"></i>', png: '<i class="fas fa-image"></i>',
-            mp4: '<i class="fas fa-video"></i>', mkv: '<i class="fas fa-video"></i>', avi: '<i class="fas fa-video"></i>',
-            mp3: '<i class="fas fa-music"></i>', wav: '<i class="fas fa-music"></i>',
-            pdf: '<i class="fas fa-file-pdf"></i>', zip: '<i class="fas fa-file-archive"></i>'
-        };
-        return icons[ext] || '<i class="fas fa-file"></i>';
-    }
+            elements.actions.innerHTML = `
+                <a href="${viewUrl}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                <a href="${downloadUrl}" class="btn btn-success">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                ${streamUrl ? `<a href="${streamUrl}" target="_blank" class="btn btn-outline">
+                    <i class="fas fa-play"></i> Stream
+                </a>` : ''}
+                <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline">
+                    <i class="fas fa-copy"></i> Copy Link
+                </button>
+            `;
+        }
 
-    function formatBytes(bytes) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
+        function handleUploadError(elements, error) {
+            elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error}`;
+            elements.status.className = 'file-status failed';
+            elements.progressFill.style.width = '100%';
+            elements.progressFill.style.background = 'var(--error)';
+        }
 
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('Link copied!', 'success');
-        }).catch(() => showToast('Copy failed', 'error'));
-    }
+        function checkProcessingComplete() {
+            if (uploadStats.total === uploadStats.completed + uploadStats.failed) {
+                isProcessing = false;
+                console.log('✅ All uploads completed, isProcessing reset to false');
+            }
+        }
 
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
-            <div class="toast-icon">${icon}</div>
-            <div class="toast-content">
-                <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-        `;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 4000);
-    }
+        function updateStats() {
+            document.getElementById('totalSize').textContent = formatBytes(totalSize);
+            document.getElementById('totalChunks').textContent = totalChunks;
+            document.getElementById('filesCount').textContent = uploadStats.completed;
 
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+            const avgSpeed = totalSize / 1024 / 1024; // Convert to MB
+            document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(2) + ' MB';
 
-    console.log('✅ MARYA VAULT v5.0 (Chunked Upload) loaded');
-</script>
+            document.getElementById('statsDashboard').style.display = 'grid';
+        }
+
+        function showResults() {
+            document.getElementById('results').classList.add('show');
+        }
+
+        function updateFileCounter(count) {
+            fileCounter += count;
+            document.getElementById('resultsCount').textContent = `${fileCounter} file${fileCounter !== 1 ? 's' : ''} uploaded`;
+        }
+
+        function updateTotalSize(size) {
+            totalSize += size;
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                // Images
+                jpg: '<i class="fas fa-image"></i>', jpeg: '<i class="fas fa-image"></i>',
+                png: '<i class="fas fa-image"></i>', gif: '<i class="fas fa-image"></i>',
+                webp: '<i class="fas fa-image"></i>', svg: '<i class="fas fa-image"></i>',
+                // Videos
+                mp4: '<i class="fas fa-video"></i>', avi: '<i class="fas fa-video"></i>',
+                mov: '<i class="fas fa-video"></i>', mkv: '<i class="fas fa-video"></i>',
+                webm: '<i class="fas fa-video"></i>',
+                // Audio
+                mp3: '<i class="fas fa-music"></i>', wav: '<i class="fas fa-music"></i>',
+                ogg: '<i class="fas fa-music"></i>', flac: '<i class="fas fa-music"></i>',
+                // Documents
+                pdf: '<i class="fas fa-file-pdf"></i>',
+                doc: '<i class="fas fa-file-word"></i>', docx: '<i class="fas fa-file-word"></i>',
+                xls: '<i class="fas fa-file-excel"></i>', xlsx: '<i class="fas fa-file-excel"></i>',
+                ppt: '<i class="fas fa-file-powerpoint"></i>', pptx: '<i class="fas fa-file-powerpoint"></i>',
+                txt: '<i class="fas fa-file-alt"></i>',
+                // Archives
+                zip: '<i class="fas fa-file-archive"></i>', rar: '<i class="fas fa-file-archive"></i>',
+                '7z': '<i class="fas fa-file-archive"></i>', tar: '<i class="fas fa-file-archive"></i>',
+                gz: '<i class="fas fa-file-archive"></i>',
+                // Code
+                js: '<i class="fas fa-file-code"></i>', html: '<i class="fas fa-file-code"></i>',
+                css: '<i class="fas fa-file-code"></i>', json: '<i class="fas fa-file-code"></i>',
+                xml: '<i class="fas fa-file-code"></i>', php: '<i class="fas fa-file-code"></i>',
+                py: '<i class="fas fa-file-code"></i>'
+            };
+            return icons[ext] || '<i class="fas fa-file"></i>';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Link copied to clipboard!', 'success');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showToast('Failed to copy link', 'error');
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        console.log('✅ MARYA VAULT ULTIMATE loaded successfully');
+    </script>
 </body>
 </html>
