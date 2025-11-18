@@ -93,8 +93,8 @@ export async function onRequest(context) {
       }
     }
 
-    // Ensure filename has no invalid chars for Telegram
-    filename = filename.replace(/[\x00-\x1F\x7F<>:"/\\|?*-\u001F]/g, '_');
+    // FIXED: Safe filename cleaning - moved hyphen to end to avoid invalid range
+    filename = filename.replace(/[\x00-\x1F\x7F<>:"/\\|?*\u001F-]/g, '_');
 
     const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
     if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
