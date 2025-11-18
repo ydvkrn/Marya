@@ -553,7 +553,7 @@
             xhr.send(formData);
         }
 
-        async async function uploadFromUrl() {
+        async function uploadFromUrl() {
             console.log('🌐 Starting URL upload');
             const urlInput = document.getElementById('urlInput');
             const filenameInput = document.getElementById('filenameInput');
@@ -603,7 +603,7 @@
 
             try {
                 console.log(`📤 Sending POST request to /upload-from-url`);
-                const response = await fetch('/functions/upload-from-url', {
+                const response = await fetch('/upload-from-url', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
