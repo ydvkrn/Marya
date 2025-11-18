@@ -38,70 +38,80 @@ export async function onRequest(context) {
     }
 
     if (!BOT_TOKEN || !CHANNEL_ID || kvNamespaces.length === 0) {
-      throw new Error('Missing credentials or KV namespaces');
+      throw new Error('Missing BOT_TOKEN, CHANNEL_ID or KV namespaces');
     }
 
-    // Parse JSON body
+    // Parse body
     const body = await request.json();
-    const fileUrl = body.fileUrl || body.url || body.telegramUrl;
-    const customFilename = body.filename || null;
+    const fileUrl = body.fileUrl || body.url || body.telegramUrl || body.file_url;
+    const customFilename = body.filename || body.name || null;
 
-    if (!fileUrl) {
-      throw new Error('No URL provided');
+    if (!fileUrl || typeof fileUrl !== 'string') {
+      throw new Error('Valid fileUrl is required');
     }
 
-    console.log('Fetching URL:', fileUrl);
+    console.log('Fetching file from:', fileUrl);
 
-    // Fetch file
+    // Fetch file with better headers
     const fileResponse = await fetch(fileUrl, {
-      headers: { 'User-Agent': 'MaryaVault/2.0' }
+      headers: {
+        'User-Agent': 'MaryaVault/2.0 (+https://github.com/ydvkrn/Marya)'
+      },
+      redirect: 'follow'
     });
 
     if (!fileResponse.ok) {
-      throw new Error(`Failed to fetch: ${fileResponse.status}`);
+      throw new Error(`Failed to download: ${fileResponse.status} ${fileResponse.statusText}`);
     }
 
     const arrayBuffer = await fileResponse.arrayBuffer();
-
     if (arrayBuffer.byteLength === 0) {
       throw new Error('Downloaded file is empty');
     }
 
     const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
 
+    // FIXED: Safe & correct filename extraction
     let filename = customFilename;
+
     if (!filename) {
       const disposition = fileResponse.headers.get('content-disposition');
-      if (disposition && disposition.includes('filename=')) {
-        const matches = disposition.match(/filename[^;=
-]*=((['"]).*?\u0002|[^;
-]*)/);
-        if (matches && matches[1]) {
-          filename = matches[1].replace(/['"]/g, '');
+      if (disposition) {
+        const match = disposition.match(/filename[*]?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+        if (match?.[1]) {
+          filename = decodeURIComponent(match[1].trim());
         }
       }
 
+      // Final fallback: from URL
       if (!filename) {
-        filename = new URL(fileUrl).pathname.split('/').pop() || `file_${Date.now()}`;
+        const urlPath = new URL(fileUrl).pathname;
+        const decodedPath = decodeURIComponent(urlPath);
+        filename = decodedPath.split('/').pop() || `file_${Date.now()}`;
+        // Clean weird characters
+        filename = filename.split('?')[0].split('#')[0];
       }
     }
 
-    const MAX_FILE_SIZE = 500 * 1024 * 1024;
+    // Ensure filename has no invalid chars for Telegram
+    filename = filename.replace(/[\x00-\x1F\x7F<>:"/\\|?*-\u001F]/g, '_');
+
+    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
     if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
-      throw new Error(`File too large: ${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB`);
+      throw new Error(`File too large: ${formatBytes(arrayBuffer.byteLength)} (max 500MB)`);
     }
 
     const file = new File([arrayBuffer], filename, { type: contentType });
     const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).slice(2, 8);
+    const random = Math.random().toString(36).substring(2, 8);
     const fileId = `url${timestamp}${random}`;
     const extension = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')) : '';
 
-    const CHUNK_SIZE = 20 * 1024 * 1024;
+    const CHUNK_SIZE = 20 * 1024 * 1024; // 20 MB chunks
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     if (totalChunks > kvNamespaces.length) {
-      throw new Error(`File requires ${totalChunks} chunks`);
+      throw new Error(`File too big: needs ${totalChunks} chunks but only ${kvNamespaces.length} KV namespaces available`);
     }
 
     const chunkPromises = [];
@@ -114,12 +124,15 @@ export async function onRequest(context) {
       const chunkFile = new File([chunk], `${filename}.part${i}`, { type: contentType });
       const targetKV = kvNamespaces[i % kvNamespaces.length];
 
-      chunkPromises.push(uploadChunkToKV(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV));
+      chunkPromises.push(
+        uploadChunkToKV(chunkFile, fileId, i, BOT_TOKEN, CHANNEL_ID, targetKV)
+      );
     }
 
     const chunkResults = await Promise.all(chunkPromises);
     const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(2);
 
+    // Save master metadata in first KV
     const masterMetadata = {
       filename,
       size: file.size,
@@ -128,7 +141,7 @@ export async function onRequest(context) {
       uploadedAt: Date.now(),
       uploadDuration: parseFloat(uploadDuration),
       type: 'multi_kv_chunked_url',
-      version: '2.0',
+      version: '2.1',
       sourceUrl: fileUrl,
       totalChunks,
       chunks: chunkResults.map((r, i) => ({
@@ -150,7 +163,7 @@ export async function onRequest(context) {
 
     const result = {
       success: true,
-      message: 'URL import completed',
+      message: 'File successfully imported from URL',
       data: {
         id: fileId,
         filename,
@@ -169,25 +182,24 @@ export async function onRequest(context) {
           kvDistribution: chunkResults.map(r => r.kvNamespace)
         },
         uploadedAt: new Date().toISOString()
-      },
-      timestamp: new Date().toISOString()
+      }
     };
 
-    console.log('✅ URL UPLOAD COMPLETED:', fileId);
+    console.log('URL UPLOAD SUCCESS:', fileId, filename, formatBytes(file.size));
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(result, null, 2), {
       status: 200,
       headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('❌ URL UPLOAD ERROR:', error);
+    console.error('URL UPLOAD FAILED:', error.message);
 
     return new Response(JSON.stringify({
       success: false,
       error: {
-        message: error.message,
-        type: error.name || 'UrlUploadError',
+        message: error.message || 'Unknown error occurred',
+        type: error.name || 'UploadError',
         timestamp: new Date().toISOString()
       }
     }), {
@@ -197,40 +209,43 @@ export async function onRequest(context) {
   }
 }
 
+// Upload single chunk to Telegram + save metadata in KV
 async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
-  const telegramForm = new FormData();
-  telegramForm.append('chat_id', channelId);
-  telegramForm.append('document', chunkFile);
-  telegramForm.append('caption', `Chunk ${chunkIndex} - ${fileId}`);
+  const form = new FormData();
+  form.append('chat_id', channelId);
+  form.append('document', chunkFile);
+  form.append('caption', `MaryaVault Chunk | ${fileId} | Part ${chunkIndex}`);
 
-  const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
     method: 'POST',
-    body: telegramForm
+    body: form
   });
 
-  if (!telegramResponse.ok) {
-    throw new Error(`Telegram upload failed (${telegramResponse.status})`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Telegram upload failed (${res.status}): ${text}`);
   }
 
-  const telegramData = await telegramResponse.json();
-  if (!telegramData.ok || !telegramData.result?.document?.file_id) {
-    throw new Error('Invalid Telegram response');
+  const data = await res.json();
+  if (!data.ok || !data.result?.document?.file_id) {
+    throw new Error('Telegram failed to return file_id');
   }
 
-  const telegramFileId = telegramData.result.document.file_id;
-  const telegramMessageId = telegramData.result.message_id;
+  const telegramFileId = data.result.document.file_id;
+  const telegramMessageId = data.result.message_id;
 
-  const getFileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`);
-  const getFileData = await getFileResponse.json();
+  // Get direct link
+  const fileInfo = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${telegramFileId}`);
+  const fileData = await fileInfo.json();
 
-  if (!getFileData.ok || !getFileData.result?.file_path) {
-    throw new Error('Failed to get file path');
+  if (!fileData.ok || !fileData.result?.file_path) {
+    throw new Error('Failed to get Telegram file path');
   }
 
-  const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
+  const directUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
   const chunkKey = `${fileId}_chunk_${chunkIndex}`;
 
-  const chunkMetadata = {
+  const metadata = {
     telegramFileId,
     telegramMessageId,
     directUrl,
@@ -241,10 +256,10 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
     uploadedAt: Date.now(),
     lastRefreshed: Date.now(),
     refreshCount: 0,
-    version: '2.0'
+    version: '2.1'
   };
 
-  await kvNamespace.kv.put(chunkKey, JSON.stringify(chunkMetadata));
+  await kvNamespace.kv.put(chunkKey, JSON.stringify(metadata));
 
   return {
     telegramFileId,
@@ -257,10 +272,11 @@ async function uploadChunkToKV(chunkFile, fileId, chunkIndex, botToken, channelI
   };
 }
 
+// Helper function
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
