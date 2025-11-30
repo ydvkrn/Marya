@@ -1,347 +1,159 @@
-// /functions/upload.js - Memory Optimized Sequential Upload
-export async function onRequest(context) {
-  const { request, env } = context;
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const cors = require('cors');
 
-  console.log('=== MEMORY-OPTIMIZED UPLOAD START ===');
+const app = express();
 
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept'
-  };
+// CORS enable karo
+app.use(cors());
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
+// Body size limits increase karo
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({
-      success: false,
-      error: { message: 'Method not allowed' }
-    }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
-    });
-  }
-
-  try {
-    const BOT_TOKEN = env.BOT_TOKEN;
-    const CHANNEL_ID = env.CHANNEL_ID;
-
-    // Get all available KV namespaces (up to 25)
-    const kvNamespaces = [];
-    for (let i = 1; i <= 25; i++) {
-      const kvKey = i === 1 ? 'FILES_KV' : `FILES_KV${i}`;
-      if (env[kvKey]) {
-        kvNamespaces.push({ kv: env[kvKey], name: kvKey });
-      }
-    }
-
-    console.log(`Available KV: ${kvNamespaces.length}`);
-
-    if (!BOT_TOKEN || !CHANNEL_ID) {
-      throw new Error('Missing BOT_TOKEN or CHANNEL_ID');
-    }
-
-    if (kvNamespaces.length === 0) {
-      throw new Error('No KV namespaces bound');
-    }
-
-    // Parse form data (streaming)
-    const formData = await request.formData();
-    const file = formData.get('file');
-
-    if (!file) {
-      throw new Error('No file provided');
-    }
-
-    console.log(`File: ${file.name}, Size: ${file.size} bytes`);
-
-    // Dynamic max size based on available KV
-    const CHUNK_SIZE = 18 * 1024 * 1024; // 18MB chunks (safe for 20MB Telegram limit)
-    const MAX_FILE_SIZE = kvNamespaces.length * CHUNK_SIZE;
-
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error(
-        `File too large: ${formatBytes(file.size)}. Max: ${formatBytes(MAX_FILE_SIZE)} ` +
-        `(${kvNamespaces.length} KV × 18MB)`
-      );
-    }
-
-    if (file.size === 0) {
-      throw new Error('File is empty');
-    }
-
-    // Generate file ID
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).slice(2, 8);
-    const fileId = `id${timestamp}${random}`;
-    const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
-
-    console.log(`File ID: ${fileId}`);
-
-    // Calculate chunks
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    console.log(`Total chunks: ${totalChunks}`);
-
-    if (totalChunks > kvNamespaces.length) {
-      throw new Error(`Need ${totalChunks} KV, only ${kvNamespaces.length} available`);
-    }
-
-    // Convert file to ArrayBuffer once
-    const fileBuffer = await file.arrayBuffer();
-    console.log('File loaded to buffer');
-
-    const uploadStartTime = Date.now();
-    const chunkResults = [];
-
-    // Sequential upload (one by one to avoid memory issues)
-    for (let i = 0; i < totalChunks; i++) {
-      const start = i * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-
-      // Extract chunk from buffer
-      const chunkBuffer = fileBuffer.slice(start, end);
-      const chunkBlob = new Blob([chunkBuffer], { type: file.type });
-      const chunkFile = new File([chunkBlob], `${file.name}.part${i}`, { type: file.type });
-
-      const targetKV = kvNamespaces[i % kvNamespaces.length];
-
-      console.log(`Uploading chunk ${i + 1}/${totalChunks} to ${targetKV.name}`);
-
-      // Upload with retry
-      const result = await uploadChunkWithRetry(
-        chunkFile,
-        fileId,
-        i,
-        BOT_TOKEN,
-        CHANNEL_ID,
-        targetKV,
-        3 // max retries
-      );
-
-      chunkResults.push(result);
-
-      // Small delay to avoid rate limits
-      if (i < totalChunks - 1) {
-        await sleep(200);
-      }
-    }
-
-    const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(2);
-    console.log(`Upload completed in ${uploadDuration}s`);
-
-    // Store master metadata
-    const masterMetadata = {
-      filename: file.name,
-      size: file.size,
-      contentType: file.type || 'application/octet-stream',
-      extension: extension,
-      uploadedAt: Date.now(),
-      uploadDuration: parseFloat(uploadDuration),
-      type: 'multi_kv_sequential',
-      version: '3.0',
-      totalChunks: totalChunks,
-      chunks: chunkResults.map((r, i) => ({
-        index: i,
-        kvNamespace: r.kvNamespace,
-        telegramFileId: r.telegramFileId,
-        telegramMessageId: r.telegramMessageId,
-        size: r.size,
-        chunkKey: r.chunkKey,
-        uploadedAt: r.uploadedAt
-      }))
-    };
-
-    await kvNamespaces[0].kv.put(fileId, JSON.stringify(masterMetadata));
-
-    // Generate URLs
-    const baseUrl = new URL(request.url).origin;
-    const viewUrl = `${baseUrl}/btfstorage/file/${fileId}${extension}`;
-    const downloadUrl = `${baseUrl}/btfstorage/file/${fileId}${extension}?dl=1`;
-    const streamUrl = `${baseUrl}/btfstorage/file/${fileId}${extension}?stream=1`;
-
-    const result = {
-      success: true,
-      message: 'File uploaded successfully',
-      data: {
-        id: fileId,
-        filename: file.name,
-        size: file.size,
-        sizeFormatted: formatBytes(file.size),
-        contentType: file.type || 'application/octet-stream',
-        extension: extension,
-        uploadDuration: `${uploadDuration}s`,
-        uploadSpeed: `${(file.size / 1024 / parseFloat(uploadDuration)).toFixed(2)} KB/s`,
-        urls: {
-          view: viewUrl,
-          download: downloadUrl,
-          stream: streamUrl
-        },
-        storage: {
-          strategy: 'multi_kv_sequential',
-          totalChunks: totalChunks,
-          kvDistribution: chunkResults.map(r => r.kvNamespace),
-          redundancy: 'distributed'
-        },
-        uploadedAt: new Date().toISOString()
-      },
-      timestamp: new Date().toISOString()
-    };
-
-    console.log('✅ UPLOAD SUCCESS');
-
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'X-File-Id': fileId,
-        ...corsHeaders
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ UPLOAD ERROR:', error.message);
-
-    return new Response(JSON.stringify({
-      success: false,
-      error: {
-        message: error.message,
-        type: error.name || 'UploadError',
-        timestamp: new Date().toISOString()
-      }
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
-    });
-  }
+// Uploads folder create karo agar nahi hai toh
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Upload chunk with retry logic
-async function uploadChunkWithRetry(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace, maxRetries = 3) {
-  let lastError;
+// Multer configuration for chunked uploads
+const storage = multer.diskStorage({
+    destination: (req, res, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        // Original filename with timestamp
+        const timestamp = Date.now();
+        const originalName = file.originalname;
+        cb(null, `${timestamp}-${originalName}`);
+    }
+});
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+// Multer with increased limits
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 500 * 1024 * 1024, // 500MB max file size
+        fieldSize: 500 * 1024 * 1024  // 500MB max field size
+    }
+});
+
+// Chunk upload endpoint
+app.post('/upload-chunk', upload.single('chunk'), (req, res) => {
     try {
-      console.log(`Chunk ${chunkIndex}: Attempt ${attempt}/${maxRetries}`);
-      return await uploadChunkToTelegram(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace);
+        const { chunkIndex, totalChunks, fileName, fileId } = req.body;
+        const chunk = req.file;
+
+        if (!chunk) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'No chunk received' 
+            });
+        }
+
+        console.log(`Chunk ${chunkIndex + 1}/${totalChunks} received for ${fileName}`);
+
+        // Temporary chunks folder
+        const chunksDir = path.join(uploadsDir, 'chunks', fileId);
+        if (!fs.existsSync(chunksDir)) {
+            fs.mkdirSync(chunksDir, { recursive: true });
+        }
+
+        // Chunk file ko save karo
+        const chunkFileName = `chunk-${chunkIndex}`;
+        const chunkPath = path.join(chunksDir, chunkFileName);
+        
+        fs.renameSync(chunk.path, chunkPath);
+
+        res.json({
+            success: true,
+            message: `Chunk ${chunkIndex + 1}/${totalChunks} uploaded successfully`,
+            chunkIndex: parseInt(chunkIndex)
+        });
+
     } catch (error) {
-      console.error(`Chunk ${chunkIndex} attempt ${attempt} failed:`, error.message);
-      lastError = error;
-
-      if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-        console.log(`Retrying after ${delay}ms...`);
-        await sleep(delay);
-      }
+        console.error('Chunk upload error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Chunk upload failed',
+            error: error.message
+        });
     }
-  }
+});
 
-  throw new Error(`Chunk ${chunkIndex} failed after ${maxRetries} attempts: ${lastError.message}`);
-}
+// Complete upload endpoint - all chunks merge karo
+app.post('/complete-upload', async (req, res) => {
+    try {
+        const { fileName, totalChunks, fileId } = req.body;
 
-// Upload chunk to Telegram
-async function uploadChunkToTelegram(chunkFile, fileId, chunkIndex, botToken, channelId, kvNamespace) {
-  const uploadStart = Date.now();
+        const chunksDir = path.join(uploadsDir, 'chunks', fileId);
+        const outputPath = path.join(uploadsDir, fileName);
 
-  // Create form data for Telegram
-  const telegramForm = new FormData();
-  telegramForm.append('chat_id', channelId);
-  telegramForm.append('document', chunkFile);
-  telegramForm.append('caption', `Chunk ${chunkIndex} - ${fileId}`);
+        // Check if all chunks are present
+        const chunks = fs.readdirSync(chunksDir);
+        if (chunks.length !== parseInt(totalChunks)) {
+            return res.status(400).json({
+                success: false,
+                message: `Missing chunks. Expected: ${totalChunks}, Found: ${chunks.length}`
+            });
+        }
 
-  // Upload to Telegram with timeout
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+        // Chunks ko merge karo
+        const writeStream = fs.createWriteStream(outputPath);
 
-  try {
-    const telegramResponse = await fetch(
-      `https://api.telegram.org/bot${botToken}/sendDocument`,
-      {
-        method: 'POST',
-        body: telegramForm,
-        signal: controller.signal
-      }
-    );
+        for (let i = 0; i < totalChunks; i++) {
+            const chunkPath = path.join(chunksDir, `chunk-${i}`);
+            const chunkBuffer = fs.readFileSync(chunkPath);
+            writeStream.write(chunkBuffer);
+        }
 
-    clearTimeout(timeout);
+        writeStream.end();
 
-    if (!telegramResponse.ok) {
-      const errorText = await telegramResponse.text();
-      throw new Error(`Telegram error ${telegramResponse.status}: ${errorText.slice(0, 100)}`);
+        writeStream.on('finish', () => {
+            // Temporary chunks delete karo
+            fs.rmSync(chunksDir, { recursive: true, force: true });
+            
+            console.log(`File ${fileName} merged successfully!`);
+            
+            res.json({
+                success: true,
+                message: 'File uploaded and merged successfully',
+                filePath: outputPath,
+                fileName: fileName
+            });
+        });
+
+        writeStream.on('error', (error) => {
+            throw error;
+        });
+
+    } catch (error) {
+        console.error('File merge error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'File merge failed',
+            error: error.message
+        });
     }
+});
 
-    const telegramData = await telegramResponse.json();
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'Server is running',
+        timestamp: new Date().toISOString()
+    });
+});
 
-    if (!telegramData.ok || !telegramData.result?.document?.file_id) {
-      throw new Error('Invalid Telegram response');
-    }
+// Server start karo
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Upload server running on port ${PORT}`);
+    console.log(`Max file size: 500MB`);
+    console.log(`Uploads folder: ${uploadsDir}`);
+});
 
-    const telegramFileId = telegramData.result.document.file_id;
-    const telegramMessageId = telegramData.result.message_id;
-
-    console.log(`Chunk ${chunkIndex} uploaded: ${telegramFileId}`);
-
-    // Get file path
-    const getFileResponse = await fetch(
-      `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(telegramFileId)}`
-    );
-
-    const getFileData = await getFileResponse.json();
-
-    if (!getFileData.ok || !getFileData.result?.file_path) {
-      throw new Error('Failed to get file path');
-    }
-
-    const directUrl = `https://api.telegram.org/file/bot${botToken}/${getFileData.result.file_path}`;
-
-    // Store in KV
-    const chunkKey = `${fileId}_chunk_${chunkIndex}`;
-    const chunkMetadata = {
-      telegramFileId,
-      telegramMessageId,
-      directUrl,
-      size: chunkFile.size,
-      index: chunkIndex,
-      parentFileId: fileId,
-      kvNamespace: kvNamespace.name,
-      uploadedAt: Date.now(),
-      lastRefreshed: Date.now(),
-      refreshCount: 0,
-      version: '3.0'
-    };
-
-    await kvNamespace.kv.put(chunkKey, JSON.stringify(chunkMetadata));
-
-    const duration = ((Date.now() - uploadStart) / 1000).toFixed(2);
-    console.log(`✅ Chunk ${chunkIndex} stored in ${kvNamespace.name} (${duration}s)`);
-
-    return {
-      telegramFileId,
-      telegramMessageId,
-      size: chunkFile.size,
-      directUrl,
-      kvNamespace: kvNamespace.name,
-      chunkKey,
-      uploadedAt: Date.now()
-    };
-
-  } catch (error) {
-    clearTimeout(timeout);
-    throw error;
-  }
-}
-
-// Helper: Sleep
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// Helper: Format bytes
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
+module.exports = app;
