@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 MARYA VAULT ULTIMATE - 1.5GB Storage</title>
+    <title>🚀 MARYA VAULT ULTIMATE - 1.5GB File Storage</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -137,33 +137,6 @@
             max-width: 500px; line-height: 1.6;
         }
         
-        /* 🔥 URL SECTION */
-        .url-section { 
-            display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; margin-top: 2rem; 
-            align-items: end; padding: 2rem; background: var(--gray-50); border-radius: 20px;
-        }
-        .url-inputs { display: flex; flex-direction: column; gap: 1rem; }
-        .url-input, .filename-input {
-            padding: 1.25rem 1.75rem; border: 2px solid var(--gray-200); border-radius: 16px;
-            font-size: 1.1rem; outline: none; transition: all 0.3s; background: white;
-            box-shadow: var(--shadow-sm);
-        }
-        .url-input:focus, .filename-input:focus { 
-            border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light);
-        }
-        .url-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-            color: white; padding: 1.25rem 3rem; border: none; border-radius: 16px; 
-            font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; gap: 1rem; box-shadow: var(--shadow-lg);
-            text-transform: uppercase; letter-spacing: 0.05em;
-        }
-        .url-btn:hover { 
-            transform: translateY(-3px); box-shadow: var(--shadow-xl); 
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-        }
-        .url-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        
         /* 🔥 FILE LIST */
         .file-item {
             background: white; border-radius: 20px; padding: 2.5rem; margin-bottom: 2rem;
@@ -178,6 +151,8 @@
             transform: translateY(-6px); box-shadow: var(--shadow-xl); 
             border-color: var(--primary-light);
         }
+        .file-item.success::before { background: linear-gradient(180deg, var(--success), #047857); }
+        .file-item.error::before { background: linear-gradient(180deg, var(--error), #b91c1c); }
         .file-header { display: flex; align-items: flex-start; gap: 2rem; margin-bottom: 2rem; }
         .file-icon {
             width: 90px; height: 90px; border-radius: 20px; display: flex; align-items: center;
@@ -239,6 +214,7 @@
             background: white; color: var(--gray-700); border: 2px solid var(--gray-300); 
         }
         .btn-outline:hover { border-color: var(--primary); background: var(--primary-light); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         
         /* 🔥 TOAST */
         .toast {
@@ -251,12 +227,14 @@
         .toast.show { transform: translateX(0); }
         .toast.success { border-left: 6px solid var(--success); }
         .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--warning); }
         .toast-icon {
             width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center;
             justify-content: center; font-size: 1.5rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
         }
         .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
         .toast.error .toast-icon { background: var(--primary-light); color: var(--error); }
+        .toast.warning .toast-icon { background: #fef3c7; color: var(--warning); }
         .toast-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 0.5rem; }
         .toast-message { color: var(--gray-600); line-height: 1.5; }
         
@@ -275,12 +253,23 @@
             font-size: 1.1rem; font-weight: 800;
         }
         
+        /* 🔥 LOADING */
+        .loading-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+            backdrop-filter: blur(8px);
+        }
+        .loading-spinner {
+            width: 120px; height: 120px; border: 6px solid var(--gray-200); 
+            border-top: 6px solid var(--primary); border-radius: 50%; 
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         /* 🔥 MOBILE */
         @media (max-width: 768px) {
             .container { padding: 1.5rem; }
             .title { font-size: 3rem; }
-            .url-section { grid-template-columns: 1fr; }
-            .url-btn { width: 100%; justify-content: center; }
             .file-header { flex-direction: column; text-align: center; gap: 1.5rem; }
             .file-actions { flex-direction: column; }
             .btn { width: 100%; justify-content: center; }
@@ -298,8 +287,8 @@
         </div>
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
-            <div class="stat-value" id="uploadSpeed">0 MB/s</div>
-            <div class="stat-label">Speed</div>
+            <div class="stat-value" id="successCount">0</div>
+            <div class="stat-label">Success</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon"><i class="fas fa-cubes"></i></div>
@@ -307,9 +296,9 @@
             <div class="stat-label">Chunks</div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-value" id="successCount">0</div>
-            <div class="stat-label">Success</div>
+            <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+            <div class="stat-value" id="uploadSpeed">--</div>
+            <div class="stat-label">Status</div>
         </div>
     </div>
 
@@ -320,19 +309,16 @@
             <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
             <p class="subtitle">
                 <strong>1.5GB Max</strong> • 25 KV Namespaces • Multi-VIP Telegram • 
-                <strong>Lightning Fast</strong> • Backward Compatible • 
+                <strong>Lightning Fast</strong> • JSON Error Fixed • 
                 <strong>Production Ready</strong>
             </p>
         </header>
 
-        <!-- 🔥 TABS -->
+        <!-- 🔥 MAIN UPLOAD SECTION -->
         <section class="tabs-container">
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('upload')">
                     <i class="fas fa-cloud-upload-alt"></i> Upload Files
-                </button>
-                <button class="tab" onclick="switchTab('url')">
-                    <i class="fas fa-link"></i> URL Import
                 </button>
             </div>
 
@@ -343,25 +329,13 @@
                     <h2 class="upload-title">Drop Files Here or Click</h2>
                     <p class="upload-desc">
                         Supports <strong>1.5GB max</strong> • All formats • 
-                        Auto-chunking • 25 KV distribution • VIP reliability
+                        Auto-chunking • 25 KV distribution • <strong>JSON Fixed</strong>
                     </p>
+                    <small style="color: var(--gray-500); font-size: 1rem;">
+                        Max file size: 1.5GB • Works with new upload.js v5.1
+                    </small>
                 </label>
                 <input type="file" id="fileInput" multiple style="display: none;">
-            </div>
-
-            <!-- 🔥 URL UPLOAD -->
-            <div id="urlTab" class="tab-content">
-                <div class="url-section">
-                    <div class="url-inputs">
-                        <input type="url" id="urlInput" class="url-input" 
-                               placeholder="https://example.com/video.mp4">
-                        <input type="text" id="filenameInput" class="filename-input" 
-                               placeholder="Custom filename (optional)">
-                    </div>
-                    <button class="url-btn" id="urlBtn" onclick="uploadUrl()">
-                        <i class="fas fa-magic"></i> Import URL
-                    </button>
-                </div>
             </div>
         </section>
 
@@ -375,59 +349,90 @@
         </section>
     </div>
 
-    <!-- 🔥 TOAST -->
+    <!-- 🔥 TOAST CONTAINER -->
     <div id="toastContainer"></div>
 
-    <script>
-        // 🔥 ULTIMATE STATE
-        let uploads = [], totalSize = 0, totalChunks = 0, successCount = 0, isUploading = false;
-        const MAX_CONCURRENT = 2, MAX_SIZE = 1536 * 1024 * 1024;
+    <!-- 🔥 LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
 
-        // 🔥 INIT
-        document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        // 🔥 ULTIMATE STATE MANAGEMENT
+        let uploads = [], totalSize = 0, totalChunks = 0, successCount = 0;
+        let isUploading = false, uploadStartTime = 0;
+        const MAX_CONCURRENT = 1; // Sequential to avoid JSON errors
+        const MAX_SIZE = 1536 * 1024 * 1024; // 1.5GB
+
+        // 🔥 INITIALIZE
+        document.addEventListener('DOMContentLoaded', function() {
             initDragDrop();
             initFileInput();
-            console.log('🚀 MARYA VAULT ULTIMATE v4.0 READY');
+            console.log('🚀 MARYA VAULT ULTIMATE v5.1 - JSON FIXED ✅');
         });
 
-        // 🔥 TABS
-        function switchTab(tab) {
+        // 🔥 TAB SWITCHING
+        function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            document.getElementById(tab + 'Tab').classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
         }
 
         // 🔥 DRAG & DROP
         function initDragDrop() {
             const dropZone = document.getElementById('dropZone');
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
-                dropZone.addEventListener(ev, e => e.preventDefault());
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
             });
-            ['dragenter', 'dragover'].forEach(ev => {
-                dropZone.addEventListener(ev, () => dropZone.classList.add('dragover'));
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
             });
-            ['dragleave', 'drop'].forEach(ev => {
-                dropZone.addEventListener(ev, () => dropZone.classList.remove('dragover'));
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
             });
-            dropZone.addEventListener('drop', e => handleFiles(Array.from(e.dataTransfer.files)));
-            dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+
+            dropZone.addEventListener('drop', e => {
+                handleFiles(Array.from(e.dataTransfer.files));
+            });
+
+            dropZone.addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
         }
 
+        // 🔥 FILE INPUT
         function initFileInput() {
             document.getElementById('fileInput').addEventListener('change', e => {
-                if (e.target.files.length) handleFiles(Array.from(e.target.files));
+                if (e.target.files.length) {
+                    handleFiles(Array.from(e.target.files));
+                }
                 e.target.value = '';
             });
         }
 
-        // 🔥 FILE HANDLER
-        async function handleFiles(files) {
-            if (isUploading) return showToast('Already uploading!', 'warning');
-            
-            const validFiles = files.filter(f => {
-                if (f.size > MAX_SIZE) {
-                    showToast(`${f.name} too big (max 1.5GB)`, 'error');
+        // 🔥 PROCESS FILES
+        function handleFiles(files) {
+            if (isUploading) {
+                showToast('⏳ Already uploading files...', 'warning');
+                return;
+            }
+
+            const validFiles = Array.from(files).filter(file => {
+                if (file.size > MAX_SIZE) {
+                    showToast(`❌ ${file.name} too big (max 1.5GB)`, 'error');
+                    return false;
+                }
+                if (file.size === 0) {
+                    showToast(`❌ ${file.name} is empty`, 'error');
                     return false;
                 }
                 return true;
@@ -436,145 +441,232 @@
             if (!validFiles.length) return;
 
             isUploading = true;
+            uploadStartTime = Date.now();
+            showLoading(true);
             document.getElementById('resultsSection').classList.add('show');
             document.getElementById('statsBar').style.display = 'grid';
 
-            for (const file of validFiles) {
-                if (uploads.length < MAX_CONCURRENT) {
-                    uploadFile(file);
-                } else {
-                    setTimeout(() => uploadFile(file), 1000);
-                }
-            }
+            // Sequential upload (no parallel to avoid JSON errors)
+            uploadNextFile(validFiles);
         }
 
-        // 🔥 UPLOAD ENGINE
-        async function uploadFile(file) {
-            const id = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-            uploads.push({ id, file, status: 'pending', progress: 0 });
+        // 🔥 SEQUENTIAL UPLOAD QUEUE
+        let uploadQueue = [];
+        function uploadNextFile(files) {
+            if (files.length === 0) {
+                isUploading = false;
+                showLoading(false);
+                updateStats();
+                return;
+            }
 
-            const fileEl = createFileElement(id, file);
+            const file = files.shift();
+            uploadFile(file).finally(() => {
+                setTimeout(() => uploadNextFile(files), 1000); // 1s delay between files
+            });
+        }
+
+        // 🔥 CORE UPLOAD FUNCTION (JSON ERROR PROOF)
+        async function uploadFile(file) {
+            const uploadId = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            const fileEl = createFileElement(uploadId, file);
             document.getElementById('filesContainer').prepend(fileEl);
 
             const formData = new FormData();
             formData.append('file', file);
 
             try {
-                const res = await fetch('/api/upload', { 
-                    method: 'POST', 
-                    body: formData 
+                showProgress(uploadId, 10, 'Connecting...');
+                
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
                 });
-                const data = await res.json();
 
-                if (data.success) {
-                    updateFileSuccess(fileEl, data.data);
+                // 🔥 JSON ERROR FIXED - SAFE PARSING
+                let result;
+                try {
+                    const responseText = await response.text();
+                    console.log('🔍 Raw API Response:', responseText.substring(0, 500) + '...');
+                    
+                    if (!responseText.trim()) {
+                        throw new Error('Empty response from server');
+                    }
+                    
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('❌ JSON Parse Error:', parseError);
+                    console.error('Raw response was:', await response.text());
+                    throw new Error('Invalid JSON response from server');
+                }
+
+                if (result.success) {
+                    updateFileSuccess(fileEl, result.data);
                     totalSize += file.size;
-                    totalChunks += data.data.chunks;
+                    totalChunks += result.data.totalChunks || 0;
                     successCount++;
                 } else {
-                    updateFileError(fileEl, data.error);
+                    updateFileError(fileEl, result.error || 'Unknown server error');
                 }
+
             } catch (error) {
+                console.error('💥 Upload failed:', error);
                 updateFileError(fileEl, error.message);
+                showToast(`❌ Upload failed: ${error.message}`, 'error');
             }
 
             updateStats();
-            uploads = uploads.filter(u => u.status !== 'complete' && u.status !== 'error');
-            if (uploads.length === 0) isUploading = false;
         }
 
-        // 🔥 UI HELPERS
+        // 🔥 UI CREATION
         function createFileElement(id, file) {
             const div = document.createElement('div');
             div.id = id;
             div.className = 'file-item';
             div.innerHTML = `
                 <div class="file-header">
-                    <div class="file-icon"><i class="fas fa-file"></i></div>
+                    <div class="file-icon">
+                        <i class="fas fa-file"></i>
+                    </div>
                     <div class="file-details">
-                        <div class="file-name">${file.name}</div>
+                        <div class="file-name">${escapeHtml(file.name)}</div>
                         <div class="file-meta">
-                            ${formatBytes(file.size)} • <span id="${id}_status">Preparing...</span>
+                            <span>${formatBytes(file.size)}</span>
+                            <span id="${id}_status">⏳ Preparing...</span>
+                            <span id="${id}_speed">--</span>
                         </div>
                     </div>
                 </div>
                 <div class="progress-container">
                     <div class="progress-info">
                         <span id="${id}_progress">0%</span>
-                        <span id="${id}_speed">0 MB/s</span>
+                        <span id="${id}_eta">--</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" id="${id}_fill"></div>
+                        <div class="progress-fill" id="${id}_fill" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="file-actions" id="${id}_actions"></div>
+                <div class="file-actions" id="${id}_actions" style="display: none;">
+                    <!-- Actions appear on success -->
+                </div>
             `;
             return div;
         }
 
         function updateFileSuccess(el, data) {
             const id = el.id;
-            el.querySelector('#' + id + '_status').innerHTML = '✅ Complete';
-            el.querySelector('#' + id + '_progress').textContent = '100%';
-            el.querySelector('#' + id + '_fill').style.width = '100%';
+            el.classList.add('success');
+            el.querySelector(`#${id}_status`).innerHTML = '✅ Complete';
+            el.querySelector(`#${id}_progress`).textContent = '100%';
+            el.querySelector(`#${id}_fill`).style.width = '100%';
             
-            el.querySelector('#' + id + '_actions').innerHTML = `
-                <a href="${data.urls.view}" target="_blank" class="btn btn-primary">
+            const actions = el.querySelector(`#${id}_actions`);
+            actions.style.display = 'flex';
+            actions.innerHTML = `
+                <a href="${data.urls.view}" target="_blank" class="btn btn-primary" rel="noopener">
                     <i class="fas fa-eye"></i> View
                 </a>
-                <a href="${data.urls.download}" class="btn btn-success">
+                <a href="${data.urls.download}" class="btn btn-success" download>
                     <i class="fas fa-download"></i> Download
                 </a>
                 <button onclick="copyLink('${data.urls.view}')" class="btn btn-outline">
-                    <i class="fas fa-copy"></i> Copy
+                    <i class="fas fa-copy"></i> Copy Link
                 </button>
             `;
+            
+            showToast(`🎉 ${data.filename} uploaded! ${data.sizeFormatted}`, 'success');
         }
 
         function updateFileError(el, error) {
             const id = el.id;
-            el.querySelector('#' + id + '_status').innerHTML = `❌ ${error}`;
-            el.querySelector('#' + id + '_fill').style.width = '0%';
+            el.classList.add('error');
+            el.querySelector(`#${id}_status`).innerHTML = `❌ Failed`;
+            el.querySelector(`#${id}_progress`).textContent = '0%';
+            el.querySelector(`#${id}_fill`).style.width = '0%';
+            
+            const actions = el.querySelector(`#${id}_actions`);
+            actions.style.display = 'flex';
+            actions.innerHTML = `
+                <button onclick="retryUpload('${id}')" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            `;
         }
 
+        function showProgress(id, percent, status) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            
+            el.querySelector(`#${id}_progress`).textContent = `${percent}%`;
+            el.querySelector(`#${id}_fill`).style.width = `${percent}%`;
+            el.querySelector(`#${id}_status`).textContent = status;
+        }
+
+        // 🔥 STATS UPDATE
         function updateStats() {
             document.getElementById('totalSize').textContent = formatBytes(totalSize);
             document.getElementById('totalChunks').textContent = totalChunks.toLocaleString();
             document.getElementById('successCount').textContent = successCount;
             document.getElementById('resultsCount').textContent = `${successCount} files`;
+            
+            const elapsed = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
+            document.getElementById('uploadSpeed').textContent = 
+                isUploading ? `${elapsed}s` : 'Complete!';
         }
 
-        function copyLink(url) {
-            navigator.clipboard.writeText(url);
-            showToast('🔗 Link copied!', 'success');
-        }
-
-        function formatBytes(bytes) {
-            const units = ['B', 'KB', 'MB', 'GB'];
-            let i = 0;
-            while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
-            return `${bytes.toFixed(1)} ${units[i]}`;
-        }
-
+        // 🔥 UTILITIES
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type} show`;
             toast.innerHTML = `
                 <div class="toast-icon">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'}"></i>
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                      type === 'error' ? 'times-circle' : 'exclamation-triangle'}"></i>
                 </div>
                 <div>
                     <div class="toast-title">${type.toUpperCase()}</div>
                     <div class="toast-message">${message}</div>
                 </div>
             `;
+            
             document.getElementById('toastContainer').appendChild(toast);
-            setTimeout(() => toast.remove(), 5000);
+            setTimeout(() => toast.remove(), 6000);
         }
 
-        // 🔥 URL UPLOAD (Future)
-        async function uploadUrl() {
-            showToast('URL import coming in v4.1 🔥', 'warning');
+        function copyLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('🔗 Link copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy link', 'error');
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // 🔥 RETRY FUNCTION (Future)
+        function retryUpload(id) {
+            showToast('Retry feature coming soon! 🔄', 'warning');
         }
     </script>
 </body>
