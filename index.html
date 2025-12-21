@@ -3,547 +3,578 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 MARYA VAULT ULTIMATE - 1GB Storage</title>
+    <title>🚀 MARYA VAULT ULTIMATE - 1.5GB Storage</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
             --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2;
-            --success: #059669; --success-light: #d1fae5; --error: #dc2626; --warning: #f59e0b;
-            --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; 
-            --gray-300: #d1d5db; --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827;
+            --success: #059669; --success-light: #d1fae5; --error: #dc2626; 
+            --warning: #f59e0b; --white: #ffffff; --gray-50: #f9fafb; 
+            --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db; 
+            --gray-600: #4b5563; --gray-700: #374151; --gray-900: #111827;
             --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); 
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--white), var(--gray-50));
-            min-height: 100vh; color: var(--gray-900); line-height: 1.5;
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+            min-height: 100vh; color: var(--gray-900); line-height: 1.6;
+            overflow-x: hidden;
         }
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .header { text-align: center; margin-bottom: 3rem; padding: 2rem 0; }
+        
+        /* 🔥 HEADER */
+        .header { 
+            text-align: center; margin-bottom: 4rem; padding: 3rem 0; 
+            background: linear-gradient(135deg, rgba(220,38,38,0.03), rgba(5,150,105,0.03));
+            border-radius: 24px; box-shadow: var(--shadow-xl); 
+        }
         .logo {
-            width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 30px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center;
-            box-shadow: var(--shadow-xl); animation: logoGlow 3s ease-in-out infinite alternate;
+            width: 140px; height: 140px; margin: 0 auto 2.5rem; 
+            background: conic-gradient(from 0deg, var(--primary), var(--success), var(--primary));
+            border-radius: 36px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 30px 60px rgba(220,38,38,0.3); position: relative; overflow: hidden;
+            animation: logoPulse 4s ease-in-out infinite;
         }
-        @keyframes logoGlow { 0% { box-shadow: var(--shadow-xl); } 100% { box-shadow: 0 25px 50px rgba(220, 38, 38, 0.3); } }
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 30px 60px rgba(220,38,38,0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 40px 80px rgba(220,38,38,0.4); }
+        }
+        .logo i { font-size: 4.5rem; color: white; z-index: 2; }
         .title {
-            font-size: 4rem; font-weight: 900; margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-size: 4.5rem; font-weight: 900; margin-bottom: 1.5rem; 
+            background: linear-gradient(135deg, var(--primary), var(--success), #3b82f6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            background-clip: text; letter-spacing: -0.03em;
         }
-        .subtitle { font-size: 1.25rem; color: var(--gray-600); font-weight: 500; max-width: 700px; margin: 0 auto; }
-        .tabs-container {
-            background: var(--white); border-radius: 20px; box-shadow: var(--shadow-xl);
-            padding: 2rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
+        .subtitle { 
+            font-size: 1.4rem; color: var(--gray-600); font-weight: 500; 
+            max-width: 800px; margin: 0 auto; line-height: 1.6;
         }
-        .tabs { display: flex; margin-bottom: 2rem; background: var(--gray-100); border-radius: 12px; overflow: hidden; }
-        .tab {
-            flex: 1; padding: 1rem 1.5rem; border: none; background: transparent; cursor: pointer;
-            font-size: 1rem; font-weight: 600; transition: all 0.3s;
-        }
-        .tab.active { background: var(--primary); color: var(--white); }
-        .tab:not(.active):hover { background: var(--gray-200); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeInUp 0.5s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .dropzone {
-            border: 3px dashed var(--gray-200); border-radius: 20px; padding: 4rem 2rem; text-align: center;
-            cursor: pointer; transition: all 0.4s; background: var(--gray-50);
-            min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .dropzone:hover, .dropzone.dragover {
-            border-color: var(--primary); background: var(--primary-light);
-            transform: translateY(-3px); box-shadow: var(--shadow-lg);
-        }
-        .upload-icon { font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary); animation: float 6s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
-        .upload-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .upload-description { font-size: 1.125rem; color: var(--gray-600); margin-bottom: 2rem; }
-        .url-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: stretch; }
-        .url-input-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-        .url-input, .filename-input {
-            padding: 1rem 1.5rem; border: 2px solid var(--gray-200); border-radius: 12px;
-            font-size: 1rem; outline: none; transition: border-color 0.3s; background: var(--white);
-        }
-        .url-input:focus, .filename-input:focus { border-color: var(--primary); }
-        .url-btn {
-            background: var(--primary); color: var(--white); padding: 1rem 2rem; border: none;
-            border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; gap: 0.5rem;
-        }
-        .url-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
-        .url-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .file-types { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
-        .file-type-badge {
-            background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; border-radius: 25px;
-            font-size: 0.875rem; font-weight: 600; text-transform: uppercase;
-        }
-        .stats-dashboard {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
-            margin-bottom: 2rem; padding: 1.5rem; background: var(--gray-50); border-radius: 15px;
+        
+        /* 🔥 STATS BAR */
+        .stats-bar {
+            background: white; border-radius: 20px; padding: 2rem; margin-bottom: 3rem;
+            box-shadow: var(--shadow-xl); border: 1px solid var(--gray-100);
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem;
         }
         .stat-card {
-            background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow-sm);
-            text-align: center;
+            text-align: center; position: relative; padding: 1.5rem;
         }
-        .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
-        .stat-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; text-transform: uppercase; }
+        .stat-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .stat-value { 
+            font-size: 2.5rem; font-weight: 900; 
+            background: linear-gradient(135deg, var(--primary), var(--success));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-label { 
+            font-size: 0.9rem; color: var(--gray-600); font-weight: 600; 
+            text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem;
+        }
+        
+        /* 🔥 TABS */
+        .tabs-container {
+            background: white; border-radius: 24px; box-shadow: var(--shadow-xl);
+            padding: 2.5rem; margin-bottom: 3rem; border: 1px solid var(--gray-100);
+            position: relative; overflow: hidden;
+        }
+        .tabs-container::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--success), #3b82f6);
+        }
+        .tabs { 
+            display: flex; margin-bottom: 2.5rem; background: var(--gray-100); 
+            border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm);
+        }
+        .tab {
+            flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; 
+            cursor: pointer; font-size: 1.1rem; font-weight: 600; transition: all 0.3s;
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .tab.active { 
+            background: linear-gradient(135deg, var(--primary), var(--success)); 
+            color: white; box-shadow: 0 8px 25px rgba(220,38,38,0.3);
+        }
+        .tab:not(.active):hover { background: var(--gray-200); }
+        .tab-content { display: none; animation: fadeInUp 0.5s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeInUp { 
+            from { opacity: 0; transform: translateY(30px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        /* 🔥 DROPZONE */
+        .dropzone {
+            border: 4px dashed var(--gray-200); border-radius: 24px; padding: 5rem 3rem; 
+            text-align: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            background: linear-gradient(135deg, var(--gray-50), var(--white));
+            min-height: 400px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; position: relative; overflow: hidden;
+        }
+        .dropzone::before {
+            content: ''; position: absolute; inset: 0; background: 
+            radial-gradient(circle at 30% 30%, rgba(220,38,38,0.05) 0%, transparent 50%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .dropzone:hover::before, .dropzone.dragover::before { opacity: 1; }
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary); background: linear-gradient(135deg, var(--primary-light), var(--white));
+            transform: translateY(-8px); box-shadow: var(--shadow-xl);
+        }
+        .upload-icon { 
+            font-size: 6rem; margin-bottom: 2rem; color: var(--primary); 
+            animation: float 6s ease-in-out infinite; filter: drop-shadow(0 10px 20px rgba(220,38,38,0.2));
+        }
+        @keyframes float { 
+            0%, 100% { transform: translateY(0px) rotate(0deg); } 
+            50% { transform: translateY(-20px) rotate(5deg); } 
+        }
+        .upload-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
+        .upload-desc { 
+            font-size: 1.3rem; color: var(--gray-600); margin-bottom: 2.5rem; 
+            max-width: 500px; line-height: 1.6;
+        }
+        
+        /* 🔥 URL SECTION */
+        .url-section { 
+            display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; margin-top: 2rem; 
+            align-items: end; padding: 2rem; background: var(--gray-50); border-radius: 20px;
+        }
+        .url-inputs { display: flex; flex-direction: column; gap: 1rem; }
+        .url-input, .filename-input {
+            padding: 1.25rem 1.75rem; border: 2px solid var(--gray-200); border-radius: 16px;
+            font-size: 1.1rem; outline: none; transition: all 0.3s; background: white;
+            box-shadow: var(--shadow-sm);
+        }
+        .url-input:focus, .filename-input:focus { 
+            border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light);
+        }
+        .url-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+            color: white; padding: 1.25rem 3rem; border: none; border-radius: 16px; 
+            font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; gap: 1rem; box-shadow: var(--shadow-lg);
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .url-btn:hover { 
+            transform: translateY(-3px); box-shadow: var(--shadow-xl); 
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        }
+        .url-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        /* 🔥 FILE LIST */
         .file-item {
-            background: var(--white); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;
-            box-shadow: var(--shadow-md); border: 1px solid var(--gray-100); transition: all 0.4s ease;
+            background: white; border-radius: 20px; padding: 2.5rem; margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg); border: 1px solid var(--gray-100); 
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden;
         }
-        .file-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-        .file-header { display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 2rem; }
+        .file-item::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+            background: linear-gradient(180deg, var(--primary), var(--success));
+        }
+        .file-item:hover { 
+            transform: translateY(-6px); box-shadow: var(--shadow-xl); 
+            border-color: var(--primary-light);
+        }
+        .file-header { display: flex; align-items: flex-start; gap: 2rem; margin-bottom: 2rem; }
         .file-icon {
-            width: 80px; height: 80px; border-radius: 15px; display: flex; align-items: center;
-            justify-content: center; font-size: 2rem; color: var(--white); flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            width: 90px; height: 90px; border-radius: 20px; display: flex; align-items: center;
+            justify-content: center; font-size: 2.5rem; color: white; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--primary), var(--success)); box-shadow: var(--shadow-md);
         }
-        .file-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-all; }
-        .file-meta { color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem; }
-        .progress-container { margin: 2rem 0; }
-        .progress-info { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.875rem; font-weight: 600; }
-        .progress-bar { width: 100%; height: 12px; background: var(--gray-200); border-radius: 10px; overflow: hidden; }
+        .file-details { flex: 1; min-width: 0; }
+        .file-name { 
+            font-size: 1.5rem; font-weight: 800; margin-bottom: 0.75rem; 
+            word-break: break-word; line-height: 1.3;
+        }
+        .file-meta { 
+            color: var(--gray-600); font-size: 1rem; display: flex; flex-wrap: wrap; 
+            gap: 1.5rem; align-items: center; margin-bottom: 1.5rem;
+        }
+        
+        /* 🔥 PROGRESS */
+        .progress-container { margin: 2.5rem 0; }
+        .progress-info {
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 1.5rem; font-size: 1rem; font-weight: 600;
+        }
+        .progress-bar {
+            width: 100%; height: 16px; background: var(--gray-200); border-radius: 12px;
+            overflow: hidden; position: relative; box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+        }
         .progress-fill {
-            height: 100%; border-radius: 10px; transition: width 0.4s ease;
-            background: linear-gradient(90deg, var(--primary), var(--success));
+            height: 100%; border-radius: 12px; transition: width 0.4s ease;
+            background: linear-gradient(90deg, var(--primary), var(--success), #3b82f6);
+            position: relative; overflow: hidden;
         }
-        .file-status { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; }
-        .file-status.uploading { color: var(--primary); }
-        .file-status.completed { color: var(--success); }
-        .file-status.failed { color: var(--error); }
-        .file-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+        .progress-fill::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        
+        /* 🔥 BUTTONS */
+        .file-actions { 
+            display: flex; flex-wrap: wrap; gap: 1rem; padding-top: 1.5rem; 
+            border-top: 1px solid var(--gray-200); margin-top: 2rem;
+        }
         .btn {
-            display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
-            border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
-            text-decoration: none; cursor: pointer; transition: all 0.3s; min-width: 140px;
-            justify-content: center;
+            padding: 1rem 2rem; border: none; border-radius: 16px; font-size: 0.95rem; 
+            font-weight: 700; cursor: pointer; transition: all 0.3s; 
+            display: flex; align-items: center; gap: 0.75rem; text-decoration: none;
+            box-shadow: var(--shadow-sm); min-height: 52px;
         }
-        .btn-primary { background: var(--primary); color: var(--white); }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
-        .btn-success { background: var(--success); color: var(--white); }
-        .btn-success:hover { background: #047857; transform: translateY(-2px); }
-        .btn-outline {
-            background: var(--white); color: var(--gray-700); border: 2px solid var(--gray-300);
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; 
         }
-        .btn-outline:hover { background: var(--gray-50); border-color: var(--primary); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .btn-success { 
+            background: linear-gradient(135deg, var(--success), #047857); color: white; 
+        }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .btn-outline { 
+            background: white; color: var(--gray-700); border: 2px solid var(--gray-300); 
+        }
+        .btn-outline:hover { border-color: var(--primary); background: var(--primary-light); }
+        
+        /* 🔥 TOAST */
         .toast {
-            position: fixed; top: 2rem; right: 2rem; background: var(--white); border-radius: 15px;
-            padding: 1.5rem; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);
-            z-index: 1000; transform: translateX(120%); transition: all 0.4s; max-width: 400px;
-            display: flex; align-items: center; gap: 1rem;
+            position: fixed; top: 2.5rem; right: 2.5rem; background: white; 
+            border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-xl); 
+            z-index: 10000; transform: translateX(400px); transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            max-width: 450px; border: 1px solid var(--gray-200); min-width: 350px;
+            display: flex; align-items: flex-start; gap: 1.25rem;
         }
         .toast.show { transform: translateX(0); }
-        .toast.success { border-left: 5px solid var(--success); }
-        .toast.error { border-left: 5px solid var(--error); }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
         .toast-icon {
-            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 1.25rem;
+            width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1.5rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
         }
         .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
         .toast.error .toast-icon { background: var(--primary-light); color: var(--error); }
+        .toast-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .toast-message { color: var(--gray-600); line-height: 1.5; }
+        
+        /* 🔥 RESULTS */
         .results { display: none; }
-        .results.show { display: block; }
+        .results.show { display: block; animation: slideIn 0.6s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         .results-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;
-            padding: 1.5rem; background: var(--white); border-radius: 15px; box-shadow: var(--shadow-sm);
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem;
+            padding: 2rem; background: white; border-radius: 20px; box-shadow: var(--shadow-lg);
         }
-        .results-title { font-size: 2rem; font-weight: 800; color: var(--gray-900); }
+        .results-title { font-size: 2.5rem; font-weight: 900; color: var(--gray-900); }
         .results-count {
-            background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem;
-            border-radius: 25px; font-size: 0.875rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), var(--success-light)); 
+            color: var(--primary); padding: 1rem 2rem; border-radius: 50px; 
+            font-size: 1.1rem; font-weight: 800;
         }
-        .storage-info {
-            background: linear-gradient(135deg, var(--primary-light), var(--success-light));
-            padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center;
-        }
+        
+        /* 🔥 MOBILE */
         @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .title { font-size: 2.5rem; }
-            .url-section { flex-direction: column; }
-            .url-btn { width: 100%; }
+            .container { padding: 1.5rem; }
+            .title { font-size: 3rem; }
+            .url-section { grid-template-columns: 1fr; }
+            .url-btn { width: 100%; justify-content: center; }
+            .file-header { flex-direction: column; text-align: center; gap: 1.5rem; }
+            .file-actions { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .toast { inset: 1.5rem 1.5rem auto auto; max-width: none; min-width: auto; }
         }
     </style>
 </head>
 <body>
+    <!-- 🔥 STATS BAR -->
+    <div class="stats-bar" id="statsBar" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-hdd"></i></div>
+            <div class="stat-value" id="totalSize">0 GB</div>
+            <div class="stat-label">Total Storage</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
+            <div class="stat-value" id="uploadSpeed">0 MB/s</div>
+            <div class="stat-label">Speed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-cubes"></i></div>
+            <div class="stat-value" id="totalChunks">0</div>
+            <div class="stat-label">Chunks</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value" id="successCount">0</div>
+            <div class="stat-label">Success</div>
+        </div>
+    </div>
+
     <div class="container">
+        <!-- 🔥 HEADER -->
         <header class="header">
-            <div class="logo"><i class="fas fa-cloud" style="font-size: 4rem; color: var(--white);"></i></div>
+            <div class="logo"><i class="fas fa-rocket"></i></div>
             <h1 class="title">🚀 MARYA VAULT ULTIMATE</h1>
-            <p class="subtitle">Professional 25-KV multi-namespace storage. Upload up to <strong>1GB</strong> per file.</p>
+            <p class="subtitle">
+                <strong>1.5GB Max</strong> • 25 KV Namespaces • Multi-VIP Telegram • 
+                <strong>Lightning Fast</strong> • Backward Compatible • 
+                <strong>Production Ready</strong>
+            </p>
         </header>
 
-        <div class="storage-info">
-            <div class="storage-info-title">
-                <i class="fas fa-database"></i> 1GB Multi-KV Storage System
-            </div>
-            <div class="storage-info-desc">
-                25 KV Namespaces • 35MB Chunks • <strong>1GB</strong> Max • Permanent Links
-            </div>
-        </div>
-
+        <!-- 🔥 TABS -->
         <section class="tabs-container">
             <div class="tabs">
-                <button class="tab active" onclick="showTab('file')">
-                    <i class="fas fa-upload"></i> File Upload
+                <button class="tab active" onclick="switchTab('upload')">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Files
                 </button>
-                <button class="tab" onclick="showTab('url')">
-                    <i class="fas fa-link"></i> URL Upload
+                <button class="tab" onclick="switchTab('url')">
+                    <i class="fas fa-link"></i> URL Import
                 </button>
             </div>
 
-            <div class="tab-content active" id="file-content">
-                <label class="dropzone" id="dropzone">
+            <!-- 🔥 FILE UPLOAD -->
+            <div id="uploadTab" class="tab-content active">
+                <label class="dropzone" id="dropZone">
                     <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
-                    <h2 class="upload-title">Drop your files here</h2>
-                    <p class="upload-description">or click to browse • Max <strong>1GB</strong> per file</p>
-                    <div class="file-types">
-                        <span class="file-type-badge"><i class="fas fa-image"></i> Images</span>
-                        <span class="file-type-badge"><i class="fas fa-video"></i> Videos</span>
-                        <span class="file-type-badge"><i class="fas fa-file"></i> Documents</span>
-                        <span class="file-type-badge"><i class="fas fa-music"></i> Audio</span>
-                        <span class="file-type-badge"><i class="fas fa-file-archive"></i> Archives</span>
-                    </div>
+                    <h2 class="upload-title">Drop Files Here or Click</h2>
+                    <p class="upload-desc">
+                        Supports <strong>1.5GB max</strong> • All formats • 
+                        Auto-chunking • 25 KV distribution • VIP reliability
+                    </p>
                 </label>
-                <input type="file" id="fileInput" multiple accept="*/*" style="display: none;">
+                <input type="file" id="fileInput" multiple style="display: none;">
             </div>
 
-            <div class="tab-content" id="url-content">
+            <!-- 🔥 URL UPLOAD -->
+            <div id="urlTab" class="tab-content">
                 <div class="url-section">
-                    <div class="url-input-group">
-                        <input type="text" id="urlInput" class="url-input" 
-                               placeholder="🔗 Direct file URL (https://example.com/video.mp4)">
+                    <div class="url-inputs">
+                        <input type="url" id="urlInput" class="url-input" 
+                               placeholder="https://example.com/video.mp4">
                         <input type="text" id="filenameInput" class="filename-input" 
-                               placeholder="📝 Custom filename (optional)">
+                               placeholder="Custom filename (optional)">
                     </div>
-                    <button class="url-btn" id="urlUploadBtn" onclick="uploadFromUrl()">
-                        <i class="fas fa-cloud-download-alt"></i> Import
+                    <button class="url-btn" id="urlBtn" onclick="uploadUrl()">
+                        <i class="fas fa-magic"></i> Import URL
                     </button>
                 </div>
             </div>
         </section>
 
-        <section class="stats-dashboard" id="statsDashboard" style="display: none;">
-            <div class="stat-card">
-                <div class="stat-value" id="totalSize">0 GB</div>
-                <div class="stat-label">Total Size</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="avgSpeed">0 MB/s</div>
-                <div class="stat-label">Upload Speed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalChunks">0</div>
-                <div class="stat-label">Total Chunks</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="filesCount">0</div>
-                <div class="stat-label">Files Processed</div>
-            </div>
-        </section>
-
-        <section class="results" id="results">
+        <!-- 🔥 RESULTS -->
+        <section class="results" id="resultsSection">
             <div class="results-header">
-                <h2 class="results-title">📁 Your Files</h2>
-                <div class="results-count" id="resultsCount">0 files uploaded</div>
+                <h2 class="results-title">📁 Your Uploads</h2>
+                <div class="results-count" id="resultsCount">0 files</div>
             </div>
-            <div id="filesList"></div>
+            <div id="filesContainer"></div>
         </section>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <!-- 🔥 TOAST -->
+    <div id="toastContainer"></div>
 
     <script>
-        let fileCounter = 0;
-        let totalSize = 0;
-        let totalChunks = 0;
-        let uploadStats = { total: 0, completed: 0, failed: 0 };
-        let isProcessing = false;
-        let activeUploads = new Map();
+        // 🔥 ULTIMATE STATE
+        let uploads = [], totalSize = 0, totalChunks = 0, successCount = 0, isUploading = false;
+        const MAX_CONCURRENT = 2, MAX_SIZE = 1536 * 1024 * 1024;
 
-        const MAX_SIZE = 1024 * 1024 * 1024; // 1GB
-        const MAX_CONCURRENT = 2;
+        // 🔥 INIT
+        document.addEventListener('DOMContentLoaded', () => {
+            initDragDrop();
+            initFileInput();
+            console.log('🚀 MARYA VAULT ULTIMATE v4.0 READY');
+        });
 
-        document.addEventListener('DOMContentLoaded', initializeSystem);
-
-        function initializeSystem() {
-            setupFileUpload();
-            setupUrlUpload();
-            setupDragDrop();
-            console.log('✅ MARYA VAULT 1GB Ready!');
-        }
-
-        function showTab(tabName) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        // 🔥 TABS
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            document.getElementById(tabName + '-content').classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
         }
 
-        function setupFileUpload() {
-            const fileInput = document.getElementById('fileInput');
-            const dropzone = document.getElementById('dropzone');
-
-            dropzone.addEventListener('click', () => {
-                if (!isProcessing) fileInput.click();
-                else showToast('Upload in progress', 'warning');
+        // 🔥 DRAG & DROP
+        function initDragDrop() {
+            const dropZone = document.getElementById('dropZone');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                dropZone.addEventListener(ev, e => e.preventDefault());
             });
+            ['dragenter', 'dragover'].forEach(ev => {
+                dropZone.addEventListener(ev, () => dropZone.classList.add('dragover'));
+            });
+            ['dragleave', 'drop'].forEach(ev => {
+                dropZone.addEventListener(ev, () => dropZone.classList.remove('dragover'));
+            });
+            dropZone.addEventListener('drop', e => handleFiles(Array.from(e.dataTransfer.files)));
+            dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+        }
 
-            fileInput.addEventListener('change', (e) => {
-                if (!isProcessing) {
-                    const files = Array.from(e.target.files);
-                    if (files.length > 0) handleFiles(files);
-                }
+        function initFileInput() {
+            document.getElementById('fileInput').addEventListener('change', e => {
+                if (e.target.files.length) handleFiles(Array.from(e.target.files));
                 e.target.value = '';
             });
         }
 
-        function setupUrlUpload() {
-            document.getElementById('urlInput').addEventListener('keypress', e => {
-                if (e.key === 'Enter' && !isProcessing) uploadFromUrl();
-            });
-        }
-
-        function setupDragDrop() {
-            const dropzone = document.getElementById('dropzone');
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, preventDefaults, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
-            });
-
-            dropzone.addEventListener('drop', e => {
-                if (!isProcessing) handleFiles(Array.from(e.dataTransfer.files));
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }
-
-        function handleFiles(files) {
-            const validFiles = files.filter(file => {
-                const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-                if (file.size > MAX_SIZE) {
-                    showToast(`❌ ${file.name}: ${sizeMB}MB > 1GB`, 'error');
+        // 🔥 FILE HANDLER
+        async function handleFiles(files) {
+            if (isUploading) return showToast('Already uploading!', 'warning');
+            
+            const validFiles = files.filter(f => {
+                if (f.size > MAX_SIZE) {
+                    showToast(`${f.name} too big (max 1.5GB)`, 'error');
                     return false;
                 }
                 return true;
             });
 
-            if (validFiles.length === 0) return;
+            if (!validFiles.length) return;
 
-            isProcessing = true;
-            showResults();
-            validFiles.forEach((file, index) => {
-                setTimeout(() => uploadFile(file), index * 200);
-            });
+            isUploading = true;
+            document.getElementById('resultsSection').classList.add('show');
+            document.getElementById('statsBar').style.display = 'grid';
+
+            for (const file of validFiles) {
+                if (uploads.length < MAX_CONCURRENT) {
+                    uploadFile(file);
+                } else {
+                    setTimeout(() => uploadFile(file), 1000);
+                }
+            }
         }
 
+        // 🔥 UPLOAD ENGINE
         async function uploadFile(file) {
-            const fileItem = createAdvancedFileItem(file);
-            document.getElementById('filesList').prepend(fileItem);
-            const elements = getFileElements(fileItem);
+            const id = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            uploads.push({ id, file, status: 'pending', progress: 0 });
 
-            uploadStats.total++;
-            updateTotalSize(file.size);
+            const fileEl = createFileElement(id, file);
+            document.getElementById('filesContainer').prepend(fileEl);
 
             const formData = new FormData();
             formData.append('file', file);
 
             try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
+                const res = await fetch('/api/upload', { 
+                    method: 'POST', 
+                    body: formData 
                 });
+                const data = await res.json();
 
-                const result = await response.json();
-
-                if (result.success) {
-                    handleUploadSuccess(elements, result.data, file);
-                    uploadStats.completed++;
-                    totalChunks += result.data.totalChunks || 0;
+                if (data.success) {
+                    updateFileSuccess(fileEl, data.data);
+                    totalSize += file.size;
+                    totalChunks += data.data.chunks;
+                    successCount++;
                 } else {
-                    handleUploadError(elements, result.error);
-                    uploadStats.failed++;
+                    updateFileError(fileEl, data.error);
                 }
             } catch (error) {
-                handleUploadError(elements, error.message);
-                uploadStats.failed++;
+                updateFileError(fileEl, error.message);
             }
 
             updateStats();
-            checkProcessingComplete();
+            uploads = uploads.filter(u => u.status !== 'complete' && u.status !== 'error');
+            if (uploads.length === 0) isUploading = false;
         }
 
-        async function uploadFromUrl() {
-            const urlInput = document.getElementById('urlInput');
-            const fileUrl = urlInput.value.trim();
-
-            if (!fileUrl) {
-                showToast('Enter URL', 'error');
-                return;
-            }
-
-            if (isProcessing) {
-                showToast('Upload in progress', 'warning');
-                return;
-            }
-
-            isProcessing = true;
-            const fileItem = createAdvancedFileItem({ name: 'URL Import', size: 0 });
-            document.getElementById('filesList').prepend(fileItem);
-            const elements = getFileElements(fileItem);
-
-            try {
-                // URL upload endpoint (implement similarly)
-                showToast('URL import coming soon!', 'warning');
-            } catch (error) {
-                handleUploadError(elements, error.message);
-            } finally {
-                isProcessing = false;
-            }
-        }
-
-        function createAdvancedFileItem(file) {
-            const item = document.createElement('div');
-            item.className = 'file-item';
-            item.innerHTML = `
+        // 🔥 UI HELPERS
+        function createFileElement(id, file) {
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'file-item';
+            div.innerHTML = `
                 <div class="file-header">
-                    <div class="file-icon">${getFileIcon(file.name)}</div>
+                    <div class="file-icon"><i class="fas fa-file"></i></div>
                     <div class="file-details">
                         <div class="file-name">${file.name}</div>
                         <div class="file-meta">
-                            ${formatBytes(file.size)} • 
-                            <span class="file-status uploading">
-                                <i class="fas fa-spinner fa-spin"></i> Preparing...
-                            </span>
+                            ${formatBytes(file.size)} • <span id="${id}_status">Preparing...</span>
                         </div>
                     </div>
                 </div>
                 <div class="progress-container">
                     <div class="progress-info">
-                        <span class="progress-percent">0%</span>
-                        <span class="speed-indicator">
-                            <i class="fas fa-tachometer-alt"></i> <span class="upload-speed">0 MB/s</span>
-                        </span>
+                        <span id="${id}_progress">0%</span>
+                        <span id="${id}_speed">0 MB/s</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill"></div>
+                        <div class="progress-fill" id="${id}_fill"></div>
                     </div>
                 </div>
-                <div class="file-actions"></div>
+                <div class="file-actions" id="${id}_actions"></div>
             `;
-            return item;
+            return div;
         }
 
-        function getFileIcon(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            const icons = {
-                mp4: 'fas fa-video', mp3: 'fas fa-music', pdf: 'fas fa-file-pdf',
-                zip: 'fas fa-file-archive', doc: 'fas fa-file-word', xlsx: 'fas fa-file-excel'
-            };
-            return icons[ext] || 'fas fa-file';
-        }
-
-        function getFileElements(fileItem) {
-            return {
-                progressFill: fileItem.querySelector('.progress-fill'),
-                progressPercent: fileItem.querySelector('.progress-percent'),
-                uploadSpeed: fileItem.querySelector('.upload-speed'),
-                status: fileItem.querySelector('.file-status'),
-                actions: fileItem.querySelector('.file-actions')
-            };
-        }
-
-        function handleUploadSuccess(elements, data, file) {
-            elements.status.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
-            elements.status.className = 'file-status completed';
-            elements.progressFill.style.width = '100%';
-
-            const viewUrl = data.urls?.view;
-            const downloadUrl = data.urls?.download;
-
-            elements.actions.innerHTML = `
-                <a href="${viewUrl}" target="_blank" class="btn btn-primary">
+        function updateFileSuccess(el, data) {
+            const id = el.id;
+            el.querySelector('#' + id + '_status').innerHTML = '✅ Complete';
+            el.querySelector('#' + id + '_progress').textContent = '100%';
+            el.querySelector('#' + id + '_fill').style.width = '100%';
+            
+            el.querySelector('#' + id + '_actions').innerHTML = `
+                <a href="${data.urls.view}" target="_blank" class="btn btn-primary">
                     <i class="fas fa-eye"></i> View
                 </a>
-                <a href="${downloadUrl}" class="btn btn-success">
+                <a href="${data.urls.download}" class="btn btn-success">
                     <i class="fas fa-download"></i> Download
                 </a>
-                <button onclick="copyToClipboard('${viewUrl}')" class="btn btn-outline">
-                    <i class="fas fa-copy"></i> Copy Link
+                <button onclick="copyLink('${data.urls.view}')" class="btn btn-outline">
+                    <i class="fas fa-copy"></i> Copy
                 </button>
             `;
         }
 
-        function handleUploadError(elements, error) {
-            elements.status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed`;
-            elements.status.className = 'file-status failed';
-            elements.actions.innerHTML = `
-                <button class="btn btn-primary">Retry</button>
-                <button class="btn btn-outline">Remove</button>
-            `;
-        }
-
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => showToast('✅ Link copied!', 'success'));
-        }
-
-        function formatBytes(bytes) {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        function updateTotalSize(size) {
-            totalSize += size;
-            document.getElementById('totalSize').textContent = formatBytes(totalSize);
+        function updateFileError(el, error) {
+            const id = el.id;
+            el.querySelector('#' + id + '_status').innerHTML = `❌ ${error}`;
+            el.querySelector('#' + id + '_fill').style.width = '0%';
         }
 
         function updateStats() {
-            document.getElementById('totalChunks').textContent = totalChunks;
-            document.getElementById('filesCount').textContent = uploadStats.total;
-            document.getElementById('resultsCount').textContent = 
-                `${uploadStats.completed} of ${uploadStats.total} completed`;
+            document.getElementById('totalSize').textContent = formatBytes(totalSize);
+            document.getElementById('totalChunks').textContent = totalChunks.toLocaleString();
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('resultsCount').textContent = `${successCount} files`;
         }
 
-        function checkProcessingComplete() {
-            if (uploadStats.total === uploadStats.completed + uploadStats.failed) {
-                isProcessing = false;
-                showToast('🎉 All uploads complete!', 'success');
-            }
+        function copyLink(url) {
+            navigator.clipboard.writeText(url);
+            showToast('🔗 Link copied!', 'success');
+        }
+
+        function formatBytes(bytes) {
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let i = 0;
+            while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+            return `${bytes.toFixed(1)} ${units[i]}`;
         }
 
         function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
+            const toast = document.createElement('div');
             toast.className = `toast ${type} show`;
             toast.innerHTML = `
                 <div class="toast-icon">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'}"></i>
                 </div>
-                <div class="toast-content">
-                    <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                <div>
+                    <div class="toast-title">${type.toUpperCase()}</div>
                     <div class="toast-message">${message}</div>
                 </div>
             `;
-            setTimeout(() => toast.classList.remove('show'), 5000);
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
         }
 
-        function showResults() {
-            document.getElementById('statsDashboard').style.display = 'grid';
-            document.getElementById('results').classList.add('show');
+        // 🔥 URL UPLOAD (Future)
+        async function uploadUrl() {
+            showToast('URL import coming in v4.1 🔥', 'warning');
         }
     </script>
 </body>
