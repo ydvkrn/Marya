@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BTF Image AI 1.1V</title>
+  <title>BTF Image AI 1.2V</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -14,6 +14,7 @@
       --border-strong: #1f2937;
       --primary: #38bdf8;
       --primary2: #a855f7;
+      --accent-green: #4ade80;
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
       --radius-lg: 18px;
@@ -96,9 +97,44 @@
       font-weight: 500;
     }
 
+    /* TABS */
+    .tabs {
+      margin-top: 18px;
+      display: flex;
+      gap: 8px;
+      background: #020617;
+      border-radius: 999px;
+      padding: 4px;
+      border: 1px solid #0f172a;
+    }
+
+    .tab {
+      flex: 1;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #9ca3af;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+
+    .tab i { font-size: 13px; }
+
+    .tab.active {
+      background: linear-gradient(90deg, #38bdf8, #a855f7);
+      color: #020617;
+    }
+
     /* LAYOUT */
     .layout {
-      margin-top: 22px;
+      margin-top: 18px;
       display: grid;
       grid-template-columns: minmax(0, 3.1fr) minmax(0, 2.1fr);
       gap: 18px;
@@ -255,6 +291,12 @@
       box-shadow: 0 9px 22px rgba(236, 72, 153, 0.45);
     }
 
+    .btn-generate {
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      color: #020617;
+      box-shadow: 0 9px 22px rgba(34, 197, 94, 0.45);
+    }
+
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -353,7 +395,7 @@
       border: 1px solid var(--border-strong);
       padding: 8px 14px;
       font-size: 13px;
-      color: var(--text-main);
+      color: #e5e7eb;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -366,6 +408,120 @@
     }
 
     .btn-download:hover { background: #020617; }
+
+    /* TEXT TO IMAGE SECTION */
+    .t2i-wrapper {
+      margin-top: 14px;
+      border-top: 1px solid #0b1220;
+      padding-top: 12px;
+    }
+
+    .t2i-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 6px;
+    }
+
+    .t2i-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .t2i-title i {
+      color: var(--accent-green);
+      font-size: 13px;
+    }
+
+    .t2i-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .t2i-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .t2i-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .t2i-row-top {
+      flex-direction: column;
+    }
+
+    .t2i-input {
+      flex: 1;
+      min-width: 0;
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid #111827;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: #e5e7eb;
+      outline: none;
+      font-weight: 500;
+    }
+
+    .t2i-input::placeholder {
+      color: #6b7280;
+    }
+
+    .t2i-select-wrap {
+      position: relative;
+    }
+
+    .t2i-select {
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid #111827;
+      padding: 9px 32px 9px 10px;
+      font-size: 13px;
+      color: #e5e7eb;
+      outline: none;
+      font-weight: 600;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+
+    .t2i-select-icon {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      pointer-events: none;
+      font-size: 11px;
+    }
+
+    @media (max-width: 600px) {
+      .t2i-row {
+        flex-direction: column;
+      }
+      .t2i-select,
+      .t2i-input {
+        width: 100%;
+      }
+    }
+
+    /* SLIDES (for tabs) */
+    #slideTools,
+    #slideGenerator {
+      margin-top: 16px;
+    }
 
     /* FOOTER */
     .footer {
@@ -387,87 +543,191 @@
           </div>
           <span>BTF</span><span>Image AI</span>
         </div>
-        <span class="brand-sub">Real‑time Enhance & Background Removal</span>
+        <span class="brand-sub">Enhance • Remove Background • Generate</span>
       </div>
-      <!-- Right side intentionally empty now (no About / API Docs) -->
     </div>
   </header>
 
   <main class="container">
-    <section class="layout">
-      <!-- LEFT: ORIGINAL -->
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">
-            <i class="fas fa-image"></i>
-            Original Image
-          </h2>
-          <span class="card-sub">Upload, then tap Enhance or Remove BG</span>
-        </div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tabTools">
+        <i class="fas fa-sliders-h"></i>
+        <span>Image Tools</span>
+      </button>
+      <button class="tab" id="tabGenerator">
+        <i class="fas fa-wand-sparkles"></i>
+        <span>Image Generator</span>
+      </button>
+    </div>
 
-        <div class="upload-frame">
-          <div class="upload-drop" id="uploadArea">
-            <div class="upload-drop-inner" id="uploadPlaceholder">
-              <i class="fas fa-cloud-upload-alt"></i>
-              <h3>Tap to upload image</h3>
-              <p>JPG / PNG • up to 10 MB</p>
-            </div>
-            <div class="preview-wrapper" id="previewWrapper">
-              <img id="previewImg" class="preview-img" alt="Original" />
-            </div>
-            <input type="file" id="imageInput" accept="image/*" style="display:none" />
+    <!-- SLIDE 1: TOOLS -->
+    <section id="slideTools">
+      <div class="layout">
+        <!-- LEFT: ORIGINAL -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <i class="fas fa-image"></i>
+              Original Image
+            </h2>
+            <span class="card-sub">Upload, then tap Enhance or Remove BG</span>
           </div>
-        </div>
 
-        <div class="actions">
-          <button class="btn btn-enhance" id="enhanceBtn" disabled>
-            <i class="fas fa-wand-magic-sparkles"></i>
-            <span>Enhance</span>
-          </button>
-          <button class="btn btn-bg" id="removeBgBtn" disabled>
-            <i class="fas fa-scissors"></i>
-            <span>Remove BG</span>
-          </button>
-        </div>
-
-        <div class="status-bar" id="statusBar"></div>
-      </div>
-
-      <!-- RIGHT: RESULT -->
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">
-            <i class="fas fa-panorama"></i>
-            Result
-          </h2>
-          <span class="card-sub" id="resultLabel">No image processed yet</span>
-        </div>
-
-        <div class="result-box">
-          <div class="result-placeholder" id="resultPlaceholder">
-            <i class="fas fa-photo-film"></i>
-            Processed image will appear here.
+          <div class="upload-frame">
+            <div class="upload-drop" id="uploadArea">
+              <div class="upload-drop-inner" id="uploadPlaceholder">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Tap to upload image</h3>
+                <p>JPG / PNG • up to 10 MB</p>
+              </div>
+              <div class="preview-wrapper" id="previewWrapper">
+                <img id="previewImg" class="preview-img" alt="Original" />
+              </div>
+              <input type="file" id="imageInput" accept="image/*" style="display:none" />
+            </div>
           </div>
-          <img id="resultImg" class="result-img" alt="Result" />
+
+          <div class="actions">
+            <button class="btn btn-enhance" id="enhanceBtn" disabled>
+              <i class="fas fa-wand-magic-sparkles"></i>
+              <span>Enhance</span>
+            </button>
+            <button class="btn btn-bg" id="removeBgBtn" disabled>
+              <i class="fas fa-scissors"></i>
+              <span>Remove BG</span>
+            </button>
+          </div>
+
+          <div class="status-bar" id="statusBar"></div>
         </div>
 
-        <div class="download-wrap" id="downloadWrap">
-          <button class="btn-download" id="downloadBtn">
-            <i class="fas fa-download"></i>
-            <span>Download PNG</span>
-          </button>
+        <!-- RIGHT: RESULT -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <i class="fas fa-panorama"></i>
+              Result
+            </h2>
+            <span class="card-sub" id="resultLabel">No image processed yet</span>
+          </div>
+
+          <div class="result-box">
+            <div class="result-placeholder" id="resultPlaceholder">
+              <i class="fas fa-photo-film"></i>
+              Processed or generated image will appear here.
+            </div>
+            <img id="resultImg" class="result-img" alt="Result" />
+          </div>
+
+          <div class="download-wrap" id="downloadWrap">
+            <button class="btn-download" id="downloadBtn">
+              <i class="fas fa-download"></i>
+              <span>Download PNG</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- SLIDE 2: GENERATOR -->
+    <section id="slideGenerator" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-wand-sparkles"></i>
+            Image Generator
+          </h2>
+          <span class="card-sub" id="genStatusSub">Type prompt, pick ratio, then generate</span>
+        </div>
+
+        <div class="result-box" style="margin-bottom:12px;">
+          <div class="result-placeholder" id="genPlaceholder">
+            <i class="fas fa-photo-film"></i>
+            Generated image will appear here.
+          </div>
+          <img id="genResultImg" class="result-img" alt="Generated" />
+        </div>
+
+        <div class="download-wrap" id="genDownloadWrap">
+          <button class="btn-download" id="genDownloadBtn">
+            <i class="fas fa-download"></i>
+            <span>Download PNG</span>
+          </button>
+        </div>
+
+        <div class="t2i-wrapper">
+          <div class="t2i-header">
+            <div class="t2i-title">
+              <i class="fas fa-pen-nib"></i>
+              Prompt & Ratio
+            </div>
+            <div class="t2i-sub">
+              Uses Flux worker endpoint with JSON response
+            </div>
+          </div>
+
+          <div class="t2i-form">
+            <div class="t2i-row t2i-row-top">
+              <input
+                id="genPrompt"
+                type="text"
+                class="t2i-input"
+                placeholder="Describe your image, e.g. cinematic portrait of a girl in neon street"
+              />
+            </div>
+            <div class="t2i-row">
+              <div class="t2i-select-wrap">
+                <select id="genRatio" class="t2i-select">
+                  <option value="9:16">9 : 16 (vertical)</option>
+                  <option value="16:9">16 : 9 (wide)</option>
+                  <option value="1:1">1 : 1 (square)</option>
+                </select>
+                <span class="t2i-select-icon">
+                  <i class="fas fa-chevron-down"></i>
+                </span>
+              </div>
+              <button class="btn btn-generate" id="genBtn">
+                <i class="fas fa-magic"></i>
+                <span>Generate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar" id="genStatusBar"></div>
+      </div>
+    </section>
+
     <p class="footer">
-      © 2025 BTF Image AI 1.1V • Powered by Masoom & APIs By Ashlyn.
+      © 2025 BTF Image AI 1.2V • Enhance • Remove Background • Generate
     </p>
   </main>
 
   <script>
     const API_BASE = "https://arimagex.netlify.app";
 
+    // Tabs
+    const tabTools = document.getElementById("tabTools");
+    const tabGenerator = document.getElementById("tabGenerator");
+    const slideTools = document.getElementById("slideTools");
+    const slideGenerator = document.getElementById("slideGenerator");
+
+    tabTools.addEventListener("click", () => {
+      tabTools.classList.add("active");
+      tabGenerator.classList.remove("active");
+      slideTools.style.display = "";
+      slideGenerator.style.display = "none";
+    });
+
+    tabGenerator.addEventListener("click", () => {
+      tabGenerator.classList.add("active");
+      tabTools.classList.remove("active");
+      slideGenerator.style.display = "";
+      slideTools.style.display = "none";
+    });
+
+    // Common result elements for tools slide
     const uploadArea = document.getElementById("uploadArea");
     const imageInput = document.getElementById("imageInput");
     const previewImg = document.getElementById("previewImg");
@@ -517,7 +777,7 @@
       const reader = new FileReader();
 
       reader.onload = ev => {
-        const dataUrl = ev.target.result; // data:image/png;base64,...
+        const dataUrl = ev.target.result;
         currentBase64 = dataUrl;
         previewImg.src = dataUrl;
         previewWrapper.style.display = "block";
@@ -531,7 +791,7 @@
       reader.readAsDataURL(file);
     }
 
-    // Status helpers
+    // Status for tools
     function showLoading(msg) {
       statusBar.classList.remove("status-error");
       statusBar.innerHTML = "";
@@ -560,11 +820,14 @@
     }
 
     function clearResult() {
+      if (lastResultUrl) {
+        URL.revokeObjectURL(lastResultUrl);
+        lastResultUrl = "";
+      }
       resultImg.style.display = "none";
       resultPlaceholder.style.display = "block";
       downloadWrap.style.display = "none";
       resultLabel.textContent = "No image processed yet";
-      lastResultUrl = "";
     }
 
     function setButtonsDisabled(disabled) {
@@ -572,6 +835,7 @@
       removeBgBtn.disabled = disabled || !currentBase64;
     }
 
+    // Enhance / Remove BG
     async function processImage(action) {
       if (!currentBase64) {
         showError("Please upload an image first.");
@@ -599,7 +863,7 @@
         });
 
         if (!res.ok) {
-          showError("Server error " + res.status + ". Try again or check API status.");
+          showError("Server error " + res.status + ". Try again or check API.");
           setButtonsDisabled(false);
           return;
         }
@@ -617,7 +881,7 @@
         clearStatus();
       } catch (err) {
         console.error(err);
-        showError("Network or CORS issue. Check browser developer tools.");
+        showError("Network or CORS issue.");
       } finally {
         setButtonsDisabled(false);
       }
@@ -627,10 +891,115 @@
     removeBgBtn.addEventListener("click", () => processImage("removebg"));
 
     downloadBtn.addEventListener("click", () => {
-      if (!lastResultUrl) return;
+      if (!resultImg.src) return;
       const a = document.createElement("a");
-      a.href = lastResultUrl;
+      a.href = resultImg.src;
       a.download = "btf-image-result.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+
+    // ============================
+    // SLIDE 2: IMAGE GENERATOR
+    // ============================
+    const genPrompt = document.getElementById("genPrompt");
+    const genRatio = document.getElementById("genRatio");
+    const genBtn = document.getElementById("genBtn");
+    const genStatusBar = document.getElementById("genStatusBar");
+
+    const genResultImg = document.getElementById("genResultImg");
+    const genPlaceholder = document.getElementById("genPlaceholder");
+    const genDownloadWrap = document.getElementById("genDownloadWrap");
+    const genDownloadBtn = document.getElementById("genDownloadBtn");
+
+    function genShowLoading(msg) {
+      genStatusBar.classList.remove("status-error");
+      genStatusBar.innerHTML = "";
+      const sp = document.createElement("div");
+      sp.className = "spinner";
+      const t = document.createElement("span");
+      t.textContent = msg;
+      genStatusBar.appendChild(sp);
+      genStatusBar.appendChild(t);
+    }
+
+    function genShowError(msg) {
+      genStatusBar.classList.add("status-error");
+      genStatusBar.innerHTML = "";
+      const icon = document.createElement("i");
+      icon.className = "fas fa-circle-exclamation";
+      const t = document.createElement("span");
+      t.textContent = " " + msg;
+      genStatusBar.appendChild(icon);
+      genStatusBar.appendChild(t);
+    }
+
+    function genClearStatus() {
+      genStatusBar.classList.remove("status-error");
+      genStatusBar.innerHTML = "";
+    }
+
+    function genClearResult() {
+      genResultImg.style.display = "none";
+      genPlaceholder.style.display = "block";
+      genDownloadWrap.style.display = "none";
+    }
+
+    async function generateImage() {
+      const prompt = genPrompt.value.trim();
+      const ratio = genRatio.value;
+
+      if (!prompt) {
+        genShowError("Please enter a prompt.");
+        return;
+      }
+
+      genClearResult();
+      genShowLoading("Generating image… please wait.");
+      genBtn.disabled = true;
+
+      try {
+        const apiUrl =
+          "https://flux.ashlynn.workers.dev/?prompt=" +
+          encodeURIComponent(prompt) +
+          "&ratio=" +
+          encodeURIComponent(ratio);
+
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+          genShowError("Generator error " + res.status + ".");
+          genBtn.disabled = false;
+          return;
+        }
+
+        const data = await res.json(); // {"success":true,"url":"https://...jpg"}
+        if (!data.success || !data.url) {
+          genShowError("Generator response missing image URL.");
+          genBtn.disabled = false;
+          return;
+        }
+
+        genResultImg.src = data.url;
+        genResultImg.style.display = "block";
+        genPlaceholder.style.display = "none";
+        genDownloadWrap.style.display = "block";
+        genClearStatus();
+      } catch (e) {
+        console.error(e);
+        genShowError("Network error while generating image.");
+      } finally {
+        genBtn.disabled = false;
+      }
+    }
+
+    genBtn.addEventListener("click", generateImage);
+
+    genDownloadBtn.addEventListener("click", () => {
+      if (!genResultImg.src) return;
+      const a = document.createElement("a");
+      a.href = genResultImg.src;
+      a.download = "btf-generated-image.png";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
