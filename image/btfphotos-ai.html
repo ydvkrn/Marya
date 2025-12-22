@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BTF Image AI 1.1V</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root {
+      --bg-main: #020617;
+      --border-subtle: #0f172a;
+      --border-strong: #1f2937;
+      --primary: #38bdf8;
+      --primary2: #a855f7;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --shadow-card: 0 20px 45px rgba(0, 0, 0, 0.7);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 50%, #000 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(2, 6, 23, 0.96);
+      border-bottom: 1px solid #020617;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-title span:first-child { color: #38bdf8; }
+    .brand-title span:last-child { color: #a5b4fc; }
+
+    .brand-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 0, #38bdf8, #6366f1 45%, #a855f7 100%);
+      box-shadow: 0 0 18px rgba(56,189,248,0.7);
+    }
+
+    .brand-icon i {
+      color: #020617;
+      font-size: 14px;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* LAYOUT */
+    .layout {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: minmax(0, 3.1fr) minmax(0, 2.1fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .container { padding-bottom: 28px; }
+    }
+
+    /* CARDS */
+    .card {
+      background: radial-gradient(circle at top, #020617 0, #020617 55%, #020617 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+      padding: 16px 16px 18px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title i {
+      color: #38bdf8;
+      font-size: 14px;
+    }
+
+    .card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    /* UPLOAD */
+    .upload-frame {
+      background: #020617;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      border: 1px solid var(--border-subtle);
+      min-height: 280px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .upload-drop {
+      border-radius: 18px;
+      border: 1px dashed var(--border-strong);
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+      cursor: pointer;
+      background: radial-gradient(circle at top left, #020617 0, #020617 60%, #020617 100%);
+    }
+
+    .upload-drop-inner {
+      padding: 26px 14px 30px;
+      text-align: center;
+    }
+
+    .upload-drop-inner i {
+      font-size: 30px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #38bdf8, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .upload-drop-inner h3 {
+      font-size: 14px;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .upload-drop-inner p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .preview-wrapper {
+      display: none;
+      width: 100%;
+    }
+
+    .preview-img {
+      width: 100%;
+      border-radius: 18px;
+      object-fit: cover;
+      max-height: 420px;
+      background: #020617;
+    }
+
+    /* ACTION BUTTONS */
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    @media (max-width: 600px) {
+      .actions {
+        flex-direction: column;
+      }
+      .actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn i {
+      font-size: 14px;
+    }
+
+    .btn-enhance {
+      background: linear-gradient(90deg, #22d3ee, #6366f1);
+      color: #020617;
+      box-shadow: 0 9px 22px rgba(56, 189, 248, 0.45);
+    }
+
+    .btn-bg {
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+      color: #020617;
+      box-shadow: 0 9px 22px rgba(236, 72, 153, 0.45);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.8);
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 20px;
+      font-weight: 500;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 3px solid #1f2937;
+      border-top-color: #38bdf8;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-error {
+      color: #fecaca;
+    }
+
+    /* RESULT CARD */
+    .result-box {
+      background: #020617;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+
+    .result-placeholder {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .result-placeholder i {
+      display: block;
+      margin-bottom: 6px;
+      color: #4b5563;
+      font-size: 18px;
+    }
+
+    .result-img {
+      display: none;
+      width: 100%;
+      border-radius: 18px;
+      max-height: 420px;
+      object-fit: cover;
+      background: #020617;
+    }
+
+    .download-wrap {
+      display: none;
+      margin-top: 12px;
+      text-align: right;
+    }
+
+    @media (max-width: 600px) {
+      .download-wrap {
+        text-align: center;
+      }
+      .btn-download {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .btn-download {
+      background: transparent;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .btn-download i {
+      font-size: 13px;
+    }
+
+    .btn-download:hover { background: #020617; }
+
+    /* FOOTER */
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="brand-title">
+          <div class="brand-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <span>BTF</span><span>Image AI</span>
+        </div>
+        <span class="brand-sub">Real‑time Enhance & Background Removal</span>
+      </div>
+      <!-- Right side intentionally empty now (no About / API Docs) -->
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="layout">
+      <!-- LEFT: ORIGINAL -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-image"></i>
+            Original Image
+          </h2>
+          <span class="card-sub">Upload, then tap Enhance or Remove BG</span>
+        </div>
+
+        <div class="upload-frame">
+          <div class="upload-drop" id="uploadArea">
+            <div class="upload-drop-inner" id="uploadPlaceholder">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <h3>Tap to upload image</h3>
+              <p>JPG / PNG • up to 10 MB</p>
+            </div>
+            <div class="preview-wrapper" id="previewWrapper">
+              <img id="previewImg" class="preview-img" alt="Original" />
+            </div>
+            <input type="file" id="imageInput" accept="image/*" style="display:none" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-enhance" id="enhanceBtn" disabled>
+            <i class="fas fa-wand-magic-sparkles"></i>
+            <span>Enhance</span>
+          </button>
+          <button class="btn btn-bg" id="removeBgBtn" disabled>
+            <i class="fas fa-scissors"></i>
+            <span>Remove BG</span>
+          </button>
+        </div>
+
+        <div class="status-bar" id="statusBar"></div>
+      </div>
+
+      <!-- RIGHT: RESULT -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-panorama"></i>
+            Result
+          </h2>
+          <span class="card-sub" id="resultLabel">No image processed yet</span>
+        </div>
+
+        <div class="result-box">
+          <div class="result-placeholder" id="resultPlaceholder">
+            <i class="fas fa-photo-film"></i>
+            Processed image will appear here.
+          </div>
+          <img id="resultImg" class="result-img" alt="Result" />
+        </div>
+
+        <div class="download-wrap" id="downloadWrap">
+          <button class="btn-download" id="downloadBtn">
+            <i class="fas fa-download"></i>
+            <span>Download PNG</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer">
+      © 2025 BTF Image AI 1.1V • Powered by server‑side enhancement & background removal APIs
+    </p>
+  </main>
+
+  <script>
+    const API_BASE = "https://arimagex.netlify.app";
+
+    const uploadArea = document.getElementById("uploadArea");
+    const imageInput = document.getElementById("imageInput");
+    const previewImg = document.getElementById("previewImg");
+    const previewWrapper = document.getElementById("previewWrapper");
+    const uploadPlaceholder = document.getElementById("uploadPlaceholder");
+
+    const enhanceBtn = document.getElementById("enhanceBtn");
+    const removeBgBtn = document.getElementById("removeBgBtn");
+
+    const statusBar = document.getElementById("statusBar");
+
+    const resultImg = document.getElementById("resultImg");
+    const resultPlaceholder = document.getElementById("resultPlaceholder");
+    const resultLabel = document.getElementById("resultLabel");
+    const downloadWrap = document.getElementById("downloadWrap");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    let currentBase64 = null;
+    let lastResultUrl = "";
+
+    // Upload handling
+    uploadArea.addEventListener("click", () => imageInput.click());
+
+    ["dragover", "dragenter"].forEach(evt => {
+      uploadArea.addEventListener(evt, e => e.preventDefault());
+    });
+
+    uploadArea.addEventListener("drop", e => {
+      e.preventDefault();
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    imageInput.addEventListener("change", e => {
+      if (e.target.files && e.target.files[0]) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith("image/")) {
+        showError("Please upload a valid image file.");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = ev => {
+        const dataUrl = ev.target.result; // data:image/png;base64,...
+        currentBase64 = dataUrl;
+        previewImg.src = dataUrl;
+        previewWrapper.style.display = "block";
+        uploadPlaceholder.style.display = "none";
+        enhanceBtn.disabled = false;
+        removeBgBtn.disabled = false;
+        clearResult();
+        clearStatus();
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    // Status helpers
+    function showLoading(msg) {
+      statusBar.classList.remove("status-error");
+      statusBar.innerHTML = "";
+      const sp = document.createElement("div");
+      sp.className = "spinner";
+      const t = document.createElement("span");
+      t.textContent = msg;
+      statusBar.appendChild(sp);
+      statusBar.appendChild(t);
+    }
+
+    function showError(msg) {
+      statusBar.classList.add("status-error");
+      statusBar.innerHTML = "";
+      const icon = document.createElement("i");
+      icon.className = "fas fa-circle-exclamation";
+      const t = document.createElement("span");
+      t.textContent = " " + msg;
+      statusBar.appendChild(icon);
+      statusBar.appendChild(t);
+    }
+
+    function clearStatus() {
+      statusBar.classList.remove("status-error");
+      statusBar.innerHTML = "";
+    }
+
+    function clearResult() {
+      resultImg.style.display = "none";
+      resultPlaceholder.style.display = "block";
+      downloadWrap.style.display = "none";
+      resultLabel.textContent = "No image processed yet";
+      lastResultUrl = "";
+    }
+
+    function setButtonsDisabled(disabled) {
+      enhanceBtn.disabled = disabled || !currentBase64;
+      removeBgBtn.disabled = disabled || !currentBase64;
+    }
+
+    async function processImage(action) {
+      if (!currentBase64) {
+        showError("Please upload an image first.");
+        return;
+      }
+
+      clearResult();
+      setButtonsDisabled(true);
+      showLoading(
+        action === "enhance"
+          ? "Enhancing image… please wait."
+          : "Removing background… please wait."
+      );
+
+      const endpoint =
+        action === "enhance"
+          ? `${API_BASE}/api/enhance`
+          : `${API_BASE}/api/removebg`;
+
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl: currentBase64 })
+        });
+
+        if (!res.ok) {
+          showError("Server error " + res.status + ". Try again or check API status.");
+          setButtonsDisabled(false);
+          return;
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        lastResultUrl = url;
+
+        resultImg.src = url;
+        resultImg.style.display = "block";
+        resultPlaceholder.style.display = "none";
+        downloadWrap.style.display = "block";
+        resultLabel.textContent =
+          action === "enhance" ? "Enhanced Image" : "Background Removed";
+        clearStatus();
+      } catch (err) {
+        console.error(err);
+        showError("Network or CORS issue. Check browser developer tools.");
+      } finally {
+        setButtonsDisabled(false);
+      }
+    }
+
+    enhanceBtn.addEventListener("click", () => processImage("enhance"));
+    removeBgBtn.addEventListener("click", () => processImage("removebg"));
+
+    downloadBtn.addEventListener("click", () => {
+      if (!lastResultUrl) return;
+      const a = document.createElement("a");
+      a.href = lastResultUrl;
+      a.download = "btf-image-result.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  </script>
+</body>
+</html>
