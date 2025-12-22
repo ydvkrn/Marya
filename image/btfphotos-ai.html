@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BTF Image AI 1.2V</title>
+  <title>BTF Image AI 1.3V</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -225,7 +225,7 @@
 
     .upload-drop-inner p {
       font-size: 12px;
-      color: var(--text-muted);
+      color: #9ca3af;
       font-weight: 500;
     }
 
@@ -242,7 +242,7 @@
       background: #020617;
     }
 
-    /* ACTION BUTTONS */
+    /* BUTTONS */
     .actions {
       margin-top: 14px;
       display: flex;
@@ -275,9 +275,7 @@
       white-space: nowrap;
     }
 
-    .btn i {
-      font-size: 14px;
-    }
+    .btn i { font-size: 14px; }
 
     .btn-enhance {
       background: linear-gradient(90deg, #22d3ee, #6366f1);
@@ -329,17 +327,13 @@
       border-top-color: #38bdf8;
       animation: spin 0.8s linear infinite;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    .status-error { color: #fecaca; }
 
-    .status-error {
-      color: #fecaca;
-    }
-
-    /* RESULT CARD */
+    /* RESULT BOX + BADGE */
     .result-box {
+      position: relative;
       background: #020617;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-subtle);
@@ -364,7 +358,8 @@
       font-size: 18px;
     }
 
-    .result-img {
+    .result-img,
+    #genResultImg {
       display: none;
       width: 100%;
       border-radius: 18px;
@@ -403,11 +398,39 @@
       font-weight: 600;
     }
 
-    .btn-download i {
-      font-size: 13px;
+    .btn-download i { font-size: 13px; }
+    .btn-download:hover { background: #020617; }
+
+    .result-badge,
+    .gen-result-badge {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      z-index: 5;
+      background: rgba(15, 23, 42, 0.88);
+      border-radius: 999px;
+      padding: 4px 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      backdrop-filter: blur(6px);
     }
 
-    .btn-download:hover { background: #020617; }
+    .result-badge i,
+    .gen-result-badge i {
+      font-size: 10px;
+      color: #38bdf8;
+    }
+
+    .result-badge span,
+    .gen-result-badge span {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
 
     /* TEXT TO IMAGE SECTION */
     .t2i-wrapper {
@@ -452,15 +475,8 @@
       gap: 8px;
     }
 
-    .t2i-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .t2i-row-top {
-      flex-direction: column;
-    }
+    .t2i-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .t2i-row-top { flex-direction: column; }
 
     .t2i-input {
       flex: 1;
@@ -475,13 +491,9 @@
       font-weight: 500;
     }
 
-    .t2i-input::placeholder {
-      color: #6b7280;
-    }
+    .t2i-input::placeholder { color: #6b7280; }
 
-    .t2i-select-wrap {
-      position: relative;
-    }
+    .t2i-select-wrap { position: relative; }
 
     .t2i-select {
       background: #020617;
@@ -517,7 +529,7 @@
       }
     }
 
-    /* SLIDES (for tabs) */
+    /* SLIDES */
     #slideTools,
     #slideGenerator {
       margin-top: 16px;
@@ -530,6 +542,85 @@
       font-size: 11px;
       color: var(--text-muted);
       font-weight: 500;
+    }
+
+    /* NSFW MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.86);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-card {
+      background: #020617;
+      border-radius: 18px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.85);
+      padding: 18px 18px 16px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      margin: 0 auto 10px;
+      background: radial-gradient(circle at 30% 0, #f97316, #ef4444 60%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 18px rgba(248,113,113,0.65);
+    }
+
+    .modal-icon i {
+      color: #020617;
+      font-size: 18px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .modal-text {
+      font-size: 13px;
+      color: #e5e7eb;
+      margin-bottom: 14px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    .modal-btn-yes {
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-color: #22c55e;
+      color: #020617;
+    }
+
+    .modal-btn-no {
+      background: #020617;
     }
   </style>
 </head>
@@ -547,6 +638,23 @@
       </div>
     </div>
   </header>
+
+  <!-- NSFW MODAL -->
+  <div class="modal-backdrop" id="nsfwModal">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <i class="fas fa-triangle-exclamation"></i>
+      </div>
+      <div class="modal-title">Are you 18+?</div>
+      <div class="modal-text">
+        This image might contain sensitive or NSFW content. Please confirm your age to view it.
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-no" id="nsfwNoBtn">No</button>
+        <button class="modal-btn modal-btn-yes" id="nsfwYesBtn">Yes</button>
+      </div>
+    </div>
+  </div>
 
   <main class="container">
     <!-- Tabs -->
@@ -618,6 +726,10 @@
               Processed or generated image will appear here.
             </div>
             <img id="resultImg" class="result-img" alt="Result" />
+            <div class="result-badge" id="resultBadge" style="display:none;">
+              <i class="fas fa-bolt"></i>
+              <span>BTF AI</span>
+            </div>
           </div>
 
           <div class="download-wrap" id="downloadWrap">
@@ -647,6 +759,10 @@
             Generated image will appear here.
           </div>
           <img id="genResultImg" class="result-img" alt="Generated" />
+          <div class="gen-result-badge" id="genResultBadge" style="display:none;">
+            <i class="fas fa-bolt"></i>
+            <span>BTF AI</span>
+          </div>
         </div>
 
         <div class="download-wrap" id="genDownloadWrap">
@@ -700,7 +816,7 @@
     </section>
 
     <p class="footer">
-      © 2025 BTF Image AI 1.2V • Enhance • Remove Background • Generate
+      © 2025 BTF Image AI 1.3V • Enhance • Remove Background • Generate
     </p>
   </main>
 
@@ -727,7 +843,7 @@
       slideTools.style.display = "none";
     });
 
-    // Common result elements for tools slide
+    // Tools slide elements
     const uploadArea = document.getElementById("uploadArea");
     const imageInput = document.getElementById("imageInput");
     const previewImg = document.getElementById("previewImg");
@@ -742,11 +858,75 @@
     const resultImg = document.getElementById("resultImg");
     const resultPlaceholder = document.getElementById("resultPlaceholder");
     const resultLabel = document.getElementById("resultLabel");
+    const resultBadge = document.getElementById("resultBadge");
     const downloadWrap = document.getElementById("downloadWrap");
     const downloadBtn = document.getElementById("downloadBtn");
 
     let currentBase64 = null;
     let lastResultUrl = "";
+    let pendingSensitiveImage = null; // { type: 'tools' | 'gen', element, url }
+
+    // NSFW modal elements
+    const nsfwModal = document.getElementById("nsfwModal");
+    const nsfwYesBtn = document.getElementById("nsfwYesBtn");
+    const nsfwNoBtn = document.getElementById("nsfwNoBtn");
+
+    function openNsfwModal(pending) {
+      pendingSensitiveImage = pending;
+      nsfwModal.style.display = "flex";
+    }
+
+    function closeNsfwModal() {
+      nsfwModal.style.display = "none";
+    }
+
+    nsfwYesBtn.addEventListener("click", () => {
+      if (pendingSensitiveImage && pendingSensitiveImage.element) {
+        pendingSensitiveImage.element.style.filter = "none";
+        pendingSensitiveImage.element.style.opacity = "1";
+      }
+      pendingSensitiveImage = null;
+      closeNsfwModal();
+    });
+
+    nsfwNoBtn.addEventListener("click", () => {
+      if (pendingSensitiveImage) {
+        if (pendingSensitiveImage.type === "tools") {
+          resultImg.style.display = "none";
+          resultPlaceholder.style.display = "block";
+          downloadWrap.style.display = "none";
+          if (resultBadge) resultBadge.style.display = "none";
+        } else if (pendingSensitiveImage.type === "gen") {
+          genResultImg.style.display = "none";
+          genPlaceholder.style.display = "block";
+          genDownloadWrap.style.display = "none";
+          if (genResultBadge) genResultBadge.style.display = "none";
+        }
+      }
+      pendingSensitiveImage = null;
+      closeNsfwModal();
+    });
+
+    // Very basic NSFW detector (keyword / path check)
+    function isPossiblyNSFW(url) {
+      if (!url) return false;
+      const lower = url.toLowerCase();
+      const suspiciousKeywords = ["nsfw", "adult", "explicit", "porn"];
+      return suspiciousKeywords.some(k => lower.includes(k));
+    }
+
+    function handleImageWithNsfwCheck(type, imgElement, url) {
+      imgElement.style.filter = "blur(12px)";
+      imgElement.style.opacity = "0.7";
+
+      if (isPossiblyNSFW(url)) {
+        openNsfwModal({ type, element: imgElement, url });
+      } else {
+        // if not flagged, immediately clear blur
+        imgElement.style.filter = "none";
+        imgElement.style.opacity = "1";
+      }
+    }
 
     // Upload handling
     uploadArea.addEventListener("click", () => imageInput.click());
@@ -775,7 +955,6 @@
       }
 
       const reader = new FileReader();
-
       reader.onload = ev => {
         const dataUrl = ev.target.result;
         currentBase64 = dataUrl;
@@ -787,11 +966,10 @@
         clearResult();
         clearStatus();
       };
-
       reader.readAsDataURL(file);
     }
 
-    // Status for tools
+    // Status helpers (tools)
     function showLoading(msg) {
       statusBar.classList.remove("status-error");
       statusBar.innerHTML = "";
@@ -828,6 +1006,7 @@
       resultPlaceholder.style.display = "block";
       downloadWrap.style.display = "none";
       resultLabel.textContent = "No image processed yet";
+      if (resultBadge) resultBadge.style.display = "none";
     }
 
     function setButtonsDisabled(disabled) {
@@ -872,13 +1051,17 @@
         const url = URL.createObjectURL(blob);
         lastResultUrl = url;
 
+        resultImg.onload = () => {
+          resultPlaceholder.style.display = "none";
+          resultImg.style.display = "block";
+          downloadWrap.style.display = "block";
+          resultLabel.textContent =
+            action === "enhance" ? "Enhanced Image" : "Background Removed";
+          if (resultBadge) resultBadge.style.display = "inline-flex";
+          handleImageWithNsfwCheck("tools", resultImg, url);
+          clearStatus();
+        };
         resultImg.src = url;
-        resultImg.style.display = "block";
-        resultPlaceholder.style.display = "none";
-        downloadWrap.style.display = "block";
-        resultLabel.textContent =
-          action === "enhance" ? "Enhanced Image" : "Background Removed";
-        clearStatus();
       } catch (err) {
         console.error(err);
         showError("Network or CORS issue.");
@@ -900,9 +1083,7 @@
       document.body.removeChild(a);
     });
 
-    // ============================
-    // SLIDE 2: IMAGE GENERATOR
-    // ============================
+    // Generator elements
     const genPrompt = document.getElementById("genPrompt");
     const genRatio = document.getElementById("genRatio");
     const genBtn = document.getElementById("genBtn");
@@ -910,6 +1091,7 @@
 
     const genResultImg = document.getElementById("genResultImg");
     const genPlaceholder = document.getElementById("genPlaceholder");
+    const genResultBadge = document.getElementById("genResultBadge");
     const genDownloadWrap = document.getElementById("genDownloadWrap");
     const genDownloadBtn = document.getElementById("genDownloadBtn");
 
@@ -944,6 +1126,7 @@
       genResultImg.style.display = "none";
       genPlaceholder.style.display = "block";
       genDownloadWrap.style.display = "none";
+      if (genResultBadge) genResultBadge.style.display = "none";
     }
 
     async function generateImage() {
@@ -973,18 +1156,22 @@
           return;
         }
 
-        const data = await res.json(); // {"success":true,"url":"https://...jpg"}
+        const data = await res.json(); // {success:true,url:"https://...jpg"}
         if (!data.success || !data.url) {
           genShowError("Generator response missing image URL.");
           genBtn.disabled = false;
           return;
         }
 
+        genResultImg.onload = () => {
+          genPlaceholder.style.display = "none";
+          genResultImg.style.display = "block";
+          genDownloadWrap.style.display = "block";
+          if (genResultBadge) genResultBadge.style.display = "inline-flex";
+          handleImageWithNsfwCheck("gen", genResultImg, data.url);
+          genClearStatus();
+        };
         genResultImg.src = data.url;
-        genResultImg.style.display = "block";
-        genPlaceholder.style.display = "none";
-        genDownloadWrap.style.display = "block";
-        genClearStatus();
       } catch (e) {
         console.error(e);
         genShowError("Network error while generating image.");
