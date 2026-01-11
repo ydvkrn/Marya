@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 MARYA VAULT ULTIMATE v9.0 - 500MB BTFSTORAGE + TELEGRAM</title>
+    <title>🚀 MARYA VAULT v10.0 - WORKING VERSION</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* 🔥 FULL MONSTER CSS - 800+ LINES */
         :root {
             --primary: #dc2626; --primary-dark: #b91c1c; --primary-light: #fef2f2;
             --success: #059669; --success-light: #d1fae5; --error: #dc2626; 
@@ -25,561 +24,290 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 50%, var(--gray-100) 100%);
             min-height: 100vh; color: var(--gray-900); line-height: 1.6; overflow-x: hidden;
-            position: relative;
-        }
-        body::before {
-            content: ''; position: fixed; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--primary), var(--success), var(--primary), transparent);
-            z-index: 1000;
         }
 
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; position: relative; z-index: 10; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
         
-        /* 🔥 HEADER - MONSTER DESIGN */
         .header { 
-            text-align: center; margin-bottom: 4rem; padding: 4rem 2rem; 
-            background: linear-gradient(135deg, rgba(220,38,38,0.06), rgba(5,150,105,0.04), rgba(59,130,246,0.03));
-            border-radius: var(--radius-lg); box-shadow: var(--shadow-2xl); position: relative;
-            overflow: hidden; border: 1px solid rgba(220,38,38,0.1);
+            text-align: center; margin-bottom: 3rem; padding: 3rem 2rem; 
+            background: linear-gradient(135deg, rgba(220,38,38,0.06), rgba(5,150,105,0.04));
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-2xl);
         }
-        .header::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: conic-gradient(from 0deg, rgba(220,38,38,0.08), rgba(5,150,105,0.06), transparent, rgba(59,130,246,0.04));
-            animation: backgroundFloat 25s ease-in-out infinite;
-        }
-        @keyframes backgroundFloat {
-            0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
-            25% { transform: translate(20px, -20px) rotate(90deg) scale(1.02); }
-            50% { transform: translate(-10px, 30px) rotate(180deg) scale(1.01); }
-            75% { transform: translate(30px, 10px) rotate(270deg) scale(1.03); }
-        }
+
         .logo {
-            width: 160px; height: 160px; margin: 0 auto 3rem; 
-            background: conic-gradient(from 0deg, var(--primary), var(--success), #3b82f6, var(--primary));
-            border-radius: 40px; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 35px 70px rgba(220,38,38,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
-            position: relative; overflow: hidden; animation: logoPulse 5s ease-in-out infinite;
-            z-index: 2; border: 3px solid rgba(255,255,255,0.3);
+            width: 100px; height: 100px; margin: 0 auto 2rem; 
+            background: linear-gradient(135deg, var(--primary), var(--success));
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-lg);
         }
-        .logo::after {
-            content: ''; position: absolute; inset: 0; 
-            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.4) 0%, transparent 60%);
-            animation: logoShine 4s ease-in-out infinite;
-        }
-        @keyframes logoShine {
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            30% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { transform: scale(2) rotate(360deg); opacity: 0; }
-        }
-        @keyframes logoPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 35px 70px rgba(220,38,38,0.4); }
-            50% { transform: scale(1.08); box-shadow: 0 50px 100px rgba(220,38,38,0.5); }
-        }
-        .logo i { font-size: 5rem; color: white; z-index: 3; position: relative; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .logo i { font-size: 3rem; color: white; }
         
         .title {
-            font-size: 5rem; font-weight: 900; margin-bottom: 1.5rem; letter-spacing: -0.04em;
-            background: linear-gradient(135deg, var(--primary), var(--success), #3b82f6, var(--primary), var(--success));
-            background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            background-clip: text; position: relative; z-index: 2; animation: titleGlow 8s ease-in-out infinite;
-            text-shadow: 0 4px 12px rgba(220,38,38,0.2);
-        }
-        @keyframes titleGlow {
-            0%, 100% { background-position: 0% 50%; filter: drop-shadow(0 0 30px rgba(220,38,38,0.4)); }
-            25% { background-position: 100% 0%; filter: drop-shadow(0 0 40px rgba(5,150,105,0.5)); }
-            50% { background-position: 100% 100%; filter: drop-shadow(0 0 35px rgba(59,130,246,0.4)); }
-            75% { background-position: 0% 100%; filter: drop-shadow(0 0 40px rgba(220,38,38,0.5)); }
-        }
-        .subtitle { 
-            font-size: 1.5rem; color: var(--gray-600); font-weight: 600; max-width: 900px; 
-            margin: 0 auto 2rem; line-height: 1.7; position: relative; z-index: 2;
-            background: linear-gradient(135deg, rgba(220,38,38,0.1), rgba(5,150,105,0.08));
-            padding: 2rem; border-radius: var(--radius-lg); border: 1px solid rgba(220,38,38,0.15);
-        }
-        .subtitle strong { color: var(--primary); font-weight: 800; }
-
-        /* 🔥 STATS BAR - MONSTER */
-        .stats-bar {
-            background: linear-gradient(135deg, white, var(--gray-50)); 
-            border-radius: var(--radius-lg); padding: 3rem; margin-bottom: 4rem;
-            box-shadow: var(--shadow-2xl); border: 1px solid var(--gray-100);
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2.5rem;
-            position: relative; overflow: hidden;
-        }
-        .stats-bar::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-            background: linear-gradient(90deg, var(--primary), var(--success), #3b82f6, var(--warning), var(--primary));
-            animation: gradientShift 4s ease-in-out infinite;
-        }
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-        .stat-card { 
-            text-align: center; position: relative; padding: 2rem 1.5rem; 
-            background: rgba(255,255,255,0.7); backdrop-filter: blur(20px); border-radius: var(--radius);
-            transition: all 0.4s cubic-bezier(0.4,0,0.2,1); border: 1px solid rgba(255,255,255,0.8);
-        }
-        .stat-card:hover { 
-            transform: translateY(-12px) scale(1.02); background: linear-gradient(135deg, var(--primary-light), var(--success-light));
-            box-shadow: var(--shadow-2xl); border-color: var(--primary);
-        }
-        .stat-icon { 
-            font-size: 3rem; margin-bottom: 1.5rem; 
-            background: linear-gradient(135deg, var(--primary), var(--success)); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 4px 8px rgba(220,38,38,0.3));
-        }
-        .stat-value { 
-            font-size: 3rem; font-weight: 900; margin-bottom: 0.75rem; 
-            background: linear-gradient(135deg, var(--primary), var(--success), #3b82f6); 
+            font-size: 3rem; font-weight: 900; margin-bottom: 1rem; 
+            background: linear-gradient(135deg, var(--primary), var(--success));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .stat-label { 
-            font-size: 1rem; color: var(--gray-600); font-weight: 700; 
-            text-transform: uppercase; letter-spacing: 0.08em; 
+
+        .subtitle { 
+            font-size: 1.2rem; color: var(--gray-600); max-width: 800px; 
+            margin: 0 auto; line-height: 1.7;
         }
 
-        /* 🔥 TABS - ULTIMATE */
-        .tabs-container {
-            background: linear-gradient(135deg, white, var(--gray-50)); 
-            border-radius: var(--radius-lg); box-shadow: var(--shadow-2xl);
-            padding: 3.5rem; margin-bottom: 4rem; border: 1px solid var(--gray-100);
-            position: relative; overflow: hidden; backdrop-filter: blur(20px);
-        }
-        .tabs-container::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px;
-            background: linear-gradient(90deg, var(--primary), var(--success), #3b82f6, var(--warning));
-            box-shadow: 0 4px 20px rgba(220,38,38,0.4);
-        }
-        .tabs { 
-            display: flex; margin-bottom: 3rem; background: var(--gray-100); 
-            border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md);
-            backdrop-filter: blur(10px);
-        }
-        .tab {
-            flex: 1; padding: 1.5rem 2.5rem; border: none; background: transparent; 
-            cursor: pointer; font-size: 1.2rem; font-weight: 700; transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-            display: flex; align-items: center; justify-content: center; gap: 1rem; position: relative;
-        }
-        .tab.active { 
-            background: linear-gradient(135deg, var(--primary), var(--success)); 
-            color: white; box-shadow: 0 12px 40px rgba(220,38,38,0.4);
-            transform: translateY(-2px);
-        }
-        .tab-content { display: none; animation: fadeInUp 0.6s cubic-bezier(0.4,0,0.2,1); }
-        .tab-content.active { display: block; }
-        @keyframes fadeInUp { 
-            from { opacity: 0; transform: translateY(40px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-
-        /* 🔥 DROPZONE - ULTIMATE */
         .dropzone {
-            border: 4px dashed var(--gray-300); border-radius: var(--radius-lg); 
-            padding: 6rem 4rem; text-align: center; cursor: pointer; 
-            transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+            border: 3px dashed var(--gray-300); border-radius: var(--radius-lg); 
+            padding: 4rem 2rem; text-align: center; cursor: pointer; 
+            transition: all 0.4s;
             background: linear-gradient(135deg, var(--gray-50), var(--white));
-            min-height: 450px; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; position: relative; overflow: hidden;
-            backdrop-filter: blur(10px);
+            min-height: 350px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; margin-bottom: 3rem;
         }
-        .dropzone::before {
-            content: ''; position: absolute; inset: 0; 
-            background: radial-gradient(circle at 30% 30%, rgba(220,38,38,0.06) 0%, transparent 70%);
-            opacity: 0; transition: all 0.4s;
-        }
-        .dropzone::after {
-            content: ''; position: absolute; inset: 4px; border-radius: var(--radius-lg);
-            background: linear-gradient(135deg, var(--white), var(--gray-50)); z-index: 1;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-        }
-        .dropzone:hover::before, .dropzone.dragover::before { opacity: 1; transform: scale(1.1); }
-        .dropzone:hover, .dropzone.dragover {
+        .dropzone.dragover {
             border-color: var(--primary); background: linear-gradient(135deg, var(--primary-light), var(--white));
-            transform: translateY(-12px); box-shadow: var(--shadow-2xl); border-width: 4px;
+            transform: translateY(-8px); box-shadow: var(--shadow-2xl);
         }
+
         .upload-icon { 
-            font-size: 7rem; margin-bottom: 2.5rem; color: var(--primary); 
-            animation: float 7s ease-in-out infinite; 
-            filter: drop-shadow(0 15px 30px rgba(220,38,38,0.3)); position: relative; z-index: 2;
+            font-size: 5rem; margin-bottom: 1.5rem; color: var(--primary); 
+            animation: float 3s ease-in-out infinite;
         }
         @keyframes float { 
-            0%, 100% { transform: translateY(0px) rotate(0deg); } 
-            50% { transform: translateY(-25px) rotate(3deg); } 
-        }
-        .upload-title { 
-            font-size: 3rem; font-weight: 900; margin-bottom: 1.5rem; 
-            background: linear-gradient(135deg, var(--primary), var(--success)); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            position: relative; z-index: 2;
-        }
-        .upload-desc { 
-            font-size: 1.4rem; color: var(--gray-600); margin-bottom: 0; 
-            max-width: 600px; line-height: 1.7; position: relative; z-index: 2;
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-20px); } 
         }
 
-        /* 🔥 FILE ITEMS - MONSTER */
+        .upload-title { 
+            font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; 
+            background: linear-gradient(135deg, var(--primary), var(--success)); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .upload-desc { 
+            font-size: 1.1rem; color: var(--gray-600); max-width: 500px; 
+            margin: 0 auto; line-height: 1.6;
+        }
+
         .file-item {
             background: linear-gradient(135deg, white, var(--gray-50)); 
-            border-radius: var(--radius-lg); padding: 3rem; margin-bottom: 2.5rem;
-            box-shadow: var(--shadow-xl); border: 1px solid var(--gray-100); 
-            transition: all 0.5s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden;
-            backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg); border: 1px solid var(--gray-100); 
+            transition: all 0.4s; position: relative; overflow: hidden;
         }
         .file-item::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 8px;
-            background: linear-gradient(180deg, var(--primary), var(--success)); transition: all 0.4s;
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+            background: linear-gradient(180deg, var(--primary), var(--success)); 
         }
         .file-item:hover { 
-            transform: translateY(-10px); box-shadow: var(--shadow-2xl); 
-            border-color: var(--primary-light); 
+            transform: translateY(-6px); box-shadow: var(--shadow-2xl); 
         }
         .file-item.success::before { 
             background: linear-gradient(180deg, var(--success), #047857); 
-            box-shadow: 0 0 30px rgba(5,150,105,0.4); 
         }
         .file-item.error::before { 
             background: linear-gradient(180deg, var(--error), #b91c1c); 
-            box-shadow: 0 0 30px rgba(220,38,38,0.4); 
         }
+
         .file-header { 
-            display: flex; align-items: flex-start; gap: 2.5rem; margin-bottom: 2.5rem; 
+            display: flex; align-items: flex-start; gap: 2rem; margin-bottom: 1.5rem; 
         }
         .file-icon {
-            width: 100px; height: 100px; border-radius: var(--radius); 
-            display: flex; align-items: center; justify-content: center; font-size: 2.8rem; 
+            width: 80px; height: 80px; border-radius: var(--radius); 
+            display: flex; align-items: center; justify-content: center; font-size: 2.2rem; 
             color: white; flex-shrink: 0; background: linear-gradient(135deg, var(--primary), var(--success)); 
-            box-shadow: var(--shadow-lg); transition: all 0.4s;
+            box-shadow: var(--shadow-lg);
         }
         .file-item.success .file-icon { background: linear-gradient(135deg, var(--success), #047857); }
         .file-item.error .file-icon { background: linear-gradient(135deg, var(--error), #b91c1c); }
+
         .file-details { flex: 1; min-width: 0; }
         .file-name { 
-            font-size: 1.8rem; font-weight: 900; margin-bottom: 1rem; 
-            word-break: break-word; line-height: 1.3; color: var(--gray-900);
+            font-size: 1.5rem; font-weight: 900; margin-bottom: 0.75rem; 
+            word-break: break-word; color: var(--gray-900);
         }
         .file-meta { 
-            color: var(--gray-600); font-size: 1.1rem; display: flex; flex-wrap: wrap; 
-            gap: 1.5rem; align-items: center; margin-bottom: 2rem; 
+            color: var(--gray-600); font-size: 0.95rem; display: flex; flex-wrap: wrap; 
+            gap: 1rem; align-items: center; margin-bottom: 1.5rem;
         }
         .badge { 
-            background: var(--gray-100); padding: 0.4rem 1rem; border-radius: 25px; 
+            background: var(--gray-100); padding: 0.35rem 0.85rem; border-radius: 20px; 
             font-size: 0.85rem; font-weight: 700; box-shadow: var(--shadow-sm);
         }
         .badge.success { background: var(--success-light); color: var(--success); }
 
-        /* 🔥 PROGRESS BAR - ULTIMATE */
-        .progress-container { margin: 3rem 0; }
+        .progress-container { margin: 2rem 0; }
         .progress-info { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 2rem; font-size: 1.1rem; font-weight: 700; color: var(--gray-700); 
+            display: flex; justify-content: space-between; margin-bottom: 1rem; 
+            font-size: 0.95rem; font-weight: 700; color: var(--gray-700);
         }
         .progress-bar {
-            width: 100%; height: 20px; background: var(--gray-200); border-radius: 12px;
-            overflow: hidden; position: relative; box-shadow: inset 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid var(--gray-300);
+            width: 100%; height: 18px; background: var(--gray-200); border-radius: 10px;
+            overflow: hidden; position: relative; box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
         }
         .progress-fill {
-            height: 100%; border-radius: 12px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
-            background: linear-gradient(90deg, var(--primary), var(--success), #3b82f6, var(--warning));
-            position: relative; overflow: hidden; box-shadow: 0 6px 20px rgba(220,38,38,0.4);
+            height: 100%; border-radius: 10px; transition: width 0.4s;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            position: relative;
         }
         .progress-fill::after {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-            animation: shimmer 2.5s infinite;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
         }
         @keyframes shimmer { 
             0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } 
         }
 
-        /* 🔥 BUTTONS - ULTIMATE */
         .file-actions { 
-            display: flex; flex-wrap: wrap; gap: 1.25rem; padding-top: 2.5rem; 
-            border-top: 2px solid var(--gray-200); margin-top: 3rem; 
+            display: flex; flex-wrap: wrap; gap: 1rem; padding-top: 1.5rem; 
+            border-top: 1px solid var(--gray-200);
         }
         .btn {
-            padding: 1.25rem 2.5rem; border: none; border-radius: var(--radius); 
-            font-size: 1rem; font-weight: 800; cursor: pointer; transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-            display: flex; align-items: center; gap: 1rem; text-decoration: none;
-            box-shadow: var(--shadow-md); min-height: 56px; position: relative; overflow: hidden;
-            text-transform: uppercase; letter-spacing: 0.05em; backdrop-filter: blur(10px);
+            padding: 0.75rem 1.5rem; border: none; border-radius: var(--radius); 
+            font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; gap: 0.75rem; text-decoration: none;
+            box-shadow: var(--shadow-sm);
         }
-        .btn::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: left 0.8s;
-        }
-        .btn:hover::before { left: 100%; }
         .btn-primary { 
             background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; 
         }
         .btn-primary:hover { 
-            transform: translateY(-4px); box-shadow: var(--shadow-xl); 
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary)); 
+            transform: translateY(-2px); box-shadow: var(--shadow-lg); 
         }
         .btn-success { 
             background: linear-gradient(135deg, var(--success), #047857); color: white; 
         }
         .btn-success:hover { 
-            transform: translateY(-4px); box-shadow: var(--shadow-xl); 
-            background: linear-gradient(135deg, #047857, var(--success)); 
+            transform: translateY(-2px); box-shadow: var(--shadow-lg); 
         }
         .btn-outline { 
             background: white; color: var(--gray-800); border: 2px solid var(--gray-300); 
         }
         .btn-outline:hover { 
             border-color: var(--primary); background: var(--primary-light); 
-            transform: translateY(-4px); box-shadow: var(--shadow-lg); 
+            transform: translateY(-2px);
         }
 
-        /* 🔥 RESULTS SECTION */
         .results { display: none; }
-        .results.show { display: block; animation: slideIn 0.8s cubic-bezier(0.4,0,0.2,1); }
+        .results.show { display: block; animation: slideIn 0.5s ease-out; }
         @keyframes slideIn { 
-            from { opacity: 0; transform: translateY(60px); } 
+            from { opacity: 0; transform: translateY(40px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
+
         .results-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem;
-            padding: 2.5rem; background: linear-gradient(135deg, white, var(--gray-50)); 
-            border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);
-            position: relative; overflow: hidden;
+            margin-bottom: 2rem; padding: 2rem; 
+            background: linear-gradient(135deg, white, var(--gray-50)); 
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
         }
-        .results-header::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-            background: linear-gradient(90deg, var(--success), var(--primary));
-        }
-        .results-title { font-size: 3rem; font-weight: 900; color: var(--gray-900); }
-        .results-count {
-            background: linear-gradient(135deg, var(--primary-light), var(--success-light)); 
-            color: var(--primary); padding: 1.25rem 2.5rem; border-radius: 50px; 
-            font-size: 1.2rem; font-weight: 900; box-shadow: var(--shadow-lg);
-        }
+        .results-title { font-size: 2rem; font-weight: 900; color: var(--gray-900); }
 
-        /* 🔥 TOAST SYSTEM - ULTIMATE */
         .toast {
-            position: fixed; top: 3rem; right: 3rem; background: white; 
-            border-radius: var(--radius-lg); padding: 2.5rem; box-shadow: var(--shadow-2xl); 
-            z-index: 10001; transform: translateX(500px); transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
-            max-width: 500px; border: 1px solid var(--gray-200); min-width: 400px;
-            display: flex; align-items: flex-start; gap: 1.5rem; backdrop-filter: blur(20px);
+            position: fixed; top: 2rem; right: 2rem; background: white; 
+            border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-2xl); 
+            z-index: 9999; transform: translateX(500px); transition: all 0.4s;
+            max-width: 400px; border-left: 5px solid var(--success);
         }
-        .toast.show { transform: translateX(0) scale(1); }
-        .toast.success { border-left: 8px solid var(--success); }
-        .toast.error { border-left: 8px solid var(--error); }
-        .toast.warning { border-left: 8px solid var(--warning); }
-        .toast-icon {
-            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 1.8rem; font-weight: 900; flex-shrink: 0;
-        }
-        .toast.success .toast-icon { background: var(--success-light); color: var(--success); }
-        .toast.error .toast-icon { background: var(--primary-light); color: var(--error); }
-        .toast.warning .toast-icon { background: #fef3c7; color: var(--warning); }
-        .toast-title { font-weight: 900; font-size: 1.4rem; margin-bottom: 0.75rem; }
-        .toast-message { color: var(--gray-600); line-height: 1.6; }
+        .toast.show { transform: translateX(0); }
+        .toast.error { border-left-color: var(--error); }
+        .toast-title { font-weight: 900; font-size: 1rem; margin-bottom: 0.5rem; }
+        .toast-message { color: var(--gray-600); font-size: 0.9rem; }
 
-        /* 🔥 LOADING OVERLAY */
         .loading-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
-            display: flex; align-items: center; justify-content: center; z-index: 10000;
-            backdrop-filter: blur(12px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            display: none; align-items: center; justify-content: center; z-index: 10000;
         }
         .loading-spinner {
-            width: 140px; height: 140px; border: 8px solid rgba(255,255,255,0.2); 
-            border-top: 8px solid var(--primary); border-radius: 50%; 
-            animation: spin 1.2s linear infinite;
+            width: 100px; height: 100px; border: 5px solid rgba(255,255,255,0.2); 
+            border-top: 5px solid white; border-radius: 50%; 
+            animation: spin 1s linear infinite;
         }
-        .loading-text {
-            color: white; font-size: 1.8rem; font-weight: 800; margin-top: 2.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--success));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: white; margin-top: 2rem; font-size: 1.2rem; font-weight: 700; }
 
-        /* 🔥 MOBILE RESPONSIVE */
         @media (max-width: 768px) {
-            .container { padding: 1.5rem; }
-            .title { font-size: 3.5rem; }
-            .file-header { flex-direction: column; text-align: center; gap: 2rem; }
+            .container { padding: 1rem; }
+            .title { font-size: 2rem; }
+            .file-header { flex-direction: column; text-align: center; }
             .file-actions { flex-direction: column; }
             .btn { width: 100%; justify-content: center; }
-            .toast { inset: 2rem 2rem auto auto; max-width: none; min-width: auto; right: 2rem; }
-            .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 2rem; padding: 2rem; }
+            .toast { right: 1rem; left: 1rem; max-width: none; }
         }
     </style>
 </head>
 <body>
-    <!-- 🔥 STATS BAR -->
-    <div class="stats-bar" id="statsBar" style="display: none;">
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-hdd"></i></div>
-            <div class="stat-value" id="totalSize">0 MB</div>
-            <div class="stat-label">Total Storage</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-value" id="successCount">0</div>
-            <div class="stat-label">Success Files</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-cubes"></i></div>
-            <div class="stat-value" id="totalChunks">0</div>
-            <div class="stat-label">Total Chunks</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-bolt"></i></div>
-            <div class="stat-value" id="uploadSpeed">--</div>
-            <div class="stat-label">Live Status</div>
-        </div>
-    </div>
-
     <div class="container">
-        <!-- 🔥 HEADER -->
         <header class="header">
             <div class="logo"><i class="fas fa-rocket"></i></div>
-            <h1 class="title">🚀 MARYA VAULT ULTIMATE v9.0</h1>
+            <h1 class="title">🚀 MARYA VAULT v10.0</h1>
             <p class="subtitle">
-                <strong>500MB Max Upload</strong> • BTFSTORAGE Compatible • Telegram Chunks • 20MB KV Storage • 
-                <strong>/btfstorage/file/[id].mp4 URLs</strong> • <strong>Worker API Only - 101% SECURE</strong>
+                <strong>Upload to BTFSTORAGE</strong> • 500MB Max • Telegram Chunks • 
+                Worker API Safe • Upload.js Compatible
             </p>
         </header>
 
-        <!-- 🔥 TABS SYSTEM -->
-        <section class="tabs-container">
-            <div class="tabs">
-                <button class="tab active" data-tab="upload">
-                    <i class="fas fa-cloud-upload-alt"></i> File Upload
-                </button>
-                <button class="tab" data-tab="history">
-                    <i class="fas fa-history"></i> Upload History
-                </button>
-            </div>
+        <div class="dropzone" id="dropZone">
+            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <h2 class="upload-title">Drop Your File Here</h2>
+            <p class="upload-desc">
+                Drag & drop your file or click to select • Max 500MB • 
+                Auto chunks to Telegram via upload.js
+            </p>
+        </div>
+        <input type="file" id="fileInput" multiple style="display: none;">
 
-            <!-- 🔥 UPLOAD TAB -->
-            <div id="uploadTab" class="tab-content active">
-                <label class="dropzone" id="dropZone">
-                    <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
-                    <h2 class="upload-title">Drop Your Files Here</h2>
-                    <p class="upload-desc">
-                        Drag & drop or click • <strong>Max 500MB per file</strong> • Automatic Telegram upload + 20MB chunks • 
-                        BTFSTORAGE URLs ready • <strong>Exact match with your id.js</strong>
-                    </p>
-                </label>
-                <input type="file" id="fileInput" multiple style="display: none;">
-            </div>
-
-            <!-- 🔥 HISTORY TAB -->
-            <div id="historyTab" class="tab-content">
-                <div id="historyList" style="display: none;">
-                    <div class="results-header">
-                        <h2 class="results-title">📁 BTFSTORAGE History</h2>
-                        <div class="results-count" id="historyCount">0 files</div>
-                    </div>
-                    <div id="historyFiles"></div>
-                </div>
-                <div style="text-align: center; padding: 6rem 3rem; color: var(--gray-500);" id="noHistory">
-                    <i class="fas fa-history" style="font-size: 8rem; margin-bottom: 3rem; opacity: 0.4;"></i>
-                    <h2 style="font-size: 3rem; margin-bottom: 1.5rem; font-weight: 800;">No Upload History</h2>
-                    <p style="font-size: 1.3rem;">Upload files to see BTFSTORAGE URLs here</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 🔥 RESULTS SECTION -->
         <section class="results" id="resultsSection">
             <div class="results-header">
-                <h2 class="results-title">📁 Your BTFSTORAGE Files</h2>
-                <div class="results-count" id="resultsCount">0 files uploaded</div>
+                <h2 class="results-title">📁 Uploaded Files</h2>
             </div>
             <div id="filesContainer"></div>
         </section>
     </div>
 
-    <!-- 🔥 TOAST CONTAINER -->
     <div id="toastContainer"></div>
-
-    <!-- 🔥 LOADING OVERLAY -->
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div id="loadingOverlay" class="loading-overlay">
         <div style="text-align: center;">
             <div class="loading-spinner"></div>
-            <div class="loading-text" id="loadingText">🚀 Calling Worker API...</div>
+            <div class="loading-text" id="loadingText">Uploading...</div>
         </div>
     </div>
 
     <script>
-        // 🔥 MARYA VAULT ULTIMATE v9.0 - 1500+ LINES MONSTER ENGINE
-        class MaryaVaultUltimateV9 {
+        class MaryaVault {
             constructor() {
                 this.files = [];
-                this.uploads = [];
-                this.totalSize = 0;
-                this.totalChunks = 0;
-                this.successCount = 0;
                 this.isUploading = false;
-                this.uploadStartTime = 0;
-                this.MAX_CONCURRENT = 2;
-                this.MAX_SIZE = 500 * 1024 * 1024; // 500MB
-                this.CHUNK_SIZE = 20 * 1024 * 1024; // 20MB chunks (BTFSTORAGE)
-                this.BASE_URL = location.origin;
-                this.WORKER_URL = '/api/upload'; // Your worker endpoint
-                this.storageKey = 'marya_vault_ultimate_v9';
+                this.MAX_SIZE = 500 * 1024 * 1024;
+                this.CHUNK_SIZE = 20 * 1024 * 1024;
+                this.WORKER_URL = '/api/upload';
                 this.init();
             }
 
             init() {
-                this.loadStorage();
                 this.bindEvents();
-                this.updateStats();
-                this.initTabs();
-                console.log('🚀 MARYA VAULT ULTIMATE v9.0 - FULLY LOADED (2000+ LINES)');
-                console.log('✅ 500MB Max • BTFSTORAGE Ready • Worker API Secure • Exact id.js Match');
+                console.log('✅ MARYA VAULT v10.0 - READY (WORKING VERSION)');
             }
 
-            // 🔥 FULL TAB SYSTEM
-            initTabs() {
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', (e) => {
-                        const targetTab = e.currentTarget.dataset.tab;
-                        this.switchTab(targetTab);
-                    });
-                });
-            }
-
-            switchTab(tabName) {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-                document.getElementById(tabName + 'Tab').classList.add('active');
-            }
-
-            // 🔥 EVENT BINDERS
             bindEvents() {
                 const dropZone = document.getElementById('dropZone');
                 
-                // Drag & Drop
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, this.preventDefaults, false);
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+                    dropZone.addEventListener(e, this.preventDefaults);
                 });
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+
+                ['dragenter', 'dragover'].forEach(e => {
+                    dropZone.addEventListener(e, () => dropZone.classList.add('dragover'));
                 });
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+                ['dragleave', 'drop'].forEach(e => {
+                    dropZone.addEventListener(e, () => dropZone.classList.remove('dragover'));
                 });
                 
-                dropZone.addEventListener('drop', e => {
+                dropZone.addEventListener('drop', (e) => {
                     this.handleFiles(Array.from(e.dataTransfer.files));
                 });
                 dropZone.addEventListener('click', () => {
                     document.getElementById('fileInput').click();
                 });
 
-                // File Input
-                document.getElementById('fileInput').addEventListener('change', e => {
+                document.getElementById('fileInput').addEventListener('change', (e) => {
                     this.handleFiles(Array.from(e.target.files));
                     e.target.value = '';
                 });
@@ -590,15 +318,14 @@
                 e.stopPropagation();
             }
 
-            // 🔥 FILE PROCESSING - WORKER API CALL
             async handleFiles(files) {
-                const validFiles = Array.from(files).filter(file => {
+                const validFiles = files.filter(file => {
                     if (file.size > this.MAX_SIZE) {
-                        this.showToast(`❌ ${this.escapeHtml(file.name)} too big (max 500MB)`, 'error');
+                        this.showToast(`❌ ${file.name} exceeds 500MB limit`, 'error');
                         return false;
                     }
                     if (file.size === 0) {
-                        this.showToast(`❌ ${this.escapeHtml(file.name)} is empty`, 'error');
+                        this.showToast(`❌ ${file.name} is empty`, 'error');
                         return false;
                     }
                     return true;
@@ -606,95 +333,78 @@
 
                 if (!validFiles.length) return;
 
-                this.uploadStartTime = Date.now();
                 this.isUploading = true;
-                document.getElementById('statsBar').style.display = 'grid';
                 document.getElementById('resultsSection').classList.add('show');
 
-                // Process files concurrently (max 2)
-                const uploadPromises = validFiles.map(file => this.processFile(file));
-                await Promise.all(uploadPromises);
+                for (const file of validFiles) {
+                    await this.uploadFile(file);
+                }
 
                 this.isUploading = false;
-                this.updateStats();
-                this.saveStorage();
-                this.renderHistory();
             }
 
-            async processFile(file) {
+            async uploadFile(file) {
                 const uploadId = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
                 const fileEl = this.createFileElement(uploadId, file);
                 document.getElementById('filesContainer').prepend(fileEl);
 
-                this.updateProgress(uploadId, 5, '🔗 Connecting to Worker API...');
+                this.updateProgress(uploadId, 10, '🔗 Preparing upload...');
 
                 try {
-                    // 🔥 CALL YOUR BTFSTORAGE WORKER (SECURE - NO TOKENS)
+                    this.showLoading(true, `📤 Uploading ${file.name}...`);
+
                     const formData = new FormData();
                     formData.append('file', file);
                     formData.append('filename', file.name);
                     formData.append('chunkSize', this.CHUNK_SIZE);
 
-                    this.updateProgress(uploadId, 25, '📤 Uploading to Telegram via Worker...');
-                    this.showLoading(true, '📤 Telegram upload in progress...');
+                    this.updateProgress(uploadId, 35, '📤 Sending to upload.js worker...');
 
                     const response = await fetch(this.WORKER_URL, {
                         method: 'POST',
-                        body: formData
+                        body: formData,
+                        headers: {
+                            'X-File-Name': file.name,
+                            'X-File-Size': file.size
+                        }
                     });
 
                     const result = await response.json();
 
                     if (!response.ok) {
-                        throw new Error(result.error || `Worker error: ${response.status}`);
+                        throw new Error(result.error || `Server error: ${response.status}`);
                     }
 
-                    this.updateProgress(uploadId, 85, '✅ Creating BTFSTORAGE metadata...');
+                    this.updateProgress(uploadId, 85, '✅ Processing BTFSTORAGE...');
 
-                    // 🔥 PERFECT BTFSTORAGE URL MATCH
-                    const btfstorageUrl = `${this.BASE_URL}/btfstorage/file/${result.fileId}.${this.getFileExtension(file.name)}`;
-                    const finalResult = {
+                    const btfsUrl = `${location.origin}/btfstorage/file/${result.fileId}.${this.getExt(file.name)}`;
+                    
+                    const uploadData = {
                         id: result.fileId,
                         filename: file.name,
-                        originalName: file.name,
                         size: file.size,
                         sizeFormatted: this.formatBytes(file.size),
-                        mimeType: this.getMimeType(file.name),
                         totalChunks: result.totalChunks || Math.ceil(file.size / this.CHUNK_SIZE),
-                        kvNamespacesUsed: Math.min(result.totalChunks || 0, 25),
-                        telegramFileId: result.telegramFileId,
                         uploadedAt: new Date().toISOString(),
                         status: 'success',
                         urls: {
-                            view: btfstorageUrl,
-                            download: `${btfstorageUrl}?dl=1`,
-                            hls: `${this.BASE_URL}/btfstorage/file/${result.fileId}.m3u8`,
-                            api: `${this.BASE_URL}/api/file/${result.fileId}`,
-                            json: `${this.BASE_URL}/api/file/${result.fileId}/meta`
-                        },
-                        metadata: {
-                            chunkSize: this.CHUNK_SIZE,
-                            distributed: Array.from({length: Math.min(result.totalChunks || 0, 25)}, (_, i) => `KV_${i+1}`),
-                            telegramBotsUsed: result.botsUsed || 1
+                            view: btfsUrl,
+                            download: `${btfsUrl}?dl=1`,
+                            api: `${location.origin}/api/file/${result.fileId}`
                         }
                     };
 
-                    this.updateFileSuccess(fileEl, finalResult, uploadId);
-                    this.files.unshift(finalResult);
-                    this.totalSize += file.size;
-                    this.totalChunks += finalResult.totalChunks;
+                    this.updateFileSuccess(fileEl, uploadData, uploadId);
+                    this.files.push(uploadData);
 
                 } catch (error) {
-                    console.error('Upload failed:', error);
+                    console.error('Upload error:', error);
                     this.updateFileError(fileEl, error.message, uploadId);
                 } finally {
                     this.showLoading(false);
                 }
-
-                this.updateStats();
             }
 
-            // 🔥 UI ELEMENTS
             createFileElement(id, file) {
                 const div = document.createElement('div');
                 div.id = id;
@@ -706,9 +416,7 @@
                             <div class="file-name">${this.escapeHtml(file.name)}</div>
                             <div class="file-meta">
                                 <span class="badge">${this.formatBytes(file.size)}</span>
-                                <span class="badge">500MB Max</span>
-                                <span id="${id}_status">⏳ Connecting...</span>
-                                <span id="${id}_speed">--</span>
+                                <span id="${id}_status">⏳ Processing...</span>
                             </div>
                         </div>
                     </div>
@@ -726,90 +434,57 @@
                 return div;
             }
 
+            updateProgress(id, percent, status) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                
+                el.querySelector(`#${id}_progress`).textContent = `${Math.round(percent)}%`;
+                el.querySelector(`#${id}_fill`).style.width = `${Math.min(percent, 100)}%`;
+                el.querySelector(`#${id}_status`).textContent = status;
+            }
+
             updateFileSuccess(el, data, id) {
                 el.classList.add('success');
-                const statusEl = el.querySelector(`#${id}_status`);
-                const progressEl = el.querySelector(`#${id}_progress`);
-                const fillEl = el.querySelector(`#${id}_fill`);
-                
-                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> BTFSTORAGE READY!';
-                progressEl.textContent = '100%';
-                fillEl.style.width = '100%';
+                el.querySelector(`#${id}_status`).innerHTML = '<i class="fas fa-check-circle"></i> UPLOADED!';
+                el.querySelector(`#${id}_progress`).textContent = '100%';
+                el.querySelector(`#${id}_fill`).style.width = '100%';
                 
                 const actions = el.querySelector(`#${id}_actions`);
                 actions.style.display = 'flex';
                 actions.innerHTML = `
-                    <a href="${data.urls.view}" target="_blank" class="btn btn-primary" rel="noopener">
-                        <i class="fas fa-play-circle"></i> Play File
+                    <a href="${data.urls.view}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> View
                     </a>
                     <a href="${data.urls.download}" class="btn btn-success" download>
                         <i class="fas fa-download"></i> Download
                     </a>
-                    <a href="${data.urls.hls}" class="btn btn-outline" target="_blank">
-                        <i class="fas fa-video"></i> HLS Stream
-                    </a>
                     <button onclick="vault.copyLink('${data.urls.view}')" class="btn btn-outline">
                         <i class="fas fa-copy"></i> Copy URL
                     </button>
-                    <button onclick="vault.copyJson('${JSON.stringify(data).replace(/'/g, "\\'")}')" class="btn btn-outline">
-                        <i class="fas fa-code"></i> JSON
-                    </button>
                 `;
                 
-                this.showToast(
-                    `🎉 ${data.filename} UPLOADED!<br>` +
-                    `<strong>${data.urls.view}</strong><br>` +
-                    `<small>${data.totalChunks} chunks • ${data.metadata.telegramBotsUsed} bots used</small>`, 
-                    'success'
-                );
+                this.showToast(`✅ ${data.filename} uploaded successfully!`, 'success');
             }
 
             updateFileError(el, error, id) {
                 el.classList.add('error');
-                el.querySelector(`#${id}_status`).innerHTML = '<i class="fas fa-times-circle"></i> Upload Failed';
+                el.querySelector(`#${id}_status`).innerHTML = '<i class="fas fa-times-circle"></i> Failed';
                 el.querySelector(`#${id}_progress`).textContent = '0%';
                 
                 const actions = el.querySelector(`#${id}_actions`);
                 actions.style.display = 'flex';
                 actions.innerHTML = `
-                    <button class="btn btn-primary" onclick="vault.retryUpload('${id}')">
-                        <i class="fas fa-redo"></i> Retry Upload
-                    </button>
-                    <button class="btn btn-outline" onclick="vault.copyError('${this.escapeHtml(error)}')">
-                        <i class="fas fa-clipboard"></i> Copy Error
+                    <button onclick="vault.retryUpload('${id}')" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Retry
                     </button>
                 `;
-                this.showToast(`❌ Upload failed: ${error}`, 'error');
-            }
-
-            // 🔥 UTILITY FUNCTIONS
-            updateProgress(id, percent, status) {
-                const el = document.getElementById(id);
-                if (!el) return;
-                
-                const progressEl = el.querySelector(`#${id}_progress`);
-                const fillEl = el.querySelector(`#${id}_fill`);
-                const statusEl = el.querySelector(`#${id}_status`);
-                
-                progressEl.textContent = `${Math.round(percent)}%`;
-                fillEl.style.width = `${Math.min(percent, 100)}%`;
-                statusEl.textContent = status;
-            }
-
-            showLoading(show, text = 'Processing uploads...') {
-                const overlay = document.getElementById('loadingOverlay');
-                const loadingText = document.getElementById('loadingText');
-                overlay.style.display = show ? 'flex' : 'none';
-                if (show && loadingText) loadingText.textContent = text;
+                this.showToast(`❌ Error: ${error}`, 'error');
             }
 
             showToast(message, type = 'success') {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type} show`;
                 toast.innerHTML = `
-                    <div class="toast-icon">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'exclamation-triangle'}"></i>
-                    </div>
                     <div>
                         <div class="toast-title">${type.toUpperCase()}</div>
                         <div class="toast-message">${message}</div>
@@ -819,13 +494,19 @@
                 document.getElementById('toastContainer').appendChild(toast);
                 setTimeout(() => {
                     toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 500);
-                }, 8000);
+                    setTimeout(() => toast.remove(), 400);
+                }, 6000);
+            }
+
+            showLoading(show, text = 'Processing...') {
+                const overlay = document.getElementById('loadingOverlay');
+                overlay.style.display = show ? 'flex' : 'none';
+                if (show) document.getElementById('loadingText').textContent = text;
             }
 
             copyLink(url) {
                 navigator.clipboard.writeText(url).then(() => {
-                    this.showToast('🔗 BTFSTORAGE URL copied to clipboard!', 'success');
+                    this.showToast('🔗 URL copied to clipboard!', 'success');
                 }).catch(() => {
                     const textarea = document.createElement('textarea');
                     textarea.value = url;
@@ -837,152 +518,29 @@
                 });
             }
 
-            copyJson(data) {
-                navigator.clipboard.writeText(JSON.stringify(JSON.parse(data), null, 2));
-                this.showToast('📋 Full metadata JSON copied!', 'success');
-            }
-
-            copyError(error) {
-                navigator.clipboard.writeText(error);
-                this.showToast('📋 Error copied to clipboard', 'warning');
-            }
-
             retryUpload(id) {
-                const fileEl = document.getElementById(id);
-                const fileName = fileEl.querySelector('.file-name').textContent;
-                this.showToast(`🔄 Retry feature for ${fileName} coming soon!`, 'warning');
-            }
-
-            // 🔥 FILE HELPERS - PERFECT BTFSTORAGE MATCH
-            getFileExtension(filename) {
-                return filename.split('.').pop()?.toLowerCase() || 'bin';
-            }
-
-            getMimeType(filename) {
-                const ext = this.getFileExtension(filename);
-                const mimeTypes = {
-                    // Video (EXACT MATCH YOUR id.js)
-                    'mp4': 'video/mp4', 'mkv': 'video/x-matroska', 'avi': 'video/x-msvideo',
-                    'mov': 'video/quicktime', 'm4v': 'video/mp4', 'wmv': 'video/x-ms-wmv',
-                    'flv': 'video/x-flv', '3gp': 'video/3gpp', 'webm': 'video/webm', 'ogv': 'video/ogg',
-                    // Audio
-                    'mp3': 'audio/mpeg', 'wav': 'audio/wav', 'aac': 'audio/mp4', 'm4a': 'audio/mp4',
-                    'ogg': 'audio/ogg', 'flac': 'audio/flac', 'wma': 'audio/x-ms-wma',
-                    // Images
-                    'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'gif': 'image/gif',
-                    'webp': 'image/webp', 'svg': 'image/svg+xml', 'bmp': 'image/bmp', 'tiff': 'image/tiff',
-                    // Documents
-                    'pdf': 'application/pdf', 'doc': 'application/msword', 
-                    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                    'txt': 'text/plain', 'zip': 'application/zip', 'rar': 'application/x-rar-compressed',
-                    // Streaming
-                    'm3u8': 'application/x-mpegURL', 'ts': 'video/mp2t', 'mpd': 'application/dash+xml'
-                };
-                return mimeTypes[ext] || 'application/octet-stream';
+                this.showToast('Retry feature coming soon!', 'warning');
             }
 
             formatBytes(bytes) {
                 if (bytes === 0) return '0 B';
                 const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                const sizes = ['B', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+
+            getExt(filename) {
+                return filename.split('.').pop()?.toLowerCase() || 'bin';
             }
 
             escapeHtml(text) {
                 const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
                 return text.replace(/[&<>"']/g, m => map[m]);
             }
-
-            // 🔥 STORAGE & STATS
-            loadStorage() {
-                try {
-                    const stored = localStorage.getItem(this.storageKey);
-                    if (stored) {
-                        this.files = JSON.parse(stored);
-                        this.calculateTotals();
-                        this.renderHistory();
-                    }
-                } catch (e) {
-                    console.error('Storage load error:', e);
-                }
-            }
-
-            saveStorage() {
-                try {
-                    localStorage.setItem(this.storageKey, JSON.stringify(this.files.slice(0, 100))); // Keep last 100
-                } catch (e) {
-                    console.error('Storage save error:', e);
-                }
-            }
-
-            calculateTotals() {
-                this.totalSize = this.files.reduce((sum, f) => sum + (f.size || 0), 0);
-                this.successCount = this.files.length;
-                this.totalChunks = this.files.reduce((sum, f) => sum + (f.totalChunks || 0), 0);
-            }
-
-            updateStats() {
-                document.getElementById('totalSize').textContent = this.formatBytes(this.totalSize);
-                document.getElementById('successCount').textContent = this.successCount.toLocaleString();
-                document.getElementById('totalChunks').textContent = this.totalChunks.toLocaleString();
-                document.getElementById('resultsCount').textContent = `${this.successCount} files`;
-                document.getElementById('historyCount').textContent = `${this.files.length} files`;
-                
-                const elapsed = ((Date.now() - this.uploadStartTime) / 1000).toFixed(1);
-                document.getElementById('uploadSpeed').textContent = 
-                    this.isUploading ? `${elapsed}s active` : `${this.successCount} complete`;
-            }
-
-            // 🔥 HISTORY RENDER
-            renderHistory() {
-                const historyList = document.getElementById('historyList');
-                const noHistory = document.getElementById('noHistory');
-                const historyFiles = document.getElementById('historyFiles');
-                
-                if (this.files.length === 0) {
-                    historyList.style.display = 'none';
-                    noHistory.style.display = 'block';
-                } else {
-                    historyList.style.display = 'block';
-                    noHistory.style.display = 'none';
-                    historyFiles.innerHTML = '';
-                    
-                    this.files.slice(0, 25).forEach(file => {
-                        const div = document.createElement('div');
-                        div.className = 'file-item success';
-                        div.innerHTML = `
-                            <div class="file-header">
-                                <div class="file-icon"><i class="fas fa-file"></i></div>
-                                <div class="file-details">
-                                    <div class="file-name">${this.escapeHtml(file.filename)}</div>
-                                    <div class="file-meta">
-                                        <span class="badge">${file.sizeFormatted}</span>
-                                        <span class="badge success">${file.totalChunks} chunks</span>
-                                        <span>${new Date(file.uploadedAt).toLocaleDateString()}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="file-actions">
-                                <a href="${file.urls.view}" target="_blank" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                                <a href="${file.urls.download}" class="btn btn-success" download>
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                                <button onclick="vault.copyLink('${file.urls.view}')" class="btn btn-outline">
-                                    <i class="fas fa-copy"></i> Copy URL
-                                </button>
-                            </div>
-                        `;
-                        historyFiles.appendChild(div);
-                    });
-                }
-            }
         }
 
-        // 🔥 GLOBAL INSTANCE
-        const vault = new MaryaVaultUltimateV9();
+        const vault = new MaryaVault();
         window.vault = vault;
     </script>
 </body>
