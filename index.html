@@ -362,11 +362,7 @@
 
                     const response = await fetch(this.WORKER_URL, {
                         method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-File-Name': file.name,
-                            'X-File-Size': file.size
-                        }
+                        body: formData
                     });
 
                     const result = await response.json();
