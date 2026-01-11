@@ -365,10 +365,22 @@
                         body: formData
                     });
 
+                    // Check if response is ok first
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server error ${response.status}: ${errorText}`);
+                    }
+
+                    // Parse JSON with validation
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Invalid response format - expected JSON');
+                    }
+
                     const result = await response.json();
 
-                    if (!response.ok) {
-                        throw new Error(result.error || `Server error: ${response.status}`);
+                    if (!result.fileId) {
+                        throw new Error('Invalid response - no fileId returned');
                     }
 
                     this.updateProgress(uploadId, 85, '✅ Processing BTFSTORAGE...');
@@ -480,10 +492,12 @@
             showToast(message, type = 'success') {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type} show`;
+                // Escape HTML in message for security
+                const escapedMsg = this.escapeHtml(message);
                 toast.innerHTML = `
                     <div>
                         <div class="toast-title">${type.toUpperCase()}</div>
-                        <div class="toast-message">${message}</div>
+                        <div class="toast-message">${escapedMsg}</div>
                     </div>
                 `;
                 
