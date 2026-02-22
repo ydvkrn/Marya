@@ -1,264 +1,327 @@
+// functions/btfstorage/upload.js
+// 🚀 Cloudflare Pages Functions - Advanced File Upload Handler
+// URL: marya-hosting.pages.dev/btfstorage/upload
+
+const MAX_CHUNK_SIZE = 20 * 1024 * 1024;   // 20MB per chunk (Telegram bot limit safe zone)
+const MAX_SINGLE_SIZE = 50 * 1024 * 1024;  // 50MB single file limit
+
 /**
- * 🚀 MARYA VAULT - UPLOAD.JS
- * Cloudflare Worker Handler for BTFSTORAGE + Telegram Upload
- * Designed for [id].js integration with perfect URL matching
+ * Generate a unique file ID
  */
+function generateFileId() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const part1 = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const part2 = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const part3 = Array.from({ length: 2 }, () => chars[Math.floor(Math.random() * chars.length)]).join('').toLowerCase();
+  return `MSM${part1}-${part2}-${part3}`;
+}
 
-export default {
-    async fetch(request, env, ctx) {
-        // CORS Headers
-        const corsHeaders = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        };
+/**
+ * Upload a buffer to Telegram using sendDocument
+ */
+async function uploadToTelegram(botToken, chatId, buffer, filename, mimeType) {
+  const formData = new FormData();
+  const blob = new Blob([buffer], { type: mimeType });
+  formData.append('document', blob, filename);
+  formData.append('chat_id', chatId);
+  formData.append('disable_notification', 'true');
 
-        // CORS Preflight
-        if (request.method === 'OPTIONS') {
-            return new Response(null, { headers: corsHeaders });
+  const response = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+    method: 'POST',
+    body: formData,
+    signal: AbortSignal.timeout(120000) // 2 min timeout
+  });
+
+  const data = await response.json();
+
+  if (!data.ok) {
+    throw new Error(`Telegram upload failed: ${data.error_code} - ${data.description}`);
+  }
+
+  const doc = data.result.document;
+  return doc.file_id;
+}
+
+/**
+ * Get Telegram direct URL for a file_id
+ */
+async function getTelegramDirectUrl(botToken, fileId) {
+  const response = await fetch(
+    `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`,
+    { signal: AbortSignal.timeout(15000) }
+  );
+  const data = await response.json();
+
+  if (!data.ok || !data.result?.file_path) {
+    throw new Error(`getFile failed: ${data.description}`);
+  }
+
+  return `https://api.telegram.org/file/bot${botToken}/${data.result.file_path}`;
+}
+
+/**
+ * Upload single file (<=50MB)
+ */
+async function uploadSingleFile(env, buffer, filename, mimeType, fileId) {
+  const botToken = env.BOT_TOKEN;
+  const chatId = env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    throw new Error('BOT_TOKEN or TELEGRAM_CHAT_ID not configured');
+  }
+
+  console.log(`🚀 Single upload: ${filename} (${Math.round(buffer.byteLength / 1024 / 1024)}MB)`);
+
+  const telegramFileId = await uploadToTelegram(botToken, chatId, buffer, filename, mimeType);
+  const directUrl = await getTelegramDirectUrl(botToken, telegramFileId);
+
+  const metadata = {
+    filename,
+    size: buffer.byteLength,
+    contentType: mimeType,
+    telegramFileId,
+    directUrl,
+    uploadedAt: new Date().toISOString(),
+    uploadMode: 'single'
+  };
+
+  await env.FILES_KV.put(fileId, JSON.stringify(metadata));
+
+  console.log(`✅ Single file uploaded: ${fileId}`);
+  return metadata;
+}
+
+/**
+ * Upload chunked file (>50MB)
+ * Splits into MAX_CHUNK_SIZE pieces and uploads each to Telegram
+ */
+async function uploadChunkedFile(env, buffer, filename, mimeType, fileId) {
+  const botToken = env.BOT_TOKEN;
+  const chatId = env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    throw new Error('BOT_TOKEN or TELEGRAM_CHAT_ID not configured');
+  }
+
+  const totalSize = buffer.byteLength;
+  const totalChunks = Math.ceil(totalSize / MAX_CHUNK_SIZE);
+
+  console.log(`🧩 Chunked upload: ${filename}
+📦 Total size: ${Math.round(totalSize / 1024 / 1024)}MB
+🔢 Total chunks: ${totalChunks}`);
+
+  const chunks = [];
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * MAX_CHUNK_SIZE;
+    const end = Math.min(start + MAX_CHUNK_SIZE, totalSize);
+    const chunkBuffer = buffer.slice(start, end);
+
+    const chunkFilename = `${fileId}-chunk-${i}.bin`;
+    const chunkKey = `chunk:${fileId}:${i}`;
+
+    console.log(`📤 Uploading chunk ${i + 1}/${totalChunks}: ${Math.round(chunkBuffer.byteLength / 1024 / 1024)}MB`);
+
+    // Try each bot token
+    const botTokens = [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(t => t);
+    let chunkTelegramFileId = null;
+    let chunkDirectUrl = null;
+
+    for (let bi = 0; bi < botTokens.length; bi++) {
+      try {
+        chunkTelegramFileId = await uploadToTelegram(
+          botTokens[bi], chatId, chunkBuffer, chunkFilename, 'application/octet-stream'
+        );
+        chunkDirectUrl = await getTelegramDirectUrl(botTokens[bi], chunkTelegramFileId);
+        console.log(`✅ Chunk ${i + 1} uploaded via bot ${bi + 1}`);
+        break;
+      } catch (err) {
+        console.error(`❌ Bot ${bi + 1} failed for chunk ${i + 1}:`, err.message);
+        if (bi === botTokens.length - 1) {
+          throw new Error(`All bots failed for chunk ${i + 1}: ${err.message}`);
         }
-
-        // POST - Upload Handler
-        if (request.method === 'POST' && request.url.includes('/api/upload')) {
-            return await handleUpload(request, env, ctx, corsHeaders);
-        }
-
-        // Default 404
-        return new Response(JSON.stringify({ error: 'Not found' }), {
-            status: 404,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+      }
     }
-};
 
-/**
- * Handle File Upload
- * 1. Receive FormData with file + metadata
- * 2. Split into 20MB chunks
- * 3. Upload chunks to Telegram via bot
- * 4. Store metadata in KV namespace
- * 5. Return fileId + chunk info for [id].js
- */
-async function handleUpload(request, env, ctx, corsHeaders) {
-    try {
-        // Parse FormData
-        const formData = await request.formData();
-        const file = formData.get('file');
-        const filename = formData.get('filename') || 'upload.bin';
-        const chunkSize = parseInt(formData.get('chunkSize')) || 20 * 1024 * 1024;
-
-        // Validation
-        if (!file) {
-            return jsonResponse({ error: 'No file provided' }, 400, corsHeaders);
-        }
-
-        const fileBuffer = await file.arrayBuffer();
-        const fileSize = fileBuffer.byteLength;
-
-        // Validate size (max 500MB)
-        if (fileSize > 500 * 1024 * 1024) {
-            return jsonResponse(
-                { error: 'File exceeds 500MB limit' },
-                413,
-                corsHeaders
-            );
-        }
-
-        // Generate unique file ID (matches [id].js pattern)
-        const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const fileExt = getFileExtension(filename);
-
-        // Split into chunks
-        const chunks = [];
-        const totalChunks = Math.ceil(fileSize / chunkSize);
-
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, fileSize);
-            const chunkBuffer = fileBuffer.slice(start, end);
-            chunks.push(new Uint8Array(chunkBuffer));
-        }
-
-        // Upload chunks to Telegram & KV
-        const uploadPromises = chunks.map((chunk, index) =>
-            uploadChunkToTelegram(
-                env,
-                fileId,
-                index,
-                chunk,
-                filename,
-                totalChunks
-            )
-        );
-
-        const chunkResults = await Promise.all(uploadPromises);
-
-        // Store metadata in KV
-        const metadata = {
-            fileId,
-            filename,
-            fileExtension: fileExt,
-            originalSize: fileSize,
-            chunkSize,
-            totalChunks,
-            uploadedAt: new Date().toISOString(),
-            mimeType: getMimeType(filename),
-            chunks: chunkResults.map(r => ({
-                index: r.index,
-                telegramFileId: r.telegramFileId,
-                size: r.size,
-                hash: r.hash
-            })),
-            status: 'complete'
-        };
-
-        // Store in KV (key: file_{fileId})
-        await env.STORAGE.put(
-            `file_${fileId}`,
-            JSON.stringify(metadata),
-            {
-                expirationTtl: 30 * 24 * 60 * 60 // 30 days
-            }
-        );
-
-        // Perfect response for [id].js integration
-        return jsonResponse(
-            {
-                success: true,
-                fileId,
-                filename,
-                fileExtension: fileExt,
-                originalSize: fileSize,
-                totalChunks,
-                uploadedAt: metadata.uploadedAt,
-                storageUrl: `/btfstorage/file/${fileId}.${fileExt}`,
-                apiUrl: `/api/file/${fileId}`,
-                chunkInfo: {
-                    size: chunkSize,
-                    count: totalChunks,
-                    hashes: chunkResults.map(r => r.hash)
-                },
-                message: '✅ File uploaded successfully! Ready for [id].js retrieval.'
-            },
-            200,
-            corsHeaders
-        );
-
-    } catch (error) {
-        console.error('Upload error:', error);
-        return jsonResponse(
-            {
-                error: error.message || 'Upload failed',
-                details: error.stack
-            },
-            500,
-            corsHeaders
-        );
-    }
-}
-
-/**
- * Upload single chunk to Telegram
- * Uses bot token from env.TELEGRAM_BOT_TOKEN
- */
-async function uploadChunkToTelegram(env, fileId, index, chunkData, filename, totalChunks) {
-    try {
-        const botToken = env.TELEGRAM_BOT_TOKEN;
-        const chatId = env.TELEGRAM_CHAT_ID || '-1001234567890'; // Your storage chat
-
-        if (!botToken || !chatId) {
-            throw new Error('Telegram credentials not configured');
-        }
-
-        // Create blob for upload
-        const blob = new Blob([chunkData], { type: 'application/octet-stream' });
-
-        // Create FormData for Telegram
-        const telegramForm = new FormData();
-        telegramForm.append('chat_id', chatId);
-        telegramForm.append('document', blob, `${fileId}_chunk_${index}.bin`);
-        telegramForm.append('caption', `FILE: ${filename}\nCHUNK: ${index + 1}/${totalChunks}`);
-
-        // Send to Telegram
-        const telegramResponse = await fetch(
-            `https://api.telegram.org/bot${botToken}/sendDocument`,
-            {
-                method: 'POST',
-                body: telegramForm
-            }
-        );
-
-        const telegramResult = await telegramResponse.json();
-
-        if (!telegramResult.ok) {
-            throw new Error(`Telegram upload failed: ${telegramResult.description}`);
-        }
-
-        // Extract file_id from response
-        const telegramFileId = telegramResult.result.document.file_id;
-
-        return {
-            index,
-            telegramFileId,
-            size: chunkData.length,
-            hash: await hashChunk(chunkData)
-        };
-
-    } catch (error) {
-        console.error(`Chunk ${index} upload error:`, error);
-        throw error;
-    }
-}
-
-/**
- * Simple hash for chunk verification
- */
-async function hashChunk(data) {
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('')
-        .substring(0, 16);
-}
-
-/**
- * Get file extension
- */
-function getFileExtension(filename) {
-    return filename.split('.').pop()?.toLowerCase() || 'bin';
-}
-
-/**
- * Get MIME type
- */
-function getMimeType(filename) {
-    const ext = getFileExtension(filename);
-    const mimeTypes = {
-        'mp4': 'video/mp4',
-        'mkv': 'video/x-matroska',
-        'avi': 'video/x-msvideo',
-        'mov': 'video/quicktime',
-        'webm': 'video/webm',
-        'mp3': 'audio/mpeg',
-        'wav': 'audio/wav',
-        'pdf': 'application/pdf',
-        'zip': 'application/zip',
-        'jpg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif'
+    // Store chunk metadata in KV
+    const chunkMeta = {
+      telegramFileId: chunkTelegramFileId,
+      directUrl: chunkDirectUrl,
+      chunkIndex: i,
+      size: chunkBuffer.byteLength,
+      uploadedAt: new Date().toISOString()
     };
-    return mimeTypes[ext] || 'application/octet-stream';
+
+    await env.FILES_KV.put(chunkKey, JSON.stringify(chunkMeta));
+
+    chunks.push({
+      keyName: chunkKey,
+      kvNamespace: 'FILES_KV',
+      size: chunkBuffer.byteLength,
+      index: i
+    });
+
+    console.log(`✅ Chunk ${i + 1}/${totalChunks} stored in KV: ${chunkKey}`);
+  }
+
+  const metadata = {
+    filename,
+    size: totalSize,
+    contentType: mimeType,
+    chunks,
+    chunkSize: MAX_CHUNK_SIZE,
+    uploadedAt: new Date().toISOString(),
+    uploadMode: 'chunked'
+  };
+
+  await env.FILES_KV.put(fileId, JSON.stringify(metadata));
+
+  console.log(`✅ Chunked file metadata stored: ${fileId} (${totalChunks} chunks)`);
+  return metadata;
 }
 
 /**
- * JSON Response helper
+ * Main request handler
  */
-function jsonResponse(data, status = 200, headers = {}) {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: {
-            'Content-Type': 'application/json',
-            ...headers
-        }
+export async function onRequest(context) {
+  const { request, env } = context;
+
+  // CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Expose-Headers': 'Content-Type'
+  };
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  if (request.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed', status: 405 }),
+      { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
+
+  try {
+    // Validate required env vars
+    if (!env.FILES_KV) {
+      throw new Error('FILES_KV KV namespace not bound');
+    }
+    if (!env.BOT_TOKEN) {
+      throw new Error('BOT_TOKEN not configured');
+    }
+    if (!env.TELEGRAM_CHAT_ID) {
+      throw new Error('TELEGRAM_CHAT_ID not configured');
+    }
+
+    // Parse multipart form data
+    let formData;
+    try {
+      formData = await request.formData();
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid form data. Use multipart/form-data', status: 400 }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    const file = formData.get('file');
+
+    if (!file || typeof file === 'string') {
+      return new Response(
+        JSON.stringify({ error: 'No file provided. Field name must be "file"', status: 400 }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    const filename = file.name || 'unnamed_file';
+    const mimeType = file.type || 'application/octet-stream';
+    const buffer = await file.arrayBuffer();
+    const fileSize = buffer.byteLength;
+
+    if (fileSize === 0) {
+      return new Response(
+        JSON.stringify({ error: 'File is empty', status: 400 }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Cloudflare Pages Functions body limit check (100MB default)
+    const MAX_UPLOAD = 100 * 1024 * 1024;
+    if (fileSize > MAX_UPLOAD) {
+      return new Response(
+        JSON.stringify({ error: `File too large. Max ${Math.round(MAX_UPLOAD / 1024 / 1024)}MB allowed`, status: 413 }),
+        { status: 413, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Generate unique file ID
+    const fileId = generateFileId();
+    const ext = filename.includes('.') ? filename.split('.').pop().toLowerCase() : '';
+
+    console.log(`📂 Upload started:
+📁 File: ${filename}
+📊 Size: ${Math.round(fileSize / 1024 / 1024)}MB
+🏷️ MIME: ${mimeType}
+🆔 Generated ID: ${fileId}`);
+
+    let metadata;
+
+    // Choose upload strategy based on file size
+    if (fileSize <= MAX_SINGLE_SIZE) {
+      metadata = await uploadSingleFile(env, buffer, filename, mimeType, fileId);
+    } else {
+      metadata = await uploadChunkedFile(env, buffer, filename, mimeType, fileId);
+    }
+
+    // Build response
+    const baseUrl = new URL(request.url).origin;
+    const fileUrl = `${baseUrl}/btfstorage/file/${fileId}.${ext}`;
+    const downloadUrl = `${fileUrl}?dl=1`;
+    const hlsUrl = metadata.chunks ? `${baseUrl}/btfstorage/file/${fileId}.m3u8` : null;
+
+    const response = {
+      success: true,
+      fileId,
+      filename,
+      size: fileSize,
+      sizeHuman: fileSize >= 1024 * 1024
+        ? `${(fileSize / 1024 / 1024).toFixed(2)}MB`
+        : `${(fileSize / 1024).toFixed(2)}KB`,
+      mimeType,
+      uploadMode: metadata.uploadMode,
+      chunks: metadata.chunks?.length || 0,
+      urls: {
+        stream: fileUrl,
+        download: downloadUrl,
+        ...(hlsUrl ? { hls: hlsUrl } : {})
+      },
+      uploadedAt: metadata.uploadedAt
+    };
+
+    console.log(`🎉 Upload complete: ${fileId}
+🔗 Stream URL: ${fileUrl}
+📥 Download URL: ${downloadUrl}`);
+
+    return new Response(JSON.stringify(response, null, 2), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
+
+  } catch (error) {
+    console.error('❌ Upload error:', error.message);
+    console.error('📍 Stack:', error.stack);
+
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+        status: 500,
+        timestamp: new Date().toISOString()
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
 }
