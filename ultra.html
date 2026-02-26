@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BTFStorage — Up to 2GB Upload</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:     #0f1117;
+    --card:   #1a1d27;
+    --border: #2a2d3a;
+    --accent: #6c63ff;
+    --accent2:#4ecdc4;
+    --text:   #e2e8f0;
+    --muted:  #64748b;
+    --green:  #22c55e;
+    --red:    #ef4444;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: .5rem;
+  }
+
+  .subtitle { color: var(--muted); margin-bottom: 2rem; font-size: .95rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── Drop zone ── */
+  #dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  #dropzone.drag-over { border-color: var(--accent); background: rgba(108,99,255,.07); }
+  #dropzone svg { width: 48px; height: 48px; stroke: var(--muted); margin-bottom: 1rem; }
+  #dropzone p   { color: var(--muted); font-size: .9rem; }
+  #dropzone strong { color: var(--text); }
+  #fileInput { display: none; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: .65rem 1.5rem;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: center;
+  }
+  .btn:hover   { opacity: .88; }
+  .btn:disabled{ opacity: .45; cursor: not-allowed; }
+  .btn.cancel  { background: var(--red); margin-top: .5rem; }
+
+  /* ── Progress ── */
+  #progressSection { display: none; }
+
+  .prog-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: .85rem;
+    color: var(--muted);
+    margin-bottom: .4rem;
+  }
+
+  .prog-bar-bg {
+    background: var(--border);
+    border-radius: 9999px;
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+  }
+
+  .prog-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 9999px;
+    transition: width .3s ease;
+    width: 0%;
+  }
+
+  .chunk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    gap: 4px;
+    margin-top: .5rem;
+  }
+
+  .chunk-dot {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: var(--border);
+    transition: background .3s;
+  }
+  .chunk-dot.uploading { background: var(--accent); animation: pulse 1s infinite; }
+  .chunk-dot.done      { background: var(--green); }
+  .chunk-dot.error     { background: var(--red); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  /* ── Result ── */
+  #resultSection { display: none; }
+
+  .result-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .url-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .75rem;
+  }
+
+  .url-label { font-size: .75rem; color: var(--muted); width: 72px; flex-shrink: 0; }
+
+  .url-box {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .45rem .75rem;
+    font-size: .8rem;
+    color: var(--accent2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: monospace;
+  }
+
+  .copy-btn {
+    background: var(--border);
+    border: none;
+    border-radius: 8px;
+    padding: .45rem .65rem;
+    cursor: pointer;
+    color: var(--text);
+    font-size: .8rem;
+    flex-shrink: 0;
+    transition: background .2s;
+  }
+  .copy-btn:hover { background: var(--accent); }
+
+  /* ── Video player ── */
+  #playerSection { display: none; }
+
+  video {
+    width: 100%;
+    border-radius: 12px;
+    background: #000;
+    margin-top: .5rem;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .5rem 1rem;
+    margin-top: 1rem;
+    font-size: .82rem;
+  }
+  .info-item { color: var(--muted); }
+  .info-item span { color: var(--text); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<h1>⚡ BTFStorage</h1>
+<p class="subtitle">Upload files up to 2GB — ultra-fast streaming &amp; download</p>
+
+<!-- Upload Card -->
+<div class="card">
+  <div id="dropzone" onclick="document.getElementById('fileInput').click()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 16.5A4.5 4.5 0 0 1 7.5 8a5.5 5.5 0 0 1 10.83 1.5A4 4 0 0 1 20 17H4z"/>
+      <polyline points="12 12 12 20"/>
+      <polyline points="9 15 12 12 15 15"/>
+    </svg>
+    <p><strong>Drag &amp; drop</strong> your file here</p>
+    <p style="margin-top:.3rem">or click to browse — up to <strong>2 GB</strong></p>
+  </div>
+  <input type="file" id="fileInput" />
+
+  <div id="fileInfo" style="display:none; margin-top:1rem; font-size:.88rem; color:var(--muted)">
+    📄 <span id="fileName"></span> — <span id="fileSize"></span>
+  </div>
+
+  <button class="btn" id="uploadBtn" disabled onclick="startUpload()">
+    ⚡ Upload File
+  </button>
+</div>
+
+<!-- Progress Card -->
+<div class="card" id="progressSection">
+  <div class="prog-label">
+    <span>Uploading chunks to Telegram…</span>
+    <span id="pctLabel">0%</span>
+  </div>
+  <div class="prog-bar-bg"><div class="prog-bar-fill" id="progFill"></div></div>
+
+  <div class="prog-label" style="margin-bottom:.5rem">
+    <span>Chunk progress</span>
+    <span id="chunkLabel">0 / 0</span>
+  </div>
+  <div class="chunk-grid" id="chunkGrid"></div>
+
+  <button class="btn cancel" onclick="cancelUpload()">✕ Cancel</button>
+</div>
+
+<!-- Result Card -->
+<div class="card" id="resultSection">
+  <div class="result-title">✅ Upload complete!</div>
+
+  <div class="url-row">
+    <span class="url-label">Stream</span>
+    <div class="url-box" id="urlStream"></div>
+    <button class="copy-btn" onclick="copyUrl('urlStream')">Copy</button>
+  </div>
+  <div class="url-row">
+    <span class="url-label">Download</span>
+    <div class="url-box" id="urlDownload"></div>
+    <button class="copy-btn" onclick="copyUrl('urlDownload')">Copy</button>
+  </div>
+  <div class="url-row" id="hlsRow" style="display:none">
+    <span class="url-label">HLS</span>
+    <div class="url-box" id="urlHls"></div>
+    <button class="copy-btn" onclick="copyUrl('urlHls')">Copy</button>
+  </div>
+
+  <div class="info-grid" id="infoGrid"></div>
+
+  <button class="btn" style="margin-top:1.5rem; background:var(--border); color:var(--text)" onclick="resetUploader()">
+    Upload another file
+  </button>
+</div>
+
+<!-- Player Card -->
+<div class="card" id="playerSection">
+  <div style="font-weight:600; margin-bottom:.5rem">▶ Preview</div>
+  <video id="videoPlayer" controls playsinline></video>
+</div>
+
+<script>
+// ─── Config ────────────────────────────────────────────────────────────────────
+const UPLOAD_ENDPOINT = '/btfstorage/upload';
+const CHUNK_SIZE      = 45 * 1024 * 1024;
+const MAX_PARALLEL    = 3;
+const MAX_RETRIES     = 4;
+
+// ─── State ─────────────────────────────────────────────────────────────────────
+let selectedFile  = null;
+let uploadAborted = false;
+let activeXhrs    = [];
+
+// ─── File selection ────────────────────────────────────────────────────────────
+const dropzone  = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', ()  => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop',      e  => { e.preventDefault(); dropzone.classList.remove('drag-over'); setFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change',   e  => setFile(e.target.files[0]));
+
+function setFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  document.getElementById('fileName').textContent  = file.name;
+  document.getElementById('fileSize').textContent  = formatBytes(file.size);
+  document.getElementById('fileInfo').style.display = 'block';
+  document.getElementById('uploadBtn').disabled    = false;
+}
+
+// ─── Upload ────────────────────────────────────────────────────────────────────
+async function startUpload() {
+  if (!selectedFile) return;
+  uploadAborted = false;
+  activeXhrs    = [];
+
+  const file        = selectedFile;
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  const fileId      = `id${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}`;
+
+  // UI
+  document.getElementById('uploadBtn').disabled    = true;
+  document.getElementById('progressSection').style.display = 'block';
+  document.getElementById('resultSection').style.display   = 'none';
+  document.getElementById('playerSection').style.display   = 'none';
+
+  buildChunkGrid(totalChunks);
+
+  const results = new Array(totalChunks).fill(null);
+  let doneCount = 0;
+
+  // Queue-based parallel upload
+  const queue = Array.from({ length: totalChunks }, (_, i) => i);
+
+  async function worker() {
+    while (queue.length && !uploadAborted) {
+      const i = queue.shift();
+      if (i === undefined) break;
+
+      setChunkState(i, 'uploading');
+
+      const start = i * CHUNK_SIZE;
+      const end   = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+
+      try {
+        results[i] = await uploadChunkWithRetry(chunk, i, totalChunks, fileId, file,
+          (loaded) => updateProgress(doneCount, i, loaded, chunk.size, totalChunks, file.size)
+        );
+        doneCount++;
+        setChunkState(i, 'done');
+        updateProgress(doneCount, -1, 0, 0, totalChunks, file.size);
+      } catch (e) {
+        setChunkState(i, 'error');
+        throw e;
+      }
+    }
+  }
+
+  try {
+    await Promise.all(Array.from({ length: Math.min(MAX_PARALLEL, totalChunks) }, worker));
+    if (!uploadAborted) showResult(results[totalChunks - 1], file);
+  } catch (e) {
+    if (!uploadAborted) alert('Upload failed: ' + e.message);
+    document.getElementById('progressSection').style.display = 'none';
+    document.getElementById('uploadBtn').disabled = false;
+  }
+}
+
+function uploadChunkWithRetry(chunk, index, totalChunks, fileId, file, onProgress) {
+  return new Promise(async (resolve, reject) => {
+    let lastErr;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (uploadAborted) { reject(new Error('Aborted')); return; }
+      try {
+        const result = await doXhrUpload(chunk, index, totalChunks, fileId, file, onProgress);
+        resolve(result);
+        return;
+      } catch (e) {
+        lastErr = e;
+        if (attempt < MAX_RETRIES - 1) await sleep(1500 * Math.pow(2, attempt));
+      }
+    }
+    reject(new Error(`Chunk ${index} failed: ${lastErr?.message}`));
+  });
+}
+
+function doXhrUpload(chunk, index, totalChunks, fileId, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    activeXhrs.push(xhr);
+    xhr.open('POST', UPLOAD_ENDPOINT, true);
+
+    xhr.setRequestHeader('X-File-Id',      fileId);
+    xhr.setRequestHeader('X-Chunk-Index',  String(index));
+    xhr.setRequestHeader('X-Total-Chunks', String(totalChunks));
+    xhr.setRequestHeader('X-File-Name',    encodeURIComponent(file.name));
+    xhr.setRequestHeader('X-File-Size',    String(file.size));
+    xhr.setRequestHeader('X-File-Type',    file.type || 'application/octet-stream');
+
+    xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded); };
+
+    xhr.onload = () => {
+      activeXhrs = activeXhrs.filter(x => x !== xhr);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch { reject(new Error('Bad JSON')); }
+      } else {
+        reject(new Error(`HTTP ${xhr.status}`));
+      }
+    };
+    xhr.onerror   = () => { activeXhrs = activeXhrs.filter(x=>x!==xhr); reject(new Error('Network error')); };
+    xhr.ontimeout = () => { activeXhrs = activeXhrs.filter(x=>x!==xhr); reject(new Error('Timeout')); };
+    xhr.timeout   = 300_000;
+    xhr.send(chunk);
+  });
+}
+
+function cancelUpload() {
+  uploadAborted = true;
+  activeXhrs.forEach(x => { try { x.abort(); } catch(_){} });
+  activeXhrs = [];
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('uploadBtn').disabled = false;
+}
+
+// ─── UI helpers ────────────────────────────────────────────────────────────────
+function buildChunkGrid(n) {
+  const grid = document.getElementById('chunkGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'chunk-dot';
+    d.id = `cd_${i}`;
+    d.title = `Chunk ${i + 1}`;
+    grid.appendChild(d);
+  }
+  document.getElementById('chunkLabel').textContent = `0 / ${n}`;
+}
+
+function setChunkState(i, state) {
+  const el = document.getElementById(`cd_${i}`);
+  if (el) { el.className = 'chunk-dot ' + state; }
+}
+
+function updateProgress(done, activeIdx, loaded, chunkSize, total, totalBytes) {
+  const approxBytes = done * CHUNK_SIZE + (activeIdx >= 0 ? loaded : 0);
+  const pct = Math.min(100, Math.round((approxBytes / totalBytes) * 100));
+
+  document.getElementById('progFill').style.width  = pct + '%';
+  document.getElementById('pctLabel').textContent  = pct + '%';
+  document.getElementById('chunkLabel').textContent = `${done} / ${total}`;
+}
+
+function showResult(data, file) {
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('resultSection').style.display   = 'block';
+
+  if (!data?.urls) { alert('Upload failed — no URL returned'); return; }
+
+  document.getElementById('urlStream').textContent   = data.urls.stream   || '';
+  document.getElementById('urlDownload').textContent = data.urls.download || '';
+
+  if (data.urls.hls) {
+    document.getElementById('hlsRow').style.display     = 'flex';
+    document.getElementById('urlHls').textContent       = data.urls.hls;
+  }
+
+  const info = document.getElementById('infoGrid');
+  info.innerHTML = `
+    <div class="info-item">Filename<br><span>${file.name}</span></div>
+    <div class="info-item">Size<br><span>${formatBytes(file.size)}</span></div>
+    <div class="info-item">Chunks<br><span>${data.meta?.totalChunks ?? 1}</span></div>
+    <div class="info-item">Type<br><span>${file.type || 'unknown'}</span></div>
+  `;
+
+  // Auto-preview video/audio
+  const isMedia = /^(video|audio)\//.test(file.type);
+  if (isMedia && data.urls.stream) {
+    document.getElementById('playerSection').style.display = 'block';
+    const v = document.getElementById('videoPlayer');
+    v.src = data.urls.stream;
+  }
+}
+
+function copyUrl(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(`[onclick="copyUrl('${id}')"]`);
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+
+function resetUploader() {
+  selectedFile = null;
+  fileInput.value = '';
+  document.getElementById('fileInfo').style.display    = 'none';
+  document.getElementById('resultSection').style.display = 'none';
+  document.getElementById('playerSection').style.display = 'none';
+  document.getElementById('uploadBtn').disabled         = true;
+}
+
+const formatBytes = b => b > 1e9 ? (b/1e9).toFixed(2)+' GB' : b > 1e6 ? (b/1e6).toFixed(1)+' MB' : (b/1024).toFixed(0)+' KB';
+const sleep       = ms => new Promise(r => setTimeout(r, ms));
+</script>
+</body>
+</html>
