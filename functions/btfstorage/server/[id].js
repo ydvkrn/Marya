@@ -1,16 +1,6 @@
 // functions/btfstorage/server/[id].js
-// ⚡⚡ 10X ULTRA-FAST Cloudflare Pages Function — BTF Storage Streaming
-// Optimizations:
-//   ✅ Parallel KV metadata prefetch (biggest win for multi-chunk)
-//   ✅ 2-chunk prefetch pipeline while streaming
-//   ✅ ETag + If-None-Match → 304 Not Modified
-//   ✅ Vary: Range header
-//   ✅ RFC 5987 filename encoding (unicode filenames)
-//   ✅ M3U8: actual duration from meta, CODECS hint, BANDWIDTH estimate
-//   ✅ CF Cache for chunk data + Telegram URLs
-//   ✅ Zero-block KV writes via waitUntil
-//   ✅ Token rotation for bot failover
-//   ✅ AbortSignal timeouts on all fetches
+// ⚡ ULTRA-FAST Cloudflare Pages Function — BTF Storage Streaming
+// Optimizations: CF Cache API, parallel fetching, zero-block KV writes, minimal overhead
 
 // ─── MIME TYPE MAP ─────────────────────────────────────────────────────────────
 const MIME = {
@@ -29,31 +19,30 @@ const MIME = {
   docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   txt:'text/plain', zip:'application/zip', rar:'application/x-rar-compressed',
   // Streaming
-  m3u8:'application/x-mpegURL', ts:'video/mp2t', mpd:'application/dash+xml',
+  m3u8:'application/x-mpegURL', ts:'video/mp2t', mpd:'application/dash+xml'
 };
 
-// ─── STATIC CORS HEADERS ───────────────────────────────────────────────────────
+// ─── STATIC CORS HEADERS (reuse object, avoid re-creating every request) ──────
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-  'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization, If-None-Match, If-Modified-Since',
-  'Access-Control-Expose-Headers':'Content-Length, Content-Range, Accept-Ranges, ETag, Content-Disposition',
+  'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization',
+  'Access-Control-Expose-Headers':'Content-Length, Content-Range, Accept-Ranges',
   'Access-Control-Max-Age':       '86400',
 };
 
-// How many chunks to prefetch ahead while streaming
-const PREFETCH_AHEAD = 2;
-
 // ─── MAIN HANDLER ──────────────────────────────────────────────────────────────
 export async function onRequest({ request, env, params, waitUntil }) {
+  // ── CORS preflight — respond instantly
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS });
   }
 
-  const fileId = params.id;
+  const fileId = params.id;           // e.g. "MSM221-48U91C62-no.mp4"
   const url    = new URL(request.url);
 
   try {
+    // ── Parse extension & detect special modes ─────────────────────────────
     let actualId = fileId, ext = '', isM3U8 = false, isTS = false, segIdx = -1;
 
     const dotAt = fileId.lastIndexOf('.');
@@ -64,6 +53,7 @@ export async function onRequest({ request, env, params, waitUntil }) {
       if (ext === 'm3u8') {
         isM3U8 = true;
       } else if (ext === 'ts') {
+        // Check for segment pattern: baseId-N.ts
         const dashAt = actualId.lastIndexOf('-');
         if (dashAt !== -1) {
           const maybeN = actualId.slice(dashAt + 1);
@@ -76,98 +66,51 @@ export async function onRequest({ request, env, params, waitUntil }) {
       }
     }
 
-    // ── KV lookup ─────────────────────────────────────────────────────────────
+    // ── KV lookup (single read, JSON parse) ────────────────────────────────
     const raw = await env.FILES_KV.get(actualId);
     if (!raw) return err('File not found', 404);
 
     const meta = JSON.parse(raw);
     if (!meta.filename || !meta.size) return err('Invalid metadata', 400);
 
+    // backward-compat
     meta.telegramFileId = meta.telegramFileId || meta.fileIdCode;
 
     if (!meta.telegramFileId && !meta.chunks?.length)
       return err('Missing file source', 400);
 
-    const mime  = meta.contentType || MIME[ext] || 'application/octet-stream';
-    const etag  = `"${actualId}-${meta.size}"`;
+    const mime = meta.contentType || MIME[ext] || 'application/octet-stream';
 
-    // ── ETag / 304 check ──────────────────────────────────────────────────────
-    const ifNoneMatch = request.headers.get('If-None-Match');
-    if (ifNoneMatch && (ifNoneMatch === etag || ifNoneMatch === '*')) {
-      return new Response(null, { status: 304, headers: { ...CORS, ETag: etag } });
-    }
-
-    // ── Route ─────────────────────────────────────────────────────────────────
-    if (isM3U8) return hlsPlaylist(request, meta, actualId);
-    if (isTS)   return hlsSegment(env, meta, segIdx, waitUntil);
-    if (!meta.chunks?.length) return singleFile(request, env, meta, mime, url, etag);
-    return chunkedFile(request, env, meta, mime, url, waitUntil, etag);
+    // ── Route ──────────────────────────────────────────────────────────────
+    if (isM3U8)       return hlsPlaylist(request, meta, actualId);
+    if (isTS)         return hlsSegment(env, meta, segIdx, waitUntil);
+    if (!meta.chunks?.length) return singleFile(request, env, meta, mime, url);
+    return chunkedFile(request, env, meta, mime, url, waitUntil);
 
   } catch (e) {
-    console.error('[id].js error:', e);
     return err(e.message, 500);
   }
 }
 
 // ─── HLS PLAYLIST ──────────────────────────────────────────────────────────────
-// ⚡ Uses actual duration from meta if available, estimates from size otherwise
-//    Adds BANDWIDTH hint for adaptive-bitrate players
 function hlsPlaylist(request, meta, actualId) {
   if (!meta.chunks?.length) return err('HLS unsupported for single files', 400);
 
-  const base          = new URL(request.url).origin;
-  const totalDuration = meta.duration || 0; // seconds, if stored in meta
-  const chunkCount    = meta.chunks.length;
-  const chunkSize     = meta.chunkSize || 20971520; // 20 MB default
+  const base = new URL(request.url).origin;
+  const seg  = 6; // seconds per segment
+  let pl = `#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:${seg}\n#EXT-X-MEDIA-SEQUENCE:0\n#EXT-X-PLAYLIST-TYPE:VOD\n`;
 
-  // Estimate bandwidth (bits per second) from file size and duration
-  const bw = (totalDuration > 0)
-    ? Math.round((meta.size * 8) / totalDuration)
-    : Math.round((meta.size * 8) / (chunkCount * 6)); // fallback: assume 6s/chunk
-
-  // Per-segment duration
-  const getSegDur = (i) => {
-    if (meta.chunks[i]?.duration) return meta.chunks[i].duration;
-    if (totalDuration > 0) {
-      // Last chunk may be shorter
-      const base = totalDuration / chunkCount;
-      return (i === chunkCount - 1)
-        ? parseFloat((totalDuration - base * (chunkCount - 1)).toFixed(3))
-        : parseFloat(base.toFixed(3));
-    }
-    return 6.0;
-  };
-
-  const maxDur = Math.ceil(
-    meta.chunks.reduce((mx, _, i) => Math.max(mx, getSegDur(i)), 0)
-  );
-
-  // Build playlist
-  let pl = [
-    '#EXTM3U',
-    '#EXT-X-VERSION:3',
-    `#EXT-X-TARGETDURATION:${maxDur}`,
-    '#EXT-X-MEDIA-SEQUENCE:0',
-    '#EXT-X-PLAYLIST-TYPE:VOD',
-  ];
-
-  // Optional: stream info line
-  pl.push(`#EXT-X-STREAM-INF:BANDWIDTH=${bw},CODECS="avc1.42E01E,mp4a.40.2"`);
-
-  for (let i = 0; i < chunkCount; i++) {
-    const dur = getSegDur(i);
-    pl.push(`#EXTINF:${dur.toFixed(3)},`);
-    pl.push(`${base}/btfstorage/server/${actualId}-${i}.ts`);
+  for (let i = 0; i < meta.chunks.length; i++) {
+    pl += `#EXTINF:${seg.toFixed(1)},\n${base}/btfstorage/server/${actualId}-${i}.ts\n`;
   }
-  pl.push('#EXT-X-ENDLIST');
+  pl += '#EXT-X-ENDLIST\n';
 
-  return new Response(pl.join('\n') + '\n', {
+  return new Response(pl, {
     status: 200,
     headers: {
       ...CORS,
-      'Content-Type' : 'application/x-mpegURL; charset=utf-8',
-      'Cache-Control': 'no-cache, no-store',
-      'Vary'         : 'Origin',
+      'Content-Type' : 'application/x-mpegURL',
+      'Cache-Control': 'no-cache',
     }
   });
 }
@@ -190,37 +133,31 @@ async function hlsSegment(env, meta, segIdx, waitUntil) {
   });
 }
 
-// ─── SINGLE FILE ───────────────────────────────────────────────────────────────
-async function singleFile(request, env, meta, mime, url, etag) {
+// ─── SINGLE FILE (small file — direct Telegram proxy) ─────────────────────────
+async function singleFile(request, env, meta, mime, url) {
   const tokens = getBotTokens(env);
   if (!tokens.length) return err('No bot tokens', 503);
 
-  const range = request.headers.get('Range');
-  const isDL  = url.searchParams.has('dl') || url.searchParams.has('download');
+  const range   = request.headers.get('Range');
+  const isDL    = url.searchParams.has('dl') || url.searchParams.has('download');
 
   for (const token of tokens) {
     try {
-      const directUrl = await getTelegramUrl(token, meta.telegramFileId);
+      // Try to get Telegram direct URL (cached in CF Cache if possible)
+      const directUrl = await getTelegramUrl(token, meta.telegramFileId, request.url);
       if (!directUrl) continue;
 
-      const fetchHeaders = {};
-      if (range) fetchHeaders['Range'] = range;
-
-      const tgRes = await fetch(directUrl, {
-        headers: fetchHeaders,
-        signal : AbortSignal.timeout(15000),
-      });
-      if (!tgRes.ok && tgRes.status !== 206) continue;
+      const fetchHeaders = range ? { Range: range } : {};
+      const tgRes = await fetch(directUrl, { headers: fetchHeaders });
+      if (!tgRes.ok) continue;
 
       const resHeaders = new Headers(CORS);
-      resHeaders.set('Content-Type',        mime);
-      resHeaders.set('Accept-Ranges',       'bytes');
-      resHeaders.set('Cache-Control',       'public, max-age=31536000');
-      resHeaders.set('ETag',                etag);
-      resHeaders.set('Vary',                'Range');
-      resHeaders.set('Content-Disposition', contentDisposition(isDL, meta.filename));
+      resHeaders.set('Content-Type', mime);
+      resHeaders.set('Accept-Ranges', 'bytes');
+      resHeaders.set('Cache-Control', 'public, max-age=31536000');
+      resHeaders.set('Content-Disposition', isDL ? `attachment; filename="${meta.filename}"` : 'inline');
 
-      for (const h of ['content-length', 'content-range']) {
+      for (const h of ['content-length', 'content-range', 'accept-ranges']) {
         const v = tgRes.headers.get(h);
         if (v) resHeaders.set(h, v);
       }
@@ -233,41 +170,29 @@ async function singleFile(request, env, meta, mime, url, etag) {
 }
 
 // ─── CHUNKED FILE ──────────────────────────────────────────────────────────────
-async function chunkedFile(request, env, meta, mime, url, waitUntil, etag) {
-  const range = request.headers.get('Range');
-  const isDL  = url.searchParams.has('dl') || url.searchParams.has('download');
+async function chunkedFile(request, env, meta, mime, url, waitUntil) {
+  const range  = request.headers.get('Range');
+  const isDL   = url.searchParams.has('dl') || url.searchParams.has('download');
 
-  if (range) return smartRange(env, meta, mime, range, isDL, waitUntil, etag);
-  if (isDL)  return fullDownload(env, meta, mime, waitUntil, etag);
-  return instantPlay(env, meta, mime, waitUntil, etag);
+  if (range) return smartRange(env, meta, mime, range, isDL, waitUntil);
+  if (isDL)  return fullDownload(env, meta, mime, waitUntil);
+  return instantPlay(env, meta, mime, waitUntil);
 }
 
-// ── Instant Play ─────────────────────────────────────────────────────────────
-// ⚡ Streams first chunk immediately, uses prefetch pipeline for subsequent chunks
-async function instantPlay(env, meta, mime, waitUntil, etag) {
+// ── Instant Play: stream first chunk IMMEDIATELY, rest follows ─────────────────
+async function instantPlay(env, meta, mime, waitUntil) {
   const { chunks, size: total, filename } = meta;
 
-  // ⚡ PRE-FETCH all chunk metadata in parallel (eliminates serial KV reads)
-  const chunkMetas = await prefetchChunkMetas(env, chunks);
-
-  // Immediately start loading first two chunks in parallel
-  const prefetchQueue = new Array(Math.min(PREFETCH_AHEAD + 1, chunks.length));
-  for (let i = 0; i < prefetchQueue.length; i++) {
-    prefetchQueue[i] = loadChunkFromMeta(env, chunkMetas[i], waitUntil);
-  }
+  // Pre-fetch first chunk to respond fast
+  const firstChunk = await loadChunk(env, chunks[0], waitUntil);
 
   const stream = new ReadableStream({
     async start(ctrl) {
-      for (let i = 0; i < chunks.length; i++) {
-        try {
-          // Kick off prefetch of chunk i+PREFETCH_AHEAD before awaiting current
-          const nextPrefetch = i + PREFETCH_AHEAD + 1;
-          if (nextPrefetch < chunks.length) {
-            prefetchQueue[nextPrefetch % prefetchQueue.length] =
-              loadChunkFromMeta(env, chunkMetas[nextPrefetch], waitUntil);
-          }
+      ctrl.enqueue(new Uint8Array(firstChunk));
 
-          const data = await prefetchQueue[i % prefetchQueue.length];
+      for (let i = 1; i < chunks.length; i++) {
+        try {
+          const data = await loadChunk(env, chunks[i], waitUntil);
           ctrl.enqueue(new Uint8Array(data));
         } catch (e) {
           ctrl.error(e);
@@ -286,17 +211,14 @@ async function instantPlay(env, meta, mime, waitUntil, etag) {
       'Content-Length'     : total.toString(),
       'Accept-Ranges'      : 'bytes',
       'Cache-Control'      : 'public, max-age=31536000',
-      'ETag'               : etag,
-      'Vary'               : 'Range',
-      'Content-Disposition': contentDisposition(false, filename),
-      'X-Streaming-Mode'   : 'instant-play-pipelined',
+      'Content-Disposition': 'inline',
+      'X-Streaming-Mode'   : 'instant-play',
     }
   });
 }
 
-// ── Smart Range ───────────────────────────────────────────────────────────────
-// ⚡ Parallel fetch of needed chunks, correct byte slicing
-async function smartRange(env, meta, mime, rangeHeader, isDL, waitUntil, etag) {
+// ── Smart Range: only load chunks that cover the requested range ───────────────
+async function smartRange(env, meta, mime, rangeHeader, isDL, waitUntil) {
   const { size: total, chunks, chunkSize: cs = 20971520, filename } = meta;
 
   const m = rangeHeader.match(/bytes=(\d+)-(\d*)/);
@@ -313,10 +235,9 @@ async function smartRange(env, meta, mime, rangeHeader, isDL, waitUntil, etag) {
   const endChunk   = Math.floor(end   / cs);
   const needed     = chunks.slice(startChunk, endChunk + 1);
 
-  // ⚡ Pre-fetch chunk metas + data all in parallel
-  const chunkMetas = await prefetchChunkMetas(env, needed);
-  const fetched    = await Promise.all(
-    chunkMetas.map(cm => loadChunkFromMeta(env, cm, waitUntil))
+  // ⚡ Parallel pre-fetch all needed chunks at once
+  const fetched = await Promise.all(
+    needed.map(chunk => loadChunk(env, chunk, waitUntil))
   );
 
   let pos = startChunk * cs;
@@ -327,7 +248,7 @@ async function smartRange(env, meta, mime, rangeHeader, isDL, waitUntil, etag) {
         const sliceFrom = Math.max(start - pos, 0);
         const sliceTo   = Math.min(arr.length, end - pos + 1);
         if (sliceFrom < sliceTo) ctrl.enqueue(arr.slice(sliceFrom, sliceTo));
-        pos += arr.length; // use actual length, not assumed cs
+        pos += cs;
         if (pos > end) break;
       }
       ctrl.close();
@@ -343,40 +264,20 @@ async function smartRange(env, meta, mime, rangeHeader, isDL, waitUntil, etag) {
       'Content-Range'      : `bytes ${start}-${end}/${total}`,
       'Accept-Ranges'      : 'bytes',
       'Cache-Control'      : 'public, max-age=31536000',
-      'ETag'               : etag,
-      'Vary'               : 'Range',
-      'Content-Disposition': contentDisposition(isDL, filename),
+      'Content-Disposition': isDL ? `attachment; filename="${filename}"` : 'inline',
     }
   });
 }
 
-// ── Full Download ─────────────────────────────────────────────────────────────
-// ⚡ Prefetch pipeline — next chunk loads while current is being sent
-function fullDownload(env, meta, mime, waitUntil, etag) {
+// ── Full download ──────────────────────────────────────────────────────────────
+function fullDownload(env, meta, mime, waitUntil) {
   const { chunks, size: total, filename } = meta;
 
   const stream = new ReadableStream({
     async start(ctrl) {
-      // ⚡ Pre-fetch all chunk metas in parallel
-      let chunkMetas;
-      try {
-        chunkMetas = await prefetchChunkMetas(env, chunks);
-      } catch (e) { ctrl.error(e); return; }
-
-      // Seed prefetch queue
-      const queue = new Array(Math.min(PREFETCH_AHEAD + 1, chunks.length));
-      for (let i = 0; i < queue.length; i++) {
-        queue[i] = loadChunkFromMeta(env, chunkMetas[i], waitUntil);
-      }
-
-      for (let i = 0; i < chunks.length; i++) {
+      for (const chunk of chunks) {
         try {
-          const next = i + PREFETCH_AHEAD + 1;
-          if (next < chunks.length)
-            queue[next % queue.length] = loadChunkFromMeta(env, chunkMetas[next], waitUntil);
-
-          const data = await queue[i % queue.length];
-          ctrl.enqueue(new Uint8Array(data));
+          ctrl.enqueue(new Uint8Array(await loadChunk(env, chunk, waitUntil)));
         } catch (e) { ctrl.error(e); return; }
       }
       ctrl.close();
@@ -389,115 +290,87 @@ function fullDownload(env, meta, mime, waitUntil, etag) {
       ...CORS,
       'Content-Type'       : mime,
       'Content-Length'     : total.toString(),
+      'Content-Disposition': `attachment; filename="${filename}"`,
       'Accept-Ranges'      : 'bytes',
       'Cache-Control'      : 'public, max-age=31536000',
-      'ETag'               : etag,
-      'Vary'               : 'Range',
-      'Content-Disposition': contentDisposition(true, filename),
     }
   });
 }
 
-// ─── CORE: Prefetch all chunk metadata in parallel ─────────────────────────────
-// ⚡ BIGGEST WIN: Eliminates serial KV round-trips for multi-chunk files
-async function prefetchChunkMetas(env, chunks) {
-  return Promise.all(chunks.map(async (chunkInfo) => {
-    const kv  = env[chunkInfo.kvNamespace] || env.FILES_KV;
-    const key = chunkInfo.keyName || chunkInfo.chunkKey;
-    const raw = await kv.get(key);
-    if (!raw) throw new Error(`Chunk meta not found: ${key}`);
-    const cm = JSON.parse(raw);
-    cm.telegramFileId = cm.telegramFileId || cm.fileIdCode;
-    cm._kv  = kv;
-    cm._key = key;
-    return cm;
-  }));
-}
+// ─── CORE: Load a single chunk (CF Cache → KV directUrl → refresh) ─────────────
+async function loadChunk(env, chunkInfo, waitUntil) {
+  const kv      = env[chunkInfo.kvNamespace] || env.FILES_KV;
+  const key     = chunkInfo.keyName || chunkInfo.chunkKey;
+  const metaRaw = await kv.get(key);
+  if (!metaRaw) throw new Error(`Chunk not found: ${key}`);
 
-// ─── CORE: Load chunk data from pre-fetched metadata ──────────────────────────
-async function loadChunkFromMeta(env, cm, waitUntil) {
-  const kv  = cm._kv  || env.FILES_KV;
-  const key = cm._key;
+  const cm = JSON.parse(metaRaw);
+  cm.telegramFileId = cm.telegramFileId || cm.fileIdCode;
 
-  // ── 1. Try cached directUrl (fastest path)
+  // ── 1. Try cached directUrl first (fastest path)
   if (cm.directUrl) {
     const cached = await cacheGet(cm.directUrl);
     if (cached) return cached.arrayBuffer();
 
-    try {
-      const r = await fetch(cm.directUrl, { signal: AbortSignal.timeout(20000) });
-      if (r.ok) {
-        if (waitUntil) waitUntil(cachePut(cm.directUrl, r.clone()));
-        return r.arrayBuffer();
-      }
-    } catch (_) {}
+    // Hit origin directly — still fast
+    const r = await fetch(cm.directUrl);
+    if (r.ok) {
+      // Store in CF Cache in background, don't block response
+      if (waitUntil) waitUntil(cachePut(cm.directUrl, r.clone()));
+      return r.arrayBuffer();
+    }
   }
 
-  // ── 2. Refresh via Telegram API (token rotation)
-  const tokens = env._botTokens || (env._botTokens = getBotTokens(env));
+  // ── 2. Refresh URL via Telegram API
+  const tokens = getBotTokens(env);
   for (const token of tokens) {
     try {
       const freshUrl = await getTelegramUrl(token, cm.telegramFileId);
       if (!freshUrl) continue;
 
-      const r = await fetch(freshUrl, { signal: AbortSignal.timeout(25000) });
+      const r = await fetch(freshUrl);
       if (!r.ok) continue;
 
-      if (waitUntil && kv && key) {
+      // Background: update KV + warm CF Cache
+      if (waitUntil) {
         const body = r.clone();
-        waitUntil(Promise.all([
-          cachePut(freshUrl, body),
-          kv.put(key, JSON.stringify({ ...cm, directUrl: freshUrl, lastRefreshed: Date.now(), _kv: undefined, _key: undefined })),
-        ]));
+        waitUntil(
+          Promise.all([
+            cachePut(freshUrl, body),
+            kv.put(key, JSON.stringify({ ...cm, directUrl: freshUrl, lastRefreshed: Date.now() }))
+          ])
+        );
       }
       return r.arrayBuffer();
-    } catch (_) {}
+    } catch (_) { /* next token */ }
   }
 
   throw new Error(`All refresh attempts failed: ${key}`);
 }
 
-// ─── Legacy loadChunk (for HLS segments) ──────────────────────────────────────
-async function loadChunk(env, chunkInfo, waitUntil) {
-  const kv  = env[chunkInfo.kvNamespace] || env.FILES_KV;
-  const key = chunkInfo.keyName || chunkInfo.chunkKey;
-  const raw = await kv.get(key);
-  if (!raw) throw new Error(`Chunk not found: ${key}`);
-
-  const cm = JSON.parse(raw);
-  cm.telegramFileId = cm.telegramFileId || cm.fileIdCode;
-  cm._kv  = kv;
-  cm._key = key;
-  return loadChunkFromMeta(env, cm, waitUntil);
-}
-
 // ─── HELPERS ───────────────────────────────────────────────────────────────────
 
-// ⚡ Get Telegram direct URL — CF Cache avoids repeated getFile API calls
-async function getTelegramUrl(token, fileId) {
-  if (!fileId) return null;
-  const cacheKey = `https://tg-url-cache.internal/${token.slice(-8)}/${fileId}`;
+// Get Telegram direct URL — uses CF Cache to avoid repeated getFile calls
+async function getTelegramUrl(token, fileId, cacheKeyHint) {
+  const cacheKey = `https://tg-url-cache.internal/${token.slice(-6)}/${fileId}`;
 
+  // Try CF Cache
   const cached = await cacheGet(cacheKey);
   if (cached) {
     const text = await cached.text();
     if (text) return text;
   }
 
-  let res;
-  try {
-    res = await fetch(
-      `https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`,
-      { signal: AbortSignal.timeout(8000) }
-    );
-  } catch (_) { return null; }
-
-  const data = await res.json().catch(() => null);
-  if (!data?.ok || !data.result?.file_path) return null;
+  // Call Telegram API
+  const res  = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`, {
+    signal: AbortSignal.timeout(8000)
+  });
+  const data = await res.json();
+  if (!data.ok || !data.result?.file_path) return null;
 
   const url = `https://api.telegram.org/file/bot${token}/${data.result.file_path}`;
 
-  // Cache for 55 minutes (Telegram URLs expire in ~60 min)
+  // Cache URL for 55 minutes (Telegram URLs expire ~60min)
   cachePut(cacheKey, new Response(url, {
     headers: { 'Cache-Control': 'public, max-age=3300' }
   })).catch(() => {});
@@ -505,39 +378,28 @@ async function getTelegramUrl(token, fileId) {
   return url;
 }
 
-// Cloudflare Cache API
+// Cloudflare Cache API helpers
 async function cacheGet(url) {
-  try { return await caches.default.match(new Request(url)); }
-  catch (_) { return null; }
+  try {
+    const cache = caches.default;
+    return await cache.match(new Request(url));
+  } catch (_) { return null; }
 }
 
 async function cachePut(url, response) {
-  try { await caches.default.put(new Request(url), response); }
-  catch (_) {}
+  try {
+    const cache = caches.default;
+    await cache.put(new Request(url), response);
+  } catch (_) {}
 }
 
 function getBotTokens(env) {
   return [env.BOT_TOKEN, env.BOT_TOKEN2, env.BOT_TOKEN3, env.BOT_TOKEN4].filter(Boolean);
 }
 
-// ⚡ RFC 5987 encoded Content-Disposition (supports Unicode filenames)
-function contentDisposition(isDL, filename) {
-  const disposition = isDL ? 'attachment' : 'inline';
-  if (!filename) return disposition;
-
-  // ASCII-safe fallback + RFC 5987 encoded version for Unicode support
-  const safe    = filename.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '_');
-  const encoded = encodeURIComponent(filename).replace(/'/g, '%27');
-  return `${disposition}; filename="${safe}"; filename*=UTF-8''${encoded}`;
-}
-
 function err(msg, status = 500, extraHeaders = {}) {
   return new Response(JSON.stringify({ error: msg, status }), {
     status,
-    headers: {
-      ...CORS,
-      'Content-Type': 'application/json',
-      ...extraHeaders,
-    }
+    headers: { ...CORS, 'Content-Type': 'application/json', ...extraHeaders }
   });
 }
